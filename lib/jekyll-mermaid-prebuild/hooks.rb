@@ -18,12 +18,19 @@ module JekyllMermaidPrebuild
       dest_dir = File.join(site.dest, config.output_dir)
       FileUtils.mkdir_p(dest_dir)
 
+      copied_count = 0
       svgs.each do |cache_key, cached_path|
+        unless cached_path && File.exist?(cached_path)
+          Jekyll.logger.warn "MermaidPrebuild:", "Missing cached SVG for #{cache_key} (expected: #{cached_path})"
+          next
+        end
+
         dest_path = File.join(dest_dir, "#{cache_key}.svg")
         FileUtils.cp(cached_path, dest_path)
+        copied_count += 1
       end
 
-      Jekyll.logger.info "MermaidPrebuild:", "Copied #{svgs.size} SVG(s) to #{config.output_dir}/"
+      Jekyll.logger.info "MermaidPrebuild:", "Copied #{copied_count} SVG(s) to #{config.output_dir}/"
     end
 
     # Log helpful error message for Puppeteer issues

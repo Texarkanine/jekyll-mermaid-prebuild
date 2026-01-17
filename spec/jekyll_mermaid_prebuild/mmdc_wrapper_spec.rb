@@ -11,7 +11,7 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
   describe ".available?" do
     context "when mmdc is in PATH" do
       before do
-        allow(Kernel).to receive(:system).with("which mmdc > /dev/null 2>&1").and_return(true)
+        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(true)
       end
 
       it "returns true" do
@@ -21,12 +21,36 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
 
     context "when mmdc is not in PATH" do
       before do
-        allow(Kernel).to receive(:system).with("which mmdc > /dev/null 2>&1").and_return(false)
+        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(false)
       end
 
       it "returns false" do
         expect(described_class.available?).to be false
       end
+    end
+  end
+
+  describe ".command_exists?" do
+    around do |example|
+      original_path = ENV.fetch("PATH", nil)
+      example.run
+      ENV["PATH"] = original_path
+    end
+
+    it "returns true when executable exists in PATH" do
+      Dir.mktmpdir do |dir|
+        ENV["PATH"] = dir
+        executable = File.join(dir, "testcmd")
+        File.write(executable, "#!/bin/sh\nexit 0")
+        File.chmod(0o755, executable)
+
+        expect(described_class.command_exists?("testcmd")).to be true
+      end
+    end
+
+    it "returns false when executable does not exist" do
+      ENV["PATH"] = "/nonexistent"
+      expect(described_class.command_exists?("nonexistent_cmd")).to be false
     end
   end
 
@@ -59,7 +83,7 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
   describe ".check_status" do
     context "when mmdc is not available" do
       before do
-        allow(Kernel).to receive(:system).with("which mmdc > /dev/null 2>&1").and_return(false)
+        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(false)
       end
 
       it "returns :not_found" do
@@ -69,7 +93,7 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
 
     context "when mmdc is available but Puppeteer fails" do
       before do
-        allow(Kernel).to receive(:system).with("which mmdc > /dev/null 2>&1").and_return(true)
+        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(true)
         allow(described_class).to receive(:test_render).and_return(:puppeteer_error)
       end
 
@@ -80,7 +104,7 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
 
     context "when mmdc works correctly" do
       before do
-        allow(Kernel).to receive(:system).with("which mmdc > /dev/null 2>&1").and_return(true)
+        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(true)
         allow(described_class).to receive(:test_render).and_return(:ok)
       end
 

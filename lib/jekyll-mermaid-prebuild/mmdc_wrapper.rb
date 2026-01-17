@@ -14,7 +14,21 @@ module JekyllMermaidPrebuild
     def available?
       return @available if defined?(@available)
 
-      @available = Kernel.system("which mmdc > /dev/null 2>&1")
+      @available = command_exists?("mmdc")
+    end
+
+    # Check if a command exists in PATH (cross-platform)
+    #
+    # @param cmd [String] command name
+    # @return [Boolean] true if command found
+    def command_exists?(cmd)
+      cmd_name = Gem.win_platform? ? "#{cmd}.exe" : cmd
+      path_dirs = ENV.fetch("PATH", "").split(File::PATH_SEPARATOR)
+
+      path_dirs.any? do |dir|
+        executable = File.join(dir, cmd_name)
+        File.executable?(executable)
+      end
     end
 
     # Get mmdc version
@@ -60,6 +74,7 @@ module JekyllMermaidPrebuild
       begin
         input.write("graph TD\nA-->B")
         input.close
+        output.close # Close before mmdc writes (Windows file locking)
 
         _stdout, stderr, status = Open3.capture3("mmdc", "-i", input.path, "-o", output.path, "-e", "svg")
 
@@ -71,8 +86,8 @@ module JekyllMermaidPrebuild
           :unknown_error
         end
       ensure
-        input.unlink
-        output.unlink rescue nil # rubocop:disable Style/RescueModifier
+        input.close! rescue nil # rubocop:disable Style/RescueModifier
+        output.close! rescue nil # rubocop:disable Style/RescueModifier
       end
     end
 
