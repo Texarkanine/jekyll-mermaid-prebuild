@@ -50,8 +50,14 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: bundle exec rspec
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
       - name: Build gem
         run: gem build ${{ env.GEM_NAME }}.gemspec
