@@ -33,13 +33,14 @@ module JekyllMermaidPrebuild
 
     private
 
-def parse_output_dir(dir)
-  return DEFAULT_OUTPUT_DIR unless dir.is_a?(String)
-  dir = dir.strip
-  return DEFAULT_OUTPUT_DIR if dir.empty?
+    def parse_output_dir(dir)
+      return DEFAULT_OUTPUT_DIR unless dir.is_a?(String)
 
-  # Strip leading/trailing slashes for consistency
-  dir.gsub(%r{^/+|/+$}, "")
-end
+      dir = dir.strip
+      return DEFAULT_OUTPUT_DIR if dir.empty?
+
+      # Strip leading/trailing slashes for consistency
+      dir.gsub(%r{^/+|/+$}, "")
+    end
   end
 end
