@@ -3,7 +3,7 @@ name: "Release PR"
 on:
   pull_request:
     paths:
-      - 'lib/jekyll-highlight-cards/version.rb'
+      - 'lib/jekyll-mermaid-prebuild/version.rb'
 
 permissions:
   contents: write
