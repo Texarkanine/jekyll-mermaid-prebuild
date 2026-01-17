@@ -1,0 +1,335 @@
+---
+description: Algorithm Design Guidelines using Optimized Creative Template
+globs: creative-phase-algorithm.md
+alwaysApply: false
+---
+
+# CREATIVE PHASE: ALGORITHM DESIGN
+
+> **TL;DR:** This document provides structured guidance for algorithm design decisions using the optimized progressive documentation approach. Focus on essential information: problem definition, options comparison, and clear decision rationale.
+
+## 🎯 CORE ALGORITHM PRINCIPLES
+
+**Always prioritize:**
+
+- **KISS (Keep It Simple, Stupid)**: Choose the simplest algorithm that meets requirements. Clever != Better.
+- **DRY (Don't Repeat Yourself)**: Reuse existing implementations; leverage standard libraries and proven algorithms.
+- **Avoid YAGNI (You Aren't Gonna Need It)**: Don't optimize for hypothetical future requirements. Solve the actual problem at hand.
+
+**The best algorithm is one that:**
+1. ✅ Solves the problem correctly
+2. ✅ Is simple enough for the team to understand and maintain
+3. ✅ Meets performance requirements without over-engineering
+4. ✅ Uses existing, well-tested implementations when available
+
+## 🧮 ALGORITHM DESIGN WORKFLOW
+
+```mermaid
+graph TD
+    Start["Algorithm<br>Design Start"] --> Problem["1️⃣ PROBLEM<br>Define Requirements"]
+    Problem --> Options["2️⃣ OPTIONS<br>Explore Algorithms"]
+    Options --> Analysis["3️⃣ ANALYSIS<br>Compare Complexity"]
+    Analysis --> Decision["4️⃣ DECISION<br>Select Approach"]
+    Decision --> Implementation["5️⃣ IMPLEMENTATION<br>Document Guidelines"]
+    
+    style Start fill:#d971ff,stroke:#a33bc2,color:white
+    style Problem fill:#4da6ff,stroke:#0066cc,color:white
+    style Options fill:#ffa64d,stroke:#cc7a30,color:white
+    style Analysis fill:#4dbb5f,stroke:#36873f,color:white
+    style Decision fill:#d94dbb,stroke:#a3378a,color:white
+    style Implementation fill:#4dbbbb,stroke:#368787,color:white
+```
+
+## 📋 PROGRESSIVE DOCUMENTATION TEMPLATE
+
+Use this compact format for algorithm design decisions:
+
+```markdown
+📌 CREATIVE PHASE START: [Algorithm/Feature Name]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ PROBLEM
+   Description: [What needs to be computed/solved]
+   Requirements: [Performance, accuracy, constraints as bullets]
+   Input/Output: [Data types and ranges]
+
+2️⃣ OPTIONS
+   Option A: [Algorithm Name] - [One-line description]
+   Option B: [Algorithm Name] - [One-line description]  
+   Option C: [Algorithm Name] - [One-line description]
+
+3️⃣ ANALYSIS
+   | Criterion | Option A | Option B | Option C |
+   |-----------|----------|----------|----------|
+   | Time Complexity | O(?) | O(?) | O(?) |
+   | Space Complexity | O(?) | O(?) | O(?) |
+   | Implementation | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+   | Maintainability | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+   
+   Key Insights:
+   - [Insight 1 about trade-offs]
+   - [Insight 2 about edge cases]
+
+4️⃣ DECISION
+   Selected: [Option X: Algorithm Name]
+   Rationale: [Brief justification based on requirements]
+   
+5️⃣ IMPLEMENTATION NOTES
+   - [Note 1: Key implementation detail]
+   - [Note 2: Edge case handling]
+   - [Note 3: Performance optimization]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CREATIVE PHASE END
+```
+
+## 🎯 ALGORITHM EVALUATION CRITERIA
+
+Evaluate algorithms through the lens of **KISS, DRY, and avoiding YAGNI**:
+
+```mermaid
+graph TD
+    subgraph "EVALUATION CRITERIA"
+    C1["Simplicity (KISS)"]
+    C2["Correctness"]
+    C3["Time Complexity"]
+    C4["Space Complexity"]
+    C5["Maintainability"]
+    C6["Reusability (DRY)"]
+    end
+    
+    style C1 fill:#4dbb5f,stroke:#36873f,color:white
+    style C2 fill:#ffa64d,stroke:#cc7a30,color:white
+    style C3 fill:#d94dbb,stroke:#a3378a,color:white
+    style C4 fill:#4dbbbb,stroke:#368787,color:white
+    style C5 fill:#d971ff,stroke:#a33bc2,color:white
+    style C6 fill:#ff71c2,stroke:#c23b8a,color:white
+```
+
+**Priority Order:**
+1. **Correctness**: Does it solve the problem?
+2. **Simplicity (KISS)**: Is it the simplest solution that works?
+3. **Reusability (DRY)**: Can we use existing implementations?
+4. **Maintainability**: Can the team understand and modify it?
+5. **Performance**: Does it meet requirements? (Don't over-optimize!)
+6. **Space**: Is memory usage acceptable?
+
+### Evaluation Matrix Template
+
+Use this for quick comparison (following KISS, DRY, YAGNI principles):
+
+| Criterion | Weight | Option A | Option B | Option C |
+|-----------|--------|----------|----------|----------|
+| Simplicity (KISS) | 25% | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+| Correctness | 25% | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Reusability (DRY) | 20% | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ |
+| Time Complexity | 15% | O(?) | O(?) | O(?) |
+| Maintainability | 10% | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| Space Complexity | 5% | O(?) | O(?) | O(?) |
+
+**Note**: Simplicity and reusability are weighted highest - resist over-engineering!
+
+## 📊 COMPLEXITY-BASED SCALING
+
+### Level 1-2 (Simple Algorithm Selection)
+- Focus on PROBLEM and DECISION
+- Minimal OPTIONS exploration (2 options)
+- Basic complexity comparison
+- Quick implementation notes
+
+### Level 3 (Feature Algorithm Design)
+- Full 5-step process
+- 3 OPTIONS minimum
+- Detailed ANALYSIS with table
+- Implementation guidelines with edge cases
+
+### Level 4 (System Algorithm Design)
+- Comprehensive analysis
+- Multiple algorithm patterns considered
+- Performance benchmarking requirements
+- Integration with system architecture
+
+## 🔍 COMMON ALGORITHM PATTERNS
+
+Quick reference for common scenarios:
+
+### Searching & Sorting
+- **Binary Search**: O(log n) - Sorted data
+- **Quick Sort**: O(n log n) avg - General purpose
+- **Merge Sort**: O(n log n) - Stable, predictable
+- **Hash Table**: O(1) avg - Key-value lookup
+
+### String Processing
+- **KMP**: O(n + m) - Pattern matching
+- **Trie**: O(m) - Prefix operations
+- **Regex**: Variable - Complex patterns
+
+### Graph Algorithms
+- **BFS/DFS**: O(V + E) - Traversal
+- **Dijkstra**: O((V + E) log V) - Shortest path
+- **Union-Find**: O(α(n)) - Connected components
+
+### Dynamic Programming
+- **Memoization**: Top-down with cache
+- **Tabulation**: Bottom-up iterative
+- **Space Optimization**: Reduce dimensions
+
+## 🔄 USAGE EXAMPLES
+
+### Example 1: Search Algorithm (Level 2)
+
+```markdown
+📌 CREATIVE PHASE START: Product Search
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ PROBLEM
+   Description: Fast text search for 10K product catalog
+   Requirements: <100ms response, prefix matching, case insensitive
+   Input/Output: String query → Array of products
+
+2️⃣ OPTIONS
+   Option A: Simple filter/regex - Basic string matching
+   Option B: Trie-based search - Prefix tree structure
+   Option C: Fuzzy search library - Advanced matching
+
+3️⃣ ANALYSIS
+   | Criterion | Filter | Trie | Fuzzy |
+   |-----------|--------|------|-------|
+   | Simplicity (KISS) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+   | Reusability (DRY) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+   | Time | O(n) | O(m) | O(n log n) |
+   | Space | O(1) | O(k) | O(n) |
+   | Speed | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+   
+   Key Insights:
+   - Filter: Simplest (KISS ✓) but too slow for UX requirements
+   - Trie: Best performance, existing library available (DRY ✓)
+   - Fuzzy: Over-engineered for requirements (YAGNI violation)
+
+4️⃣ DECISION
+   Selected: Option B: Trie-based search (using existing library)
+   Rationale: Meets performance requirements, library available (DRY), simpler than custom implementation (KISS)
+   
+5️⃣ IMPLEMENTATION NOTES
+   - Use existing trie library (DRY - don't reinvent!)
+   - Build trie on app init (one-time O(n*m) cost)
+   - Lowercase normalization during indexing
+   - Debounce search input (300ms)
+   - Return top 20 results (KISS - no pagination needed yet/YAGNI)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CREATIVE PHASE END
+```
+
+### Example 2: Sorting Algorithm (Level 3)
+
+```markdown
+📌 CREATIVE PHASE START: Order Processing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ PROBLEM
+   Description: Sort orders by priority (status, timestamp, amount)
+   Requirements: Stable sort, handle 100K+ orders, multi-field
+   Input/Output: Array of orders → Sorted array
+
+2️⃣ OPTIONS
+   Option A: Native Array.sort() - JavaScript built-in
+   Option B: Timsort (custom) - Hybrid merge/insertion
+   Option C: Bucket sort by status → merge sort - Two-phase
+
+3️⃣ ANALYSIS
+   | Criterion | Native | Timsort | Bucket+Merge |
+   |-----------|--------|---------|--------------|
+   | Time | O(n log n) | O(n log n) | O(n + k) |
+   | Space | O(log n) | O(n) | O(n) |
+   | Stability | ✓ | ✓ | ✓ |
+   | Complexity | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ |
+   | Performance | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+   
+   Key Insights:
+   - Native sort sufficient for <10K items
+   - Bucket sort exploits limited status values (k=5)
+   - Custom implementation not worth complexity unless needed
+
+4️⃣ DECISION
+   Selected: Option A: Native Array.sort() with custom comparator
+   Rationale: Sufficient performance, minimal code, stable, maintainable
+   
+5️⃣ IMPLEMENTATION NOTES
+   - Custom comparator: status priority → timestamp → amount
+   - Cache status priority map (constant lookup)
+   - Monitor performance; switch to Option C if >50K orders
+   - Add index on timestamp/status in database layer
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CREATIVE PHASE END
+```
+
+## ✅ VERIFICATION CHECKLIST
+
+```markdown
+VERIFICATION:
+[ ] Problem clearly defined with requirements
+[ ] Multiple algorithmic options considered (minimum 2-3)
+[ ] Complexity analysis completed (time/space)
+[ ] KISS, DRY, YAGNI principles applied
+[ ] Decision made with clear rationale
+[ ] Implementation guidance provided
+[ ] Edge cases identified
+[ ] Existing libraries/solutions evaluated (DRY)
+```
+
+## 💡 QUICK TIPS
+
+### When to Use This Creative Phase
+- Multiple algorithm choices exist
+- Performance requirements are critical
+- Complexity trade-offs need evaluation
+- Team consensus needed on approach
+
+### When to Skip Detailed Analysis
+- Algorithm choice is obvious (e.g., standard library)
+- Performance not critical
+- Prototype/POC phase
+- Level 1 quick fixes
+
+### Common Mistakes to Avoid
+- ❌ **Premature optimization** (violates KISS & YAGNI)
+- ❌ **Reinventing the wheel** (violates DRY - use libraries!)
+- ❌ **Over-engineering for "future needs"** (violates YAGNI)
+- ❌ **Choosing clever over simple** (violates KISS)
+- ❌ **Ignoring team skill level** (affects maintainability)
+- ❌ **Not considering worst-case** (correctness matters)
+- ❌ **Optimizing before profiling** (violates YAGNI)
+
+## 🔗 INTEGRATION WITH OTHER PHASES
+
+### With Architecture Design
+- Algorithm choice impacts system design
+- Consider distributed algorithm implications
+- Align with scalability requirements
+
+### With UI/UX Design
+- Algorithm performance affects user experience
+- Consider progressive loading for slow algorithms
+- Balance accuracy vs. response time
+
+### With Implementation (BUILD)
+- Clear implementation notes prevent errors
+- Edge cases documented upfront
+- Performance targets guide optimization
+
+## 📚 ADDITIONAL RESOURCES
+
+For deeper algorithm analysis when needed:
+
+- **Big-O Complexity**: [Big-O Cheat Sheet](https://www.bigocheatsheet.com/)
+- **Algorithm Visualizations**: Help explain choices to team
+- **Benchmarking**: Profile real-world performance when uncertain
+- **Code Libraries**: Check if well-tested implementation exists
+
+Remember: **KISS + DRY + No YAGNI = The best algorithm is the simplest one that works, uses existing code where possible, and solves the actual problem without over-engineering.**
+
+> "Premature optimization is the root of all evil." — Donald Knuth
+> 
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand." — Martin Fowler

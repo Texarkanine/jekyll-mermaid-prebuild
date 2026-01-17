@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Best Practices for Running Tests
+
+1. **DO NOT** remove debug output from a test you were troubleshooting until you run the test with the debug output and see it pass.
+2. **DO NOT** use `head`, `tail`, `grep` or other output-filtering tools. You must **ALWAYS** read the whole test-run output, whether you're running the whole suite or an individual test.
+3. **PREFER** to run a single test case instead of the whole test suite when iterating on a single issue & you have reason to believe that your changes are constrained to what that test covers.
+4. **ALWAYS** run the whole test suite at the end before concluding work is "done."

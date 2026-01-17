@@ -1,0 +1,22 @@
+---
+description: Utility for remembering how to call NIKO QA rules
+globs: van-qa-utils/rule-calling-help.mdc
+alwaysApply: false
+---
+# NIKO QA: HOW TO CALL RULES
+
+> **TL;DR:** This file provides examples and reminders on how to properly call NIKO QA rules using the fetch_rules tool.
+
+## 🚨 RULE CALLING SYNTAX
+
+Always use the `fetch_rules` tool with the correct syntax:
+
+```
+<function_calls>
+<invoke name="fetch_rules">
+<parameter name="rule_names">["shared/niko/visual-maps/rule-name"]</parameter>
+</invoke>
+</function_calls>
+```
+
+This ensures proper XML structure for the function call examples.
