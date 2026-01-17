@@ -1,0 +1,52 @@
+name: "Release PR"
+
+on:
+  pull_request:
+    paths:
+      - 'lib/jekyll-highlight-cards/version.rb'
+
+permissions:
+  contents: write
+
+jobs:
+  update-gemfile-lock:
+    name: "Update Gemfile.lock"
+    # Only run on Release Please PRs
+    if: startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.HELPER_APP_ID }}
+          private-key: ${{ secrets.HELPER_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: false
+
+      - name: Update Gemfile.lock
+        run: bundle install
+
+      - name: Commit updated Gemfile.lock
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_wait_seconds: 5
+          command: |
+            git config user.name "${{ github.event.pull_request.user.login }}"
+            git config user.email "${{ github.event.pull_request.user.id }}+${{ github.event.pull_request.user.login }}@users.noreply.github.com"
+            if ! git diff --quiet Gemfile.lock; then
+              git pull --rebase origin ${{ github.head_ref }}
+              git add Gemfile.lock
+              git commit -m "chore(deps): update Gemfile.lock for new version"
+              git push
+            fi
