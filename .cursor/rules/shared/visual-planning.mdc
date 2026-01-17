@@ -1,0 +1,77 @@
+---
+alwaysApply: false
+description: REQUIRED comprehensive visual planning guidelines that must be followed when planning complex multi-component implementations, system architecture changes, user flow designs, API integrations, and feature development requiring detailed coordination.
+---
+## Visual Planning for Complex Tasks
+
+**When planning or implementing complex technical tasks (3+ components or multi-step processes), always create a visual diagram using Mermaid syntax before beginning implementation.**
+
+### Required for:
+- Multi-component features
+- User flow implementations 
+- System architecture changes
+- Complex refactoring tasks
+- Cross-page functionality
+- API integrations
+
+### Diagram should include:
+- **Planning phase**: Break down the task into logical components
+- **Dependencies**: Show relationships between components 
+- **User flow**: How users will interact with the feature
+- **Technical structure**: Key files, components, or systems involved
+- **Success criteria**: Clear indicators of completion
+
+### Visual Conventions
+
+#### Layout Standards
+- Use `graph TD` (top-down) for most architectural diagrams
+- Use `graph LR` (left-right) for user flow sequences
+- Group related components using `subgraph` containers
+- Maintain consistent visual hierarchy and spacing
+- **Always quote node labels** with double quotes: `A["Node Label"]`. If labels must contain double quotes, use HTML entity `#quot;` but avoid this if possible.
+
+#### Visual Elements for Rapid Scanning
+```
+🎯 Main goals and objectives
+✅ Completed components  
+🔧 Technical implementation details
+🎨 User-facing features and interfaces
+⚠️ Risk areas, blockers, or dependencies
+🔄 Iterative or recurring processes
+📊 Data flow or state management
+🌐 External integrations or APIs
+```
+
+#### Color Coding with Style Statements
+
+Use reusable `classDef` for consistent styling across diagrams:
+
+```mermaid
+graph TD
+    %% Define reusable style classes once
+    classDef goal fill:#e1f5fe,stroke:#01579b;
+    classDef done fill:#e8f5e8,stroke:#2e7d32;
+    classDef tech fill:#f3e5f5,stroke:#7b1fa2;
+    classDef ux fill:#e8eaf6,stroke:#3f51b5;
+    classDef risk fill:#ffebee,stroke:#c62828;
+    classDef iterative fill:#fff3e0,stroke:#ef6c00;
+    classDef dataflow fill:#f1f8e9,stroke:#558b2f;
+    classDef integration fill:#fce4ec,stroke:#ad1457;
+
+    %% Apply classes to nodes
+    A["🎯 User Dashboard (v2.0)"]:::goal --> B["🔧 Backend API"]:::tech
+    B --> C["🎨 Frontend Components"]:::ux
+    B --> D["✅ Authentication [OAuth]"]:::done
+    C --> E["📊 Data Processing (real-time)"]:::dataflow
+    C --> F["🌐 Third-party API (Stripe)"]:::integration
+    G["⚠️ Database Migration [PostgreSQL → MongoDB]"]:::risk
+    H["🔄 Auto-refresh (30s intervals)"]:::iterative
+```
+
+**Benefits of classDef:**
+- Define styles once, reuse everywhere
+- Consistent visual language across diagrams
+- Easier to maintain than inline `style` statements
+- Clear semantic meaning
+
+**This visual-first approach helps ensure clear communication, proper planning, and comprehensive implementation of complex features.**

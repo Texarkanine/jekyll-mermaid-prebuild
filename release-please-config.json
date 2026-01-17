@@ -1,0 +1,12 @@
+{
+    "release-type": "ruby",
+    "bump-minor-pre-major": true,
+    "bump-patch-for-minor-pre-major": false,
+    "include-component-in-tag": false,
+    "packages": {
+        ".": {
+            "version-file": "lib/jekyll-mermaid-prebuild/version.rb",
+            "pull-request-header": ":service_dog: I have created a release \\*bark\\* \\*woof\\*"
+        }
+    }
+}

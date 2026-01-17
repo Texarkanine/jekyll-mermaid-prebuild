@@ -1,0 +1,74 @@
+plugins:
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable
+  Exclude:
+    - 'vendor/**/*'
+    - 'spec/fixtures/**/*'
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - '*.gemspec'
+    - 'lib/**/hooks.rb'
+
+Style/Documentation:
+  Enabled: false
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+Naming/FileName:
+  Exclude:
+    - 'lib/jekyll-mermaid-prebuild.rb'
+
+Metrics/AbcSize:
+  Max: 50
+  Exclude:
+    - 'lib/**/hooks.rb'
+
+Metrics/MethodLength:
+  Max: 35
+  Exclude:
+    - 'lib/**/hooks.rb'
+
+Metrics/CyclomaticComplexity:
+  Max: 15
+  Exclude:
+    - 'lib/**/hooks.rb'
+
+Metrics/PerceivedComplexity:
+  Max: 15
+  Exclude:
+    - 'lib/**/hooks.rb'
+
+# RSpec relaxations
+RSpec/ExampleLength:
+  Max: 15
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/NestedGroups:
+  Max: 5
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+RSpec/InstanceVariable:
+  Enabled: false
+
+RSpec/MessageSpies:
+  Enabled: false
