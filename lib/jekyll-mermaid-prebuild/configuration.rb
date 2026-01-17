@@ -33,15 +33,13 @@ module JekyllMermaidPrebuild
 
     private
 
-    # Parse and normalize output directory
-    #
-    # @param dir [String, nil] configured directory
-    # @return [String] normalized directory path
-    def parse_output_dir(dir)
-      return DEFAULT_OUTPUT_DIR if dir.nil? || dir.empty?
+def parse_output_dir(dir)
+  return DEFAULT_OUTPUT_DIR unless dir.is_a?(String)
+  dir = dir.strip
+  return DEFAULT_OUTPUT_DIR if dir.empty?
 
-      # Strip leading/trailing slashes for consistency
-      dir.gsub(%r{^/|/$}, "")
-    end
+  # Strip leading/trailing slashes for consistency
+  dir.gsub(%r{^/+|/+$}, "")
+end
   end
 end
