@@ -40,9 +40,10 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
     it "returns true when executable exists in PATH" do
       Dir.mktmpdir do |dir|
         ENV["PATH"] = dir
-        executable = File.join(dir, "testcmd")
-        File.write(executable, "#!/bin/sh\nexit 0")
-        File.chmod(0o755, executable)
+        filename = Gem.win_platform? ? "testcmd.exe" : "testcmd"
+        executable = File.join(dir, filename)
+        File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+        File.chmod(0o755, executable) unless Gem.win_platform?
 
         expect(described_class.command_exists?("testcmd")).to be true
       end
