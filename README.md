@@ -1,6 +1,7 @@
 # Jekyll Mermaid Prebuild
 
 [![Gem Version](https://badge.fury.io/rb/jekyll-mermaid-prebuild.svg)](https://rubygems.org/gems/jekyll-mermaid-prebuild)
+[![code coverage](https://codecov.io/gh/Texarkanine/jekyll-mermaid-prebuild/graph/badge.svg)](https://codecov.io/gh/Texarkanine/jekyll-mermaid-prebuild)
 
 Pre-render [Mermaid](https://mermaid.js.org/) diagrams to SVG at Jekyll build time, eliminating the need for client-side JavaScript.
 
