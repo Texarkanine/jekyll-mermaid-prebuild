@@ -123,5 +123,79 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         expect(result).to include("```mermaid")
       end
     end
+
+    context "with mermaid block nested inside another fence" do
+      let(:content_with_nested_mermaid) do
+        <<~MARKDOWN
+          # Documentation Example
+
+          Here's how to write a mermaid diagram:
+
+          ````markdown
+          ```mermaid
+          graph TD
+          A-->B
+          ```
+          ````
+
+          And here's a real diagram:
+
+          ```mermaid
+          flowchart LR
+          X-->Y
+          ```
+        MARKDOWN
+      end
+
+      it "only converts top-level mermaid blocks, not nested examples" do
+        result, count, _svgs = processor.process_content(content_with_nested_mermaid, site)
+
+        # Should only convert the real diagram (1), not the nested example
+        expect(count).to eq(1)
+
+        # The nested example should remain as literal code
+        expect(result).to include("````markdown")
+        expect(result).to include("```mermaid\ngraph TD")
+
+        # The real diagram should be converted
+        expect(result).to include("<figure class=\"mermaid-diagram\">")
+        expect(result).not_to include("flowchart LR")
+      end
+
+      it "preserves nested mermaid blocks inside tilde fences" do
+        content = <<~MARKDOWN
+          ~~~~markdown
+          ~~~mermaid
+          graph TD
+          A-->B
+          ~~~
+          ~~~~
+        MARKDOWN
+
+        result, count, _svgs = processor.process_content(content, site)
+
+        expect(count).to eq(0)
+        expect(result).to include("~~~mermaid")
+        expect(result).to include("graph TD")
+      end
+
+      it "handles deeply nested fences correctly" do
+        content = <<~MARKDOWN
+          `````
+          ````markdown
+          ```mermaid
+          graph TD
+          A-->B
+          ```
+          ````
+          `````
+        MARKDOWN
+
+        result, count, _svgs = processor.process_content(content, site)
+
+        expect(count).to eq(0)
+        expect(result).to include("```mermaid")
+      end
+    end
   end
 end
