@@ -1,74 +1,117 @@
+# RuboCop configuration for jekyll-mermaid-prebuild
+# Relaxed, convention-focused linting - not overly strict
+
 plugins:
   - rubocop-rake
   - rubocop-rspec
 
 AllCops:
-  TargetRubyVersion: 3.4
+  TargetRubyVersion: 3.3
   NewCops: enable
   Exclude:
     - 'vendor/**/*'
     - 'spec/fixtures/**/*'
 
+# Style preferences
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
 
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+# Lint
+Lint/DuplicateBranch:
+  Enabled: false
+
+# Layout
 Layout/LineLength:
   Max: 120
 
+# Metrics - relaxed limits for Jekyll plugin code
+Metrics/AbcSize:
+  Max: 100
+  Exclude:
+    - 'lib/**/hooks.rb'
+
 Metrics/BlockLength:
+  Max: 30
   Exclude:
     - 'spec/**/*'
     - '*.gemspec'
     - 'lib/**/hooks.rb'
 
-Style/Documentation:
-  Enabled: false
+Metrics/ClassLength:
+  Max: 200
 
-Gemspec/DevelopmentDependencies:
-  Enabled: false
-
-Naming/FileName:
-  Exclude:
-    - 'lib/jekyll-mermaid-prebuild.rb'
-
-Metrics/AbcSize:
-  Max: 50
-  Exclude:
-    - 'lib/**/hooks.rb'
+Metrics/ModuleLength:
+  Max: 200
 
 Metrics/MethodLength:
-  Max: 35
+  Max: 60
   Exclude:
     - 'lib/**/hooks.rb'
 
 Metrics/CyclomaticComplexity:
-  Max: 15
+  Max: 25
   Exclude:
     - 'lib/**/hooks.rb'
 
 Metrics/PerceivedComplexity:
-  Max: 15
+  Max: 25
   Exclude:
     - 'lib/**/hooks.rb'
 
-# RSpec relaxations
+Metrics/ParameterLists:
+  Max: 10
+
+# Gemspec
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+# Naming
+Naming/FileName:
+  Exclude:
+    - 'lib/jekyll-mermaid-prebuild.rb'
+
+# RSpec - relaxed for practical test writing
 RSpec/ExampleLength:
-  Max: 15
+  Max: 20
 
 RSpec/MultipleExpectations:
-  Max: 5
+  Max: 8
 
 RSpec/NestedGroups:
   Max: 5
 
 RSpec/MultipleMemoizedHelpers:
-  Max: 10
+  Max: 15
 
 RSpec/InstanceVariable:
   Enabled: false
 
 RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/StubbedMock:
+  Enabled: false
+
+RSpec/ReceiveMessages:
+  Enabled: false
+
+RSpec/IndexedLet:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+RSpec/ContextWording:
   Enabled: false

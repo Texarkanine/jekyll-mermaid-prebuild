@@ -1,13 +1,46 @@
 version: 2
 updates:
-  - package-ecosystem: "bundler"
-    directory: "/"
+  # Bundler (rubygem) dependencies
+  - package-ecosystem: 'bundler'
+    directory: '/'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    groups:
+      production-deps:
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+      development-deps:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+    open-pull-requests-limit: 10
+    assignees:
+      - 'Texarkanine'
+    commit-message:
+      prefix: 'fix(deps)'
+      prefix-development: 'chore(deps-dev)'
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  # GitHub Actions dependencies
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
     open-pull-requests-limit: 5
+    assignees:
+      - 'Texarkanine'
+    commit-message:
+      prefix: 'chore(deps-ci)'
