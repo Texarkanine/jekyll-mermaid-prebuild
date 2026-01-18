@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.2.0...v0.2.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* Allow literal mermaid code examples to remain un-rendered. ([#4](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/4)) ([6a4e2e1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/6a4e2e1aa43145fde757c64dc20d7189c4eb4489))
+
 ## [0.2.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.1.0...v0.2.0) (2026-01-17)
 
 
