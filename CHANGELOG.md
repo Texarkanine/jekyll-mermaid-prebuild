@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.2.1...v0.3.0) (2026-01-18)
+
+
+### Features
+
+* standardize config across Jekyll gem repos ([#6](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/6)) ([dbd9c3a](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/dbd9c3a657bd364c4aa3467db15a21e56c22e4c7))
+
 ## [0.2.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.2.0...v0.2.1) (2026-01-18)
 
 
