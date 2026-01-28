@@ -1,0 +1,7 @@
+SPDX-License-Identifier: LicenseRef-NOASSERTION
+
+This identifier marks files whose license and copyright status have not been
+determined. These files are vendored from external sources with unknown or
+mixed licensing.
+
+Consult the original source for authoritative license information.
