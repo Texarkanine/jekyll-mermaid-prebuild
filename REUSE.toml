@@ -7,16 +7,17 @@ path = ["**/*"]
 SPDX-FileCopyrightText = "Texarkanine"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
-[[annotations]]
-path = [
-    ".cursor/rules/**",
-    "**/*.mdc",
-    "CLAUDE.md",
-    ".claude/**"
-]
-precedence = "override"
-SPDX-FileCopyrightText = "Texarkanine"
-SPDX-License-Identifier = "LicenseRef-PPL-S"
+# Uncomment if/when custom rules are added
+#[[annotations]]
+#path = [
+#    ".cursor/rules/**",
+#    "**/*.mdc",
+#    "CLAUDE.md",
+#    ".claude/**"
+#]
+#precedence = "override"
+#SPDX-FileCopyrightText = "Texarkanine"
+#SPDX-License-Identifier = "LicenseRef-PPL-S"
 
 # .cursor/rules/shared/** files are vendored from .cursor-rules upstream
 # with unknown or mixed licensing. We make no claims here about the 
