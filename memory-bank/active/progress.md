@@ -14,3 +14,20 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
 * Decisions made
     - Level 3 classification: affects Configuration, Generator, and introduces new SvgPostProcessor module
     - Nokogiri required as runtime dependency for XML parsing
+
+## 2026-03-12 - PLAN - COMPLETE
+
+* Work completed
+    - Full component analysis: Configuration, SvgPostProcessor (new), Generator, Processor, gemspec, main require, README
+    - Cross-module dependency mapping with boundary change assessment
+    - Test plan: 18 behaviors across 4 modules, 1 new spec file
+    - 6-step implementation plan ordered by dependency graph
+    - Technology validation for Nokogiri runtime dependency
+    - Challenges & mitigations documented (namespace handling, diverse diagram types, transform parsing, cache migration)
+* Decisions made
+    - Always post-process (foreignObject fix applies unconditionally; max_width is optional addition)
+    - min_width deferred — CSS layout concern, not plugin responsibility
+    - viewBox adjustment not needed — rect bounds already within viewBox
+    - No mmdc invocation changes — fix is purely post-processing
+    - Cache key format change handles migration automatically (one-time regen on upgrade)
+    - No creative phase needed — all questions resolved with high confidence
