@@ -1,0 +1,43 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Test-Driven Development (TDD) Requirement
+
+**ALL** code changes must be made according to this test-driven development process: **TESTS GET WRITTEN FIRST!** Strictly follow the four steps laid out below, in order, for every code change. **NEVER** skip ahead to making code changes without following this process!
+
+## 1. Determine Scope
+
+1. Determine scope of necessary code changes
+2. Determine necessary behaviors to test
+3. Determine the correct locations in the existing test infrastructure for those tests
+	- Determine if new test suites must be added
+	- Determine if test cases must be added to existing test suites
+	- Determine if existing test cases must be modified
+	- **IMPORTANT:** If you cannot locate existing test infrastructure, **STOP AND ASK** what to do.
+
+## 2. Preparation (Stubbing)
+
+1. **Stub new tests:** create any necessary test suites and/or test cases, with **empty implementations**
+	- If the test signature is not self-descriptive, include multi-line comments on the test suites and test cases explaining the behaviors they are supposed to test.
+	- **IMPORTANT:** do not implement any tests yet!
+2. **Stub the interface:** add any new functions, classes, etc to the codebase with **empty implementations**
+	- include full function and/or class signatures, etc
+	- include full multi-line comment documentation in the style already in use in the project *or* the industry standard for the language(s) in use if the project has no prior art
+	- **IMPORTANT:** do not implement any of the actual code changes yet!
+3. **Modify existing tests:** modify any existing tests as needed to correctly test for the new behavior
+
+## 3. Write Tests
+
+1. **Implement the Tests**: Fill out the implementations of all the empty tests you wrote.
+2. **Run the Tests:** Run the tests you wrote. All your new tests should fail; that is expected and means you did it right.
+
+## 4. Write Code
+
+Only write code after all tests have been created, stubbed, documented, and implemented.
+
+1. Start with the first failing test
+2. Implement the required code to make that test pass
+3. Run the tests
+4. Repeat steps 1-3 until all tests pass
