@@ -11,7 +11,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       JekyllMermaidPrebuild::Configuration,
       cache_dir: cache_dir,
       output_dir: "assets/svg",
-      enabled?: true
+      enabled?: true,
+      max_width: nil
     )
   end
   let(:generator) { instance_double(JekyllMermaidPrebuild::Generator) }
@@ -121,6 +122,45 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
 
         expect(count).to eq(0)
         expect(result).to include("```mermaid")
+      end
+    end
+
+    context "cache key uniqueness with max_width" do
+      let(:mermaid_source) { "graph TD\nA-->B\n" }
+      let(:diagram_content) { "```mermaid\n#{mermaid_source}```\n" }
+
+      def capture_cache_key(processor)
+        captured = nil
+        allow(generator).to receive(:generate) do |_src, key|
+          captured = key
+          File.join(cache_dir, "#{key}.svg")
+        end
+        processor.process_content(diagram_content)
+        captured
+      end
+
+      # B17: Same diagram source + different max_width → different cache keys
+      it "produces different cache keys for different max_width values" do
+        config_fixed = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg",
+          enabled?: true, max_width: 640
+        )
+
+        key_no_width = capture_cache_key(described_class.new(config, generator))
+        key_with_width = capture_cache_key(described_class.new(config_fixed, generator))
+
+        expect(key_no_width).not_to eq(key_with_width)
+      end
+
+      # B18: max_width=nil → cache key differs from legacy format (auto-migration)
+      # The new key format is digest("source\x00max_width=nil"), which differs from
+      # digest("source"), ensuring cached SVGs from before the upgrade are regenerated.
+      it "produces a different cache key than the raw-source digest (legacy format)" do
+        new_key = capture_cache_key(described_class.new(config, generator))
+        legacy_key = JekyllMermaidPrebuild::DigestCalculator.content_digest(mermaid_source)
+
+        expect(new_key).not_to eq(legacy_key)
       end
     end
 

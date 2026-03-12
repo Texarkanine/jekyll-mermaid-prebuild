@@ -44,3 +44,21 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
     - Advisory flagged: pluggable post-processor architecture for future extensibility (out of scope)
 * Insights
     - hooks_spec.rb does NOT need max_width on its config double (hooks don't access it)
+
+## 2026-03-12 - BUILD - COMPLETE
+
+* Work completed
+    - Step 1: Added Nokogiri >= 1.13 runtime dependency to gemspec; `bundle install` succeeded
+    - Step 2: Configuration — `max_width` attr_reader + `parse_max_width` (B9–B12: 7 new tests)
+    - Step 3: SvgPostProcessor — new module with `process`, `fix_foreign_object_widths`, `recenter_label_transform`, `adjust_root_svg_width` (B1–B9a: 15 new tests)
+    - Step 4: Generator — `post_process_svg` private method integrates SvgPostProcessor after mmdc render (B13–B16: 5 new tests including max_width=640 context)
+    - Step 5: Processor — cache key now includes `\x00max_width=#{@config.max_width}` suffix (B17–B18: 2 new tests)
+    - Step 6: README — SVG post-processing feature documented, Options table updated, Caching section updated with cache key note
+    - 76/76 tests pass (47 pre-existing + 29 new); RuboCop clean (0 offenses)
+* Decisions made
+    - XML declaration stripped from SvgPostProcessor output when source SVG lacked one (preserves original format)
+    - `recenter_label_transform` extracted as named helper (cleaner than inline lambda)
+    - B5 test uses `.to_s` on style to handle the nil-when-deleted case cleanly
+* Insights
+    - Nokogiri namespace-aware XPath works cleanly against mmdc SVG structure; SVG namespace is `http://www.w3.org/2000/svg`
+    - `doc.root` is more reliable than XPath for finding the root svg element (works with or without namespace)

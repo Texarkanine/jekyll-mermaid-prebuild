@@ -95,4 +95,78 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       expect(config.cache_dir).to eq(".jekyll-cache/jekyll-mermaid-prebuild")
     end
   end
+
+  describe "#max_width" do
+    # B9: max_width defaults to nil when not configured
+    context "with no max_width configured" do
+      it "returns nil" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to be_nil
+      end
+    end
+
+    # B10: max_width parses positive integer from config
+    context "with max_width: 640" do
+      let(:site_config) { { "mermaid_prebuild" => { "max_width" => 640 } } }
+
+      it "returns the configured integer" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to eq(640)
+      end
+    end
+
+    # B11: max_width rejects zero and negative values → nil
+    context "with max_width: 0" do
+      let(:site_config) { { "mermaid_prebuild" => { "max_width" => 0 } } }
+
+      it "returns nil for zero" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to be_nil
+      end
+    end
+
+    context "with max_width: -100" do
+      let(:site_config) { { "mermaid_prebuild" => { "max_width" => -100 } } }
+
+      it "returns nil for negative value" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to be_nil
+      end
+    end
+
+    # B12: max_width rejects non-integer values (string, float, boolean) → nil
+    context "with max_width: 'large'" do
+      let(:site_config) { { "mermaid_prebuild" => { "max_width" => "large" } } }
+
+      it "returns nil for string value" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to be_nil
+      end
+    end
+
+    context "with max_width: 3.14" do
+      let(:site_config) { { "mermaid_prebuild" => { "max_width" => 3.14 } } }
+
+      it "returns nil for float value" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to be_nil
+      end
+    end
+
+    context "with max_width: true" do
+      let(:site_config) { { "mermaid_prebuild" => { "max_width" => true } } }
+
+      it "returns nil for boolean value" do
+        config = described_class.new(site)
+
+        expect(config.max_width).to be_nil
+      end
+    end
+  end
 end

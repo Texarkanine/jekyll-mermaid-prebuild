@@ -16,6 +16,8 @@ The mermaid.js library is **~2MB** minified. This plugin renders your diagrams t
 - Intelligent caching - only regenerates changed diagrams
 - Clickable diagrams - link to full-size SVG for complex diagrams
 - Configurable output directory
+- **SVG post-processing** — automatically fixes mmdc's foreignObject text-clipping bug and makes diagrams responsive by default
+- **Optional `max_width` constraint** — pin diagrams to a maximum pixel width for fixed-width layouts
 
 ## Requirements
 
@@ -94,6 +96,7 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
+  max_width: 640         # optional: constrain SVG width in pixels
 ```
 
 ### Options
@@ -102,14 +105,28 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
+| `max_width` | _(none)_ | Maximum SVG width in pixels. Omit for fully responsive diagrams. |
+
+### SVG Post-Processing
+
+Every generated SVG is automatically post-processed before being written to cache:
+
+1. **foreignObject fix** — mmdc's headless Puppeteer renderer produces `<foreignObject>` elements that are narrower than their parent `<rect>`, clipping node label text. This is corrected unconditionally for all diagram types that use node rectangles (flowcharts, class diagrams, etc.).
+
+2. **Responsive width** — mmdc hard-codes a `max-width` inline style equal to the Puppeteer viewport width. This is removed by default so diagrams scale with their container. If `max_width` is configured, the `max-width` style is replaced with your configured value instead.
+
+Diagram types that don't use node rectangles (e.g. pure sequence diagrams) are unaffected by the foreignObject fix — post-processing is a no-op for those SVG structures.
 
 ## Caching
 
-Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content, so:
+Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content **and** the `max_width` configuration, so:
 
 - Unchanged diagrams are served from cache (fast rebuilds)
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
+- Changing `max_width` causes all diagrams to regenerate once (cache keys include the width setting)
+
+> **Upgrading from an earlier version?** The cache key format changed to include `max_width`. Your existing cached SVGs will be regenerated automatically on the first build after upgrading — this is expected and only happens once.
 
 To clear the cache:
 

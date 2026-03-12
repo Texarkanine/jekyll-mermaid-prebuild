@@ -52,7 +52,7 @@ module JekyllMermaidPrebuild
     # @return [Hash, nil] {cache_key:, cached_path:, html:} or nil if failed
     def convert_block(block)
       mermaid_source = block[:content]
-      cache_key = DigestCalculator.content_digest(mermaid_source)
+      cache_key = DigestCalculator.content_digest("#{mermaid_source}\x00max_width=#{@config.max_width}")
       cached_path = @generator.generate(mermaid_source, cache_key)
 
       return nil unless cached_path
