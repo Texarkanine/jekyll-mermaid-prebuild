@@ -1,34 +1,26 @@
 # Active Context
 
 ## Current Task: svg-post-processing
-**Phase:** PLAN — revised scope, ready for build
+**Phase:** QA — COMPLETE
 
-## Scope Change: max_width / SvgPostProcessor removed
+## What Was Done
 
-User confirmed via Chrome DevTools testing on the live site that SVGs scale correctly without any `max-width` manipulation. The original clipping symptom was entirely caused by emoji width undermeasurement, not container compression. The `SvgPostProcessor`, `max_width` config, Nokogiri dependency, and all related tests/integration are being removed.
+- **Step 0:** Removed SvgPostProcessor, max_width config, Nokogiri dependency; deleted svg_post_processor.rb and spec; updated Configuration, Generator, Processor, README; 48 tests after cleanup.
+- **Step 1:** Configuration — added `emoji_width_compensation` (frozen Hash, string keys); tests C1–C4.
+- **Step 2:** EmojiCompensator — new module with `detect_diagram_type` (skips frontmatter/comments) and `compensate` (flowchart label padding); tests E1–E10, D1–D7.
+- **Step 3:** Processor — detect type → check config → compensate when enabled → cache key and render from compensated source; tests P1–P4.
+- **Step 4:** README — emoji width compensation option and "Emoji width compensation" subsection with when/why/how.
+- **Post-build refinements:** Changed NBSP from `\u00a0` to `&nbsp;` (HTML entity works in mmdc pipeline, Unicode was stripped). Added multi-line label strategy: only the visually longest line (emoji counts as 2) gets padded; shorter lines center naturally. Added tests E5, E11, E12.
+- **QA:** Removed dead triple-paren circle regex (YAGNI — was `((("...")))`, not valid Mermaid; circle `(("..."))` already handled by rounded-rect regex). Updated memory bank.
 
-## Current Scope: Emoji Width Compensation Only
+**Files modified:** configuration.rb, generator.rb, processor.rb, main lib require, gemspec, README, configuration_spec, generator_spec, processor_spec, emoji_compensator.rb, emoji_compensator_spec.rb. **Files removed:** svg_post_processor.rb, svg_post_processor_spec.rb.
 
-Single focused feature: preprocess Mermaid source before mmdc to pad emoji-containing node labels with `&nbsp;`. This compensates for headless Chromium's emoji width undermeasurement on non-Mac platforms.
+## Verification
 
-Key constraint: the padding belongs in the plugin, NOT in the source files, because `&nbsp;` renders incorrectly in GitHub preview, IDE preview, mermaid.live, and client-side mermaid.js. The blog content is bound to multiple rendering pipelines.
-
-## Current State of Code
-
-- `SvgPostProcessor` exists but is slated for deletion (Step 0)
-- `max_width` config exists but is slated for removal (Step 0)
-- Nokogiri dependency exists but is slated for removal (Step 0)
-- Generator has `post_process_svg` integration — slated for removal (Step 0)
-- 73/73 tests currently pass, RuboCop clean
-
-## Implementation Plan
-
-0. **Remove max_width / SvgPostProcessor** — delete dead code, remove Nokogiri, update tests
-1. **Configuration** — add `emoji_width_compensation` (Hash of diagram types to booleans)
-2. **EmojiCompensator** — new module: detect diagram type, find emoji in labels, append `&nbsp;`
-3. **Processor** — integrate: detect type → check config → compensate → cache key
-4. **Documentation** — README with clear when/why/how guidance
+- 75/75 tests pass
+- RuboCop 0 offenses
+- User verified on live blog — emoji nodes render correctly
 
 ## Next Step
 
-Proceed to build (Step 0 first: cleanup removal)
+Reflect phase (invoke `niko-reflect` skill or proceed to Level 3 reflect phase).

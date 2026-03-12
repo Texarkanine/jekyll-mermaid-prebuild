@@ -32,7 +32,6 @@ module JekyllMermaidPrebuild
       success = MmdcWrapper.render(mermaid_source, cache_path)
       return nil unless success
 
-      post_process_svg(cache_path)
       cache_path
     end
 
@@ -54,19 +53,6 @@ module JekyllMermaidPrebuild
         <a href="#{svg_url}"><img src="#{svg_url}" alt="Mermaid Diagram"></a>
         </figure>
       HTML
-    end
-
-    private
-
-    # Read the cached SVG, post-process it, and write the result back.
-    # Always runs after a successful mmdc render, before the cache path is returned.
-    #
-    # @param cache_path [String] path to the freshly-rendered SVG file
-    # @return [void]
-    def post_process_svg(cache_path)
-      svg_content = File.read(cache_path)
-      processed = SvgPostProcessor.process(svg_content, max_width: @config.max_width)
-      File.write(cache_path, processed)
     end
   end
 end

@@ -33,7 +33,6 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "jekyll", ">= 4.0", "< 5.0"
-  spec.add_dependency "nokogiri", ">= 1.13"
 
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.3"

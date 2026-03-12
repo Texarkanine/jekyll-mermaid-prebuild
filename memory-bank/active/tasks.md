@@ -126,6 +126,18 @@ end
 
 Note: "no attempt to handle unicode funkiness" — we count individual Extended_Pictographic codepoints. ZWJ sequences (👨‍👩‍👧) count as multiple (each component is a codepoint). This over-compensates slightly for ZWJ sequences but is safe (extra trailing whitespace).
 
+## Multi-Line Label Strategy
+
+For labels with `<br/>` line breaks, only the **longest line** (by visual length) gets padded:
+
+1. Split label content on `<br/>` / `<br>` / `<br />` variants
+2. Compute visual length per line: `char_count + emoji_count` (each emoji counts as 2, since emoji render ~2x the width of a regular character)
+3. Find the longest line by visual length
+4. If the longest line has emoji → pad **that line** with `&nbsp;` × (emoji_count × 2)
+5. If the longest line has no emoji → no padding at all (the container is correctly sized by Puppeteer's accurate measurement of the non-emoji line; shorter lines center naturally)
+
+This avoids the problem where padding a short emoji line when a longer non-emoji line determines the container width causes the emoji text to shift left.
+
 ## Mermaid Label Detection Strategy
 
 Node labels in Mermaid flowchart syntax appear as:
@@ -148,7 +160,9 @@ Approach: regex to match node label patterns, extract the text content, count em
 - **E2**: Flowchart label with multiple emoji → appends 2 `&nbsp;` per emoji
 - **E3**: Flowchart label with no emoji → returns source unchanged
 - **E4**: Label with emoji and existing `&nbsp;` → adds compensation on top (doesn't strip existing)
-- **E5**: Multi-line label (contains `<br/>`) with emoji → padding appended at end of label
+- **E5**: Multi-line label where emoji line is longest → padding on that line only
+- **E11**: Multi-line label where non-emoji line is longest → no padding at all
+- **E12**: Emoji line is longest by visual length (emoji counts as 2) but not by raw char count → pads correctly
 - **E6**: Multiple nodes in one diagram, some with emoji, some without → only emoji nodes get padding
 - **E7**: Source that is not a compensated diagram type → returned unchanged
 - **E8**: Node label with HTML entities preserved (doesn't corrupt `&amp;` etc.)
@@ -244,9 +258,10 @@ Approach: regex to match node label patterns, extract the text content, count em
 - [x] Open questions resolved (via user testing + investigation)
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
-- [ ] Step 0 — Remove max_width / SvgPostProcessor
-- [ ] Step 1 — Configuration (emoji_width_compensation)
-- [ ] Step 2 — EmojiCompensator module
-- [ ] Step 3 — Processor integration
-- [ ] Step 4 — Documentation
-- [ ] Full test suite pass
+- [x] Step 0 — Remove max_width / SvgPostProcessor
+- [x] Step 1 — Configuration (emoji_width_compensation)
+- [x] Step 2 — EmojiCompensator module
+- [x] Step 3 — Processor integration
+- [x] Step 4 — Documentation
+- [x] Full test suite pass
+- [x] QA review — PASS (1 trivial fix: dead circle regex removed)

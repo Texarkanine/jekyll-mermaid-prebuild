@@ -10,8 +10,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
     instance_double(
       JekyllMermaidPrebuild::Configuration,
       cache_dir: cache_dir,
-      output_dir: "assets/svg",
-      max_width: nil
+      output_dir: "assets/svg"
     )
   end
 
@@ -47,7 +46,6 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
           File.write(output_path, "<svg>generated</svg>")
           true
         end
-        allow(JekyllMermaidPrebuild::SvgPostProcessor).to receive(:process).and_return("<svg>processed</svg>")
       end
 
       it "calls mmdc and returns cache path" do
@@ -57,48 +55,10 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         expect(File.exist?(result)).to be true
       end
 
-      # B13: Post-processing called after successful mmdc render
-      it "calls SvgPostProcessor after a successful mmdc render" do
-        generator.generate(mermaid_source, cache_key)
-
-        expect(JekyllMermaidPrebuild::SvgPostProcessor).to have_received(:process)
-      end
-
-      # B14: Post-processed content written to cache file
-      it "writes the post-processed SVG content to the cache file" do
+      it "writes the mmdc output to the cache file" do
         cache_path = generator.generate(mermaid_source, cache_key)
 
-        expect(File.read(cache_path)).to eq("<svg>processed</svg>")
-      end
-
-      # B15: max_width from config passed to SvgPostProcessor
-      it "passes max_width from config to SvgPostProcessor" do
-        generator.generate(mermaid_source, cache_key)
-
-        expect(JekyllMermaidPrebuild::SvgPostProcessor).to have_received(:process).with(
-          "<svg>generated</svg>",
-          max_width: nil
-        )
-      end
-
-      context "when max_width is configured" do
-        let(:config) do
-          instance_double(
-            JekyllMermaidPrebuild::Configuration,
-            cache_dir: cache_dir,
-            output_dir: "assets/svg",
-            max_width: 640
-          )
-        end
-
-        it "passes the configured max_width to SvgPostProcessor" do
-          generator.generate(mermaid_source, cache_key)
-
-          expect(JekyllMermaidPrebuild::SvgPostProcessor).to have_received(:process).with(
-            "<svg>generated</svg>",
-            max_width: 640
-          )
-        end
+        expect(File.read(cache_path)).to eq("<svg>generated</svg>")
       end
     end
 
@@ -111,13 +71,6 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         result = generator.generate(mermaid_source, cache_key)
 
         expect(result).to be_nil
-      end
-
-      # B16: Failed mmdc render does not invoke post-processing
-      it "does not invoke SvgPostProcessor" do
-        expect(JekyllMermaidPrebuild::SvgPostProcessor).not_to receive(:process)
-
-        generator.generate(mermaid_source, cache_key)
       end
     end
   end

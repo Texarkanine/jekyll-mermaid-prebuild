@@ -96,76 +96,52 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
     end
   end
 
-  describe "#max_width" do
-    # B9: max_width defaults to nil when not configured
-    context "with no max_width configured" do
-      it "returns nil" do
+  describe "#emoji_width_compensation" do
+    # C1: not configured → empty hash
+    context "with no emoji_width_compensation configured" do
+      it "returns empty hash" do
         config = described_class.new(site)
 
-        expect(config.max_width).to be_nil
+        expect(config.emoji_width_compensation).to eq({})
       end
     end
 
-    # B10: max_width parses positive integer from config
-    context "with max_width: 640" do
-      let(:site_config) { { "mermaid_prebuild" => { "max_width" => 640 } } }
+    # C2: flowchart: true → { "flowchart" => true }
+    context "with emoji_width_compensation: { flowchart: true }" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "emoji_width_compensation" => { "flowchart" => true } } }
+      end
 
-      it "returns the configured integer" do
+      it "returns hash with flowchart => true" do
         config = described_class.new(site)
 
-        expect(config.max_width).to eq(640)
+        expect(config.emoji_width_compensation).to eq("flowchart" => true)
       end
     end
 
-    # B11: max_width rejects zero and negative values → nil
-    context "with max_width: 0" do
-      let(:site_config) { { "mermaid_prebuild" => { "max_width" => 0 } } }
+    # C3: flowchart: false → { "flowchart" => false }
+    context "with emoji_width_compensation: { flowchart: false }" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "emoji_width_compensation" => { "flowchart" => false } } }
+      end
 
-      it "returns nil for zero" do
+      it "returns hash with flowchart => false" do
         config = described_class.new(site)
 
-        expect(config.max_width).to be_nil
+        expect(config.emoji_width_compensation).to eq("flowchart" => false)
       end
     end
 
-    context "with max_width: -100" do
-      let(:site_config) { { "mermaid_prebuild" => { "max_width" => -100 } } }
-
-      it "returns nil for negative value" do
-        config = described_class.new(site)
-
-        expect(config.max_width).to be_nil
+    # C4: non-hash value → empty hash (rejected)
+    context "with emoji_width_compensation set to a non-hash value" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "emoji_width_compensation" => true } }
       end
-    end
 
-    # B12: max_width rejects non-integer values (string, float, boolean) → nil
-    context "with max_width: 'large'" do
-      let(:site_config) { { "mermaid_prebuild" => { "max_width" => "large" } } }
-
-      it "returns nil for string value" do
+      it "returns empty hash" do
         config = described_class.new(site)
 
-        expect(config.max_width).to be_nil
-      end
-    end
-
-    context "with max_width: 3.14" do
-      let(:site_config) { { "mermaid_prebuild" => { "max_width" => 3.14 } } }
-
-      it "returns nil for float value" do
-        config = described_class.new(site)
-
-        expect(config.max_width).to be_nil
-      end
-    end
-
-    context "with max_width: true" do
-      let(:site_config) { { "mermaid_prebuild" => { "max_width" => true } } }
-
-      it "returns nil for boolean value" do
-        config = described_class.new(site)
-
-        expect(config.max_width).to be_nil
+        expect(config.emoji_width_compensation).to eq({})
       end
     end
   end

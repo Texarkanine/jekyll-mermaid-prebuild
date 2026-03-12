@@ -143,3 +143,48 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
     - Removed Nokogiri dependency (no longer needed — emoji compensation is string manipulation)
     - New implementation plan: Step 0 (cleanup removal) → Steps 1-4 (emoji compensation feature)
     - Single focused feature: emoji width compensation via Mermaid source preprocessing
+
+## 2026-03-12 - BUILD (REVISED SCOPE) - COMPLETE
+
+* Work completed
+    - Step 0: Deleted SvgPostProcessor and spec; removed max_width from Configuration/Generator/Processor; removed Nokogiri; updated README and all config doubles (48 tests)
+    - Step 1: Configuration emoji_width_compensation (parse_emoji_width_compensation, frozen Hash); C1–C4
+    - Step 2: EmojiCompensator (detect_diagram_type, compensate, compensate_flowchart_labels); E1–E10, D1–D7
+    - Step 3: Processor integration (detect type → config check → compensate → cache key + generate); P1–P4
+    - Step 4: README emoji width compensation option and subsection
+* Decisions made
+    - Flowchart label patterns: ["], ('), {"}, ((")), [/" "/] covered; regex %r for parallelogram to satisfy RuboCop
+    - P4 example shortened for RSpec/ExampleLength (keys.uniq.size == 2)
+* Insights
+    - 73 examples, 0 failures; RuboCop clean
+
+## 2026-03-12 - POST-BUILD REFINEMENTS
+
+* Work completed
+    - Changed NBSP constant from `"\u00a0"` (Unicode) to `"&nbsp;"` (HTML entity) — Unicode was stripped by mmdc pipeline, HTML entity works
+    - Added multi-line label strategy: split on `<br>` variants, compute visual length (emoji counts as 2), pad only the longest line if it has emoji
+    - Added `visual_length`, `pad_label_content` methods to EmojiCompensator
+    - Added tests E5 (emoji line longest → pad that line), E11 (non-emoji line longest → no padding), E12 (visual length tiebreaker)
+    - Updated all test expectations from `\u00a0` to `&nbsp;`
+    - 75/75 tests pass; RuboCop 0 offenses
+* Decisions made
+    - Documented as a monkeypatch with specific input constraints: double-quoted labels, `<br>` for line breaks, flowchart only
+    - Manual `&nbsp;` documented as fallback for unsupported patterns
+* User verification
+    - Rebuilt devblog with emoji width compensation enabled — emoji nodes render correctly
+
+## 2026-03-12 - QA (REVISED SCOPE) - PASS
+
+* Work completed
+    - Semantic review against plan, project brief, and acceptance criteria
+    - KISS: no over-engineering found
+    - DRY: no duplication found
+    - YAGNI: removed dead circle-shape regex (`\(\(\("(.*?)"\)\)\)` matched triple parens, not valid Mermaid; circle `(("..."))` already handled by rounded-rect regex matching inner `("...")`)
+    - Completeness: all 6 requirements verified implemented, all 7 acceptance criteria met
+    - Regression: no pattern violations — module_function, config parse pattern, test double updates all consistent
+    - Integrity: no debug artifacts, TODOs, or magic numbers
+    - Documentation: README updated, memory bank updated (activeContext had stale test count 73 → 75)
+    - 75/75 tests pass; RuboCop 0 offenses after fix
+* Decisions made
+    - Dead circle regex removed rather than fixed — fixing it would cause double-compensation (rounded-rect regex already matches inner `("...")`)
+    - Single-quote rect pattern `['']` kept — it's valid Mermaid syntax and a harmless broader match

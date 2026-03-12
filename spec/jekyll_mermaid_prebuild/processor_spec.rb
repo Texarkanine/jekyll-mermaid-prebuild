@@ -12,7 +12,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       cache_dir: cache_dir,
       output_dir: "assets/svg",
       enabled?: true,
-      max_width: nil
+      emoji_width_compensation: {}
     )
   end
   let(:generator) { instance_double(JekyllMermaidPrebuild::Generator) }
@@ -125,42 +125,89 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       end
     end
 
-    context "cache key uniqueness with max_width" do
-      let(:mermaid_source) { "graph TD\nA-->B\n" }
-      let(:diagram_content) { "```mermaid\n#{mermaid_source}```\n" }
-
-      def capture_cache_key(processor)
-        captured = nil
-        allow(generator).to receive(:generate) do |_src, key|
-          captured = key
+    context "emoji width compensation integration" do
+      # P1: Flowchart with emoji + compensation enabled → EmojiCompensator called
+      it "calls EmojiCompensator when flowchart has emoji and compensation enabled" do
+        config_with_comp = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: { "flowchart" => true }
+        )
+        proc_with_comp = described_class.new(config_with_comp, generator)
+        content = <<~MARKDOWN
+          ```mermaid
+          flowchart LR
+            A["🔧"] --> B
+          ```
+        MARKDOWN
+        allow(generator).to receive(:generate) do |source, key|
+          expect(source).to include("&nbsp;&nbsp;")
           File.join(cache_dir, "#{key}.svg")
         end
-        processor.process_content(diagram_content)
-        captured
+
+        proc_with_comp.process_content(content, site)
+
+        expect(generator).to have_received(:generate)
       end
 
-      # B17: Same diagram source + different max_width → different cache keys
-      it "produces different cache keys for different max_width values" do
-        config_fixed = instance_double(
+      # P2: Flowchart with emoji + compensation NOT enabled → EmojiCompensator NOT applied
+      it "does not compensate when emoji_width_compensation is not enabled for flowchart" do
+        content = <<~MARKDOWN
+          ```mermaid
+          flowchart LR
+            A["🔧"] --> B
+          ```
+        MARKDOWN
+        allow(generator).to receive(:generate) do |source, _key|
+          expect(source).not_to include("&nbsp;&nbsp;")
+          File.join(cache_dir, "abc.svg")
+        end
+
+        processor.process_content(content, site)
+
+        expect(generator).to have_received(:generate)
+      end
+
+      # P3: Sequence diagram + compensation enabled for flowchart only → no compensation
+      it "does not compensate sequence diagrams when only flowchart is enabled" do
+        config_flowchart_only = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg",
-          enabled?: true, max_width: 640
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: { "flowchart" => true }
         )
+        proc_flowchart_only = described_class.new(config_flowchart_only, generator)
+        content = <<~MARKDOWN
+          ```mermaid
+          sequenceDiagram
+            A->>B: 🔧
+          ```
+        MARKDOWN
+        allow(generator).to receive(:generate) do |source, _key|
+          expect(source).not_to include("&nbsp;&nbsp;")
+          File.join(cache_dir, "seq.svg")
+        end
 
-        key_no_width = capture_cache_key(described_class.new(config, generator))
-        key_with_width = capture_cache_key(described_class.new(config_fixed, generator))
+        proc_flowchart_only.process_content(content, site)
 
-        expect(key_no_width).not_to eq(key_with_width)
+        expect(generator).to have_received(:generate)
       end
 
-      # B18: max_width=nil → cache key differs from legacy format (auto-migration)
-      # The new key format is digest("source\x00max_width=nil"), which differs from
-      # digest("source"), ensuring cached SVGs from before the upgrade are regenerated.
-      it "produces a different cache key than the raw-source digest (legacy format)" do
-        new_key = capture_cache_key(described_class.new(config, generator))
-        legacy_key = JekyllMermaidPrebuild::DigestCalculator.content_digest(mermaid_source)
-
-        expect(new_key).not_to eq(legacy_key)
+      # P4: Cache key includes compensated source (different from uncompensated)
+      it "uses different cache key for compensated vs uncompensated same diagram" do
+        config_with_comp = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: { "flowchart" => true }
+        )
+        keys = []
+        allow(generator).to receive(:generate) do |_source, key|
+          keys << key
+          File.join(cache_dir, "#{key}.svg")
+        end
+        content = "```mermaid\nflowchart LR\n  A[\"🔧\"] --> B\n```\n"
+        processor.process_content(content, site)
+        described_class.new(config_with_comp, generator).process_content(content, site)
+        expect(keys.uniq.size).to eq(2)
       end
     end
 

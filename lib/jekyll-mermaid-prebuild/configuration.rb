@@ -6,7 +6,7 @@ module JekyllMermaidPrebuild
     DEFAULT_OUTPUT_DIR = "assets/svg"
     CACHE_DIR = ".jekyll-cache/jekyll-mermaid-prebuild"
 
-    attr_reader :output_dir, :max_width
+    attr_reader :output_dir, :emoji_width_compensation
 
     # Initialize configuration from Jekyll site
     #
@@ -15,7 +15,7 @@ module JekyllMermaidPrebuild
       config = site.config["mermaid_prebuild"] || {}
       @output_dir = parse_output_dir(config["output_dir"])
       @enabled = config.fetch("enabled", true)
-      @max_width = parse_max_width(config["max_width"])
+      @emoji_width_compensation = parse_emoji_width_compensation(config["emoji_width_compensation"])
     end
 
     # Check if the plugin is enabled
@@ -34,16 +34,15 @@ module JekyllMermaidPrebuild
 
     private
 
-    # Validate and return a positive integer max_width, or nil if invalid/absent.
-    # Accepts only Integer values greater than zero; rejects floats, strings, booleans, nil.
+    # Returns a frozen Hash of diagram type (string) => boolean. Non-hash values are rejected → {}.
     #
     # @param value [Object] raw config value
-    # @return [Integer, nil] validated pixel width or nil
-    def parse_max_width(value)
-      return nil unless value.is_a?(Integer)
-      return nil unless value.positive?
+    # @return [Hash<String, Boolean>] frozen hash, empty if invalid/absent
+    def parse_emoji_width_compensation(value)
+      return {}.freeze unless value.is_a?(Hash)
 
-      value
+      result = value.transform_keys(&:to_s).transform_values { |v| [true, false].include?(v) ? v : false }
+      result.freeze
     end
 
     def parse_output_dir(dir)
