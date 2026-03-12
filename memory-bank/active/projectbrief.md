@@ -14,33 +14,35 @@ A blog with a known content width (e.g., 640px) configures `max_width` in `_conf
 
 A responsive site has no fixed content width. The plugin generates SVGs that scale naturally with their container — no hardcoded `max-width` inline style locking them to Puppeteer's arbitrary computed width. Diagrams are responsive out of the box.
 
-### Use-Case 3: Text Clipping Fix (All Sites)
+### Use-Case 3: Emoji Text Clipping Fix
 
-Regardless of width configuration, the foreignObject width mismatch bug in mmdc's headless rendering is corrected. Node label text that was previously clipped due to undersized `<foreignObject>` elements is now fully visible.
+Mermaid node labels containing emoji characters are clipped because Puppeteer's headless Chrome undermeasures emoji glyph widths when sizing `<foreignObject>` elements. The plugin compensates by padding emoji-containing labels with non-breaking spaces before mmdc rendering, so Puppeteer allocates correct foreignObject widths natively.
 
 ## Requirements
 
 1. Accept an optional `max_width` configuration parameter (integer, pixels) under the `mermaid_prebuild` config key.
-2. Add SVG post-processing after `mmdc` generates SVGs — fix the foreignObject width mismatch that clips node label text.
-3. When `max_width` is configured, constrain the root `<svg>` element's sizing to that width.
-4. When `max_width` is NOT configured, remove the hardcoded `max-width` inline style from the root `<svg>` so it can scale responsively.
-5. Use Nokogiri for SVG/XML parsing (add as a runtime dependency if not already present).
-6. The post-processing must be a no-op for diagram types that don't exhibit the foreignObject pattern (e.g., sequence diagrams without node rects).
-7. Cache keys must account for width configuration so that the same diagram source with different width settings produces separate cached outputs.
+2. Add SVG post-processing after `mmdc` generates SVGs — remove/replace the hardcoded `max-width` inline style on the root `<svg>`, set `width="100%"`.
+3. When `max_width` is configured, set the root `<svg>`'s `max-width` inline style to that value.
+4. When `max_width` is NOT configured, remove the hardcoded `max-width` inline style so the SVG can scale responsively.
+5. Add Mermaid source preprocessing: detect emoji in node labels and append `&nbsp;` padding to compensate for Puppeteer's emoji width undermeasurement. Opt-in via config.
+6. The SVG post-processing must be a no-op for node content (foreignObject widths, label transforms are NOT modified — mmdc's centering is correct).
+7. Cache keys must account for both width configuration and emoji compensation state.
 
 ## Constraints
 
-1. Do not change how `mmdc` is invoked (flags, args) — the fix is purely post-processing.
-2. Preserve the SVG's visual appearance aside from fixing clipping and width constraints.
+1. Do not change how `mmdc` is invoked (flags, args) — fixes are preprocessing (source) and post-processing (SVG output).
+2. Preserve the SVG's visual appearance. Do NOT modify foreignObject widths or label transforms — `display: table-cell` shrink-wrapping makes this fundamentally incompatible with centering.
 3. Must be robust across different Mermaid diagram types (flowchart, sequence, class, etc.).
-4. Nokogiri is the XML parser — it's the Ruby standard and is in Jekyll's transitive dependency tree.
+4. Nokogiri is the XML parser for SVG post-processing.
 5. Follow existing codebase patterns: stateless utility modules use `module_function`; stateful components are classes.
+6. Emoji detection: count `\p{Extended_Pictographic}` codepoints. No attempt to handle ZWJ decomposition or other Unicode complexity.
 
 ## Acceptance Criteria
 
-1. A flowchart SVG with foreignObject width < parent rect width is corrected by post-processing.
-2. A flowchart SVG where foreignObject already matches rect width is not broken by post-processing.
-3. The root `<svg>` `max-width` inline style is removed (or set to user-configured value) after post-processing.
-4. `max_width` configuration is optional — omitting it does not break existing behavior.
-5. All existing tests pass; new tests cover the post-processing logic.
-6. RuboCop passes with no new violations.
+1. The root `<svg>` `max-width` inline style is removed (or set to user-configured value) after post-processing.
+2. `max_width` configuration is optional — omitting it does not break existing behavior.
+3. Node labels with emoji render without clipping when emoji compensation is enabled.
+4. Node labels without emoji are not modified by the emoji compensator.
+5. foreignObject widths and label transforms in the SVG output match mmdc's original values (no SVG-level width manipulation).
+6. All existing tests pass; new tests cover emoji compensation and configuration.
+7. RuboCop passes with no new violations.

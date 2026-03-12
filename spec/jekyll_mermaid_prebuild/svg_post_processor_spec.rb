@@ -9,22 +9,15 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
 
   # --- Shared SVG fixture helpers ---
 
-  # A minimal flowchart SVG with one node whose foreignObject is narrower
-  # than its parent rect (the typical mmdc output bug scenario).
-  #
-  # rect_width:       width of the containing rect element
-  # fo_width:         width of the foreignObject (< rect_width - 8 → needs fix)
-  # label_translate:  translate(x, y) string on the label <g>
-  # svg_style:        inline style on the root <svg> element
-  def flowchart_svg(rect_width: 92, fo_width: 72, label_translate: "translate(-36, -13.5)",
-                    svg_style: "max-width: 200px;", extra_attrs: "")
+  # A minimal flowchart SVG with a root style attribute.
+  def flowchart_svg(svg_style: "max-width: 200px;", extra_attrs: "")
     <<~SVG
       <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" style="#{svg_style}" #{extra_attrs}>
         <g class="nodes">
           <g class="node default" id="flowchart-A-0" transform="translate(100, 50)">
-            <rect rx="5" ry="5" x="-46" y="-23.5" width="#{rect_width}" height="47"/>
-            <g class="label" transform="#{label_translate}">
-              <foreignObject width="#{fo_width}" height="27">
+            <rect rx="5" ry="5" x="-46" y="-23.5" width="92" height="47"/>
+            <g class="label" transform="translate(-36, -13.5)">
+              <foreignObject width="72" height="27">
                 <div xmlns="http://www.w3.org/1999/xhtml">A</div>
               </foreignObject>
             </g>
@@ -34,26 +27,6 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
     SVG
   end
 
-  # Helper: parse result SVG and extract the foreignObject width as a Float
-  def result_fo_width(svg)
-    doc = Nokogiri::XML(svg)
-    doc.at_xpath("//svg:foreignObject", ns)["width"].to_f
-  end
-
-  # Helper: parse result SVG and extract the label <g> translate x as a Float
-  def result_label_translate_x(svg)
-    doc = Nokogiri::XML(svg)
-    t = doc.at_xpath("//svg:g[contains(@class, 'label')]", ns)["transform"]
-    t.match(/translate\(([-\d.]+)/)[1].to_f
-  end
-
-  # Helper: parse result SVG and extract the label <g> translate y as a Float
-  def result_label_translate_y(svg)
-    doc = Nokogiri::XML(svg)
-    t = doc.at_xpath("//svg:g[contains(@class, 'label')]", ns)["transform"]
-    t.match(/translate\([^,]+,\s*([-\d.]+)/)[1].to_f
-  end
-
   # Helper: parse result SVG and return root <svg> attributes
   def result_root_svg(svg)
     doc = Nokogiri::XML(svg)
@@ -61,52 +34,27 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
   end
 
   describe ".process" do
-    describe "foreignObject width correction" do
-      # B1: foreignObject narrower than parent rect → width corrected to rect_width - 8
-      context "when foreignObject width is narrower than parent rect" do
-        let(:svg) { flowchart_svg(rect_width: 92, fo_width: 72) }
+    describe "node content passthrough" do
+      # B1: foreignObject width and label transform are left unchanged (mmdc
+      # already centers these correctly; modifying them breaks alignment due
+      # to display:table-cell shrink-wrapping inside foreignObject).
+      context "when SVG contains flowchart nodes with foreignObject" do
+        let(:svg) { flowchart_svg }
 
-        it "corrects foreignObject width to rect_width minus margin" do
+        it "preserves foreignObject width unchanged" do
           result = described_class.process(svg)
+          doc = Nokogiri::XML(result)
+          fo = doc.at_xpath("//svg:foreignObject", ns)
 
-          expect(result_fo_width(result)).to eq(84.0)
-        end
-      end
-
-      # B2: Label <g> transform is preserved unchanged when foreignObject is widened.
-      # Puppeteer sets translate_x = -content_width/2 to center the text; only the
-      # foreignObject clip boundary (fo_width) is buggy — the translate itself is correct.
-      # Changing translate_x would shift content left and introduce left-alignment.
-      context "when foreignObject is widened" do
-        let(:svg) { flowchart_svg(rect_width: 92, fo_width: 72, label_translate: "translate(-36, -13.5)") }
-
-        it "preserves the label g translate x unchanged" do
-          result = described_class.process(svg)
-
-          expect(result_label_translate_x(result)).to eq(-36.0)
+          expect(fo["width"]).to eq("72")
         end
 
-        it "preserves the label g translate y unchanged" do
+        it "preserves label g transform unchanged" do
           result = described_class.process(svg)
+          doc = Nokogiri::XML(result)
+          label_g = doc.at_xpath("//svg:g[contains(@class, 'label')]", ns)
 
-          expect(result_label_translate_y(result)).to eq(-13.5)
-        end
-      end
-
-      # B3: foreignObject already matches rect width → no change to fo_width; translate always preserved
-      context "when foreignObject already matches rect_width minus margin" do
-        let(:svg) { flowchart_svg(rect_width: 92, fo_width: 84, label_translate: "translate(-36.0, -13.5)") }
-
-        it "keeps foreignObject width at the correct value" do
-          result = described_class.process(svg)
-
-          expect(result_fo_width(result)).to eq(84.0)
-        end
-
-        it "keeps the label g translate x unchanged" do
-          result = described_class.process(svg)
-
-          expect(result_label_translate_x(result)).to eq(-36.0)
+          expect(label_g["transform"]).to eq("translate(-36, -13.5)")
         end
       end
 
@@ -148,7 +96,6 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
           result = described_class.process(svg, max_width: nil)
           root = result_root_svg(result)
 
-          # style is nil when removed entirely (only max-width was present) — both cases are correct
           expect(root["style"].to_s).not_to include("max-width")
         end
       end

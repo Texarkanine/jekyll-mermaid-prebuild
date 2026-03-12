@@ -85,3 +85,44 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
 * Insights extracted
     - Technical: Nokogiri namespace-aware XPath, XML declaration handling, nil vs empty string for deleted attributes
     - Process: stub placement matters (put in final location from start); preflight's instance_double gap check was highest-value contribution
+
+## 2026-03-12 - POST-BUILD INVESTIGATION: foreignObject centering failure
+
+* Problem
+    - User reported node label text was left-aligned after the foreignObject widening fix
+    - Removing recenter made text right-shifted; restoring recenter made it left-aligned
+    - Both directions wrong — original mmdc output (before our changes) was perfectly centered
+* Root cause analysis
+    - `display: table-cell` on the inner `<div>` causes it to shrink-wrap to content width
+    - Widening foreignObject creates empty space the div doesn't fill
+    - With recenter: fo is centered, but div left-aligns within it → text appears left-aligned
+    - Without recenter: fo extends rightward, div left-aligns at original position → text appears right-shifted
+    - **The foreignObject width manipulation was fundamentally wrong** — it can't work with table-cell layout
+* Resolution
+    - Removed ALL foreignObject manipulation (width changes, recenter, FOREIGN_OBJECT_MARGIN, TRANSLATE_RE)
+    - SvgPostProcessor now only handles root SVG max-width/width
+    - Node content passes through untouched — mmdc's centering is preserved
+    - 73/73 tests pass, RuboCop clean
+
+## 2026-03-12 - POST-BUILD INVESTIGATION: emoji width mismatch (actual root cause)
+
+* Discovery
+    - User tested `mmdc --width 680` on charts with emoji vs without emoji
+    - Chart with emoji ("🔧 Code"): viewBox 632px — text clipped despite fitting in viewport
+    - Chart without emoji ("Code"): viewBox 677px — renders perfectly, even wider chart
+    - **Puppeteer undermeasures emoji glyphs.** It sees "🔧" as ~14.7px; real browsers render it at ~20-24px
+    - The foreignObject is sized to Puppeteer's too-narrow measurement → clips in viewing browser
+* Rejected approaches
+    - Widen foreignObject to rect_width: breaks centering (table-cell shrink-wrap)
+    - Per-emoji width compensation in SVG: fragile for multi-line labels (`"emoji<br/>wide text"`)
+    - `overflow: visible`: doesn't fix centering (overflow is asymmetric rightward)
+    - `overflow: visible` + flex centering: invasive CSS changes, uncertain browser compat
+* Winning approach: `&nbsp;` padding in Mermaid source (user-discovered)
+    - Add `&nbsp;` characters (non-breaking spaces) to node label text before mmdc renders
+    - Each emoji gets ~2 `&nbsp;` appended to the label
+    - Puppeteer now measures a wider string → foreignObject, rect, and translate all correct natively
+    - In the viewing browser, emoji's wider rendering "consumes" the extra &nbsp; space
+    - Trailing whitespace is invisible or overflow-clipped — no visual artifact
+    - Centering handled naturally by Puppeteer (no SVG post-processing needed)
+    - Multi-line labels: padding goes at end of label; if emoji is on a non-constraining line, the wider padding line gives all lines more room (graceful degradation, not surgical but not broken)
+* Status: approach validated by user manually editing Mermaid source. Ready for automation in plugin.

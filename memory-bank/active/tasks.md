@@ -4,215 +4,196 @@
 * Complexity: Level 3
 * Type: feature
 
-Add SVG post-processing to fix mmdc's foreignObject text clipping bug and support configurable `max_width` constraints. Introduces a new `SvgPostProcessor` module that runs after every mmdc render and before caching. The foreignObject fix always applies (bug correction); the `max_width` configuration is an optional enhancement for fixed-width sites. Without `max_width`, the hardcoded `max-width` inline style is removed, enabling responsive scaling.
+## Summary
+
+Two-pronged fix for mmdc-generated SVG rendering issues:
+
+1. **Emoji width compensation** (Mermaid source preprocessing): Puppeteer undermeasures emoji glyphs, producing foreignObject elements too narrow for the text. Fix: before passing Mermaid source to mmdc, detect emoji in node labels and append `&nbsp;` padding so Puppeteer allocates correct widths. Opt-in via config.
+
+2. **Root SVG max-width handling** (SVG post-processing): mmdc hardcodes a `max-width` inline style tied to Puppeteer viewport width. Fix: remove it (or replace with user-configured value) and set `width="100%"` for responsive scaling. Already implemented and tested.
 
 ## Pinned Info
 
-### Pipeline (Post-Processing Integration)
+### Why `&nbsp;` padding works
 
-Call order: where `SvgPostProcessor` sits in the existing pipeline.
+```
+Puppeteer measures: "🔧 Code"       → 55.66px (emoji undermeasured)
+Puppeteer measures: "🔧 Code\u00a0\u00a0" → ~71px (nbsp adds measured width)
 
-```mermaid
-sequenceDiagram
-    participant P as Processor
-    participant G as Generator
-    participant MW as MmdcWrapper
-    participant SPP as SvgPostProcessor (NEW)
-    participant Cache as Cache Dir
-
-    P->>G: generate(mermaid_source, cache_key)
-    G->>MW: render(source, output_path)
-    MW-->>G: true (writes .svg to output_path)
-    G->>G: read SVG from cache_path
-    G->>SPP: process(svg_content, max_width: config.max_width)
-    SPP-->>G: fixed SVG string
-    G->>Cache: write fixed SVG to cache_path
-    G-->>P: cache_path
+Desktop browser renders "🔧 Code" at ~63-65px.
+foreignObject at 71px → text fits with room to spare.
+Trailing &nbsp; is invisible whitespace, clipped by overflow:hidden.
+Puppeteer handles centering, rect sizing, transforms — all correct natively.
 ```
 
-### foreignObject Fix Logic
+### Why other approaches failed
 
-The core bug: mmdc's Puppeteer rendering produces `<foreignObject>` elements narrower than their parent `<rect>`, clipping node label text. The fix widens `foreignObject` to match `rect` (minus margin) and re-centers the label `<g>` transform.
+| Approach | Why it failed |
+|----------|--------------|
+| Widen foreignObject to rect_width | `display: table-cell` shrink-wraps; div doesn't fill wider fo → left/right misalignment |
+| Per-emoji px compensation in SVG | Fragile for multi-line labels; can't know which line constrains width |
+| `overflow: visible` on foreignObject | Asymmetric rightward overflow; centering wrong |
+| `overflow: visible` + flex CSS | Invasive; `display: table-cell` → `display: flex` swap has uncertain browser compat |
 
-```mermaid
-flowchart TD
-    A["For each g.node group"] --> B{"Has rect with width<br/>AND foreignObject?"}
-    B -->|No| Skip["Skip (no-op)"]
-    B -->|Yes| C["rect_width = rect['width']"]
-    C --> D["new_fo_width = rect_width - margin"]
-    D --> E["Set foreignObject width = new_fo_width"]
-    E --> F{"Label g has<br/>translate transform?"}
-    F -->|Yes| G["new_x = -(new_fo_width / 2)"]
-    G --> H["Update translate(new_x, existing_y)"]
-    F -->|No| Done["Done with this node"]
-    H --> Done
+### Pipeline (Updated)
+
+```
+Processor.process_content
+  ├─ extract mermaid block
+  ├─ EmojiCompensator.compensate(source)  ← NEW (before mmdc)
+  ├─ compute cache_key (includes compensated source + max_width)
+  ├─ Generator.generate(compensated_source, cache_key)
+  │   ├─ MmdcWrapper.render (gets correct widths from padded source)
+  │   └─ SvgPostProcessor.process (root SVG max-width only)
+  └─ build figure HTML
 ```
 
 ## Component Analysis
 
-### Affected Components
+### Affected Components (NEW for emoji compensation)
 
-- **Configuration** (`lib/jekyll-mermaid-prebuild/configuration.rb`): Parses site config → Add `max_width` optional integer parameter with validation
-- **SvgPostProcessor** (`lib/jekyll-mermaid-prebuild/svg_post_processor.rb`): **NEW** — Stateless utility module for SVG XML manipulation via Nokogiri
-- **Generator** (`lib/jekyll-mermaid-prebuild/generator.rb`): Orchestrates mmdc render + caching → Add post-processing step between render and cache write
-- **Processor** (`lib/jekyll-mermaid-prebuild/processor.rb`): Finds mermaid blocks, computes cache keys → Include `max_width` in cache key computation
-- **Main require** (`lib/jekyll-mermaid-prebuild.rb`): Module requires → Add `svg_post_processor` require
-- **Gemspec** (`jekyll-mermaid-prebuild.gemspec`): Dependencies → Add `nokogiri` runtime dependency
+- **EmojiCompensator** (`lib/jekyll-mermaid-prebuild/emoji_compensator.rb`): **NEW** — Stateless module. Accepts a Mermaid source string and a diagram type. If the diagram type is enabled for compensation, detects emoji in node labels and appends `&nbsp;` padding. Each diagram type has its own label detection regex (flowcharts use `NodeId["label"]` patterns; other types have different syntax).
+- **Configuration** (`lib/jekyll-mermaid-prebuild/configuration.rb`): Add `emoji_width_compensation` config — a map of diagram types to booleans. Example: `emoji_width_compensation: { flowchart: true }`. Accessor returns a frozen Hash; empty hash if not configured.
+- **Processor** (`lib/jekyll-mermaid-prebuild/processor.rb`): Detect diagram type from Mermaid source, check if compensation is enabled for that type, call EmojiCompensator if so. Cache key includes the compensated source.
 
-### Cross-Module Dependencies
+### Diagram Type Detection
 
-- `Processor` → `DigestCalculator`: cache key computation (Processor changes HOW it calls, DigestCalculator unchanged)
-- `Processor` → `Generator`: passes cache_key (unchanged interface)
-- `Generator` → `MmdcWrapper`: render call (unchanged)
-- `Generator` → `SvgPostProcessor` **(NEW)**: post-process after render
-- `Generator` → `Configuration`: reads `max_width` (already has config ref)
-- `SvgPostProcessor` → Nokogiri: XML parsing **(NEW external dependency)**
+Mermaid source can have YAML frontmatter (`---` delimited blocks) and comments (`%%` lines) before the diagram type keyword. Detection must skip these:
 
-### Boundary Changes
+```
+---
+title: My Chart
+---
+%% This is a comment
+flowchart LR        ← THIS is the diagram type line
+  A --> B
+```
 
-- **Configuration**: New public accessor `max_width` (additive, non-breaking)
-- **SvgPostProcessor**: New module with public `process` method
-- **DigestCalculator**: No interface change (caller changes how it provides input)
-- **Generator**: No public API change (post-processing is internal)
+Algorithm: scan lines, skip frontmatter (between `---` pairs), skip `%%` comment lines, skip blank lines. The first remaining line's first token is the diagram type keyword.
 
-### Invariants & Constraints
+Known diagram type keywords relevant to emoji compensation:
+- `graph`, `flowchart` → flowchart (both map to the same compensation logic)
 
-1. Post-processing must be a no-op for SVGs without node groups (sequence diagrams, etc.)
-2. Cache key must change when `max_width` changes (including nil → integer transition)
-3. Existing cached SVGs must auto-invalidate after upgrade (cache key format change handles this)
-4. Do NOT change mmdc invocation (flags, args, env)
-5. Preserve visual appearance aside from fixing clipping and width constraints
-6. Follow `module_function` pattern for stateless utility modules
+**Scope for this build: flowchart only.** Other diagram types (sequenceDiagram, classDiagram, stateDiagram, etc.) are future enhancements. The config map structure supports them without code changes — just add label detection regex for the new type. Unrecognized types in the config are silently ignored (no-op).
 
-## Open Questions
+### Already Complete (from prior build)
 
-None — implementation approach is clear.
+- **SvgPostProcessor**: Root SVG max-width handling — tested and working
+- **Generator**: Post-processing integration — tested and working
+- **Gemspec**: Nokogiri dependency — added
+- **Configuration**: `max_width` parsing — tested and working
 
-Design decisions made without creative phase:
-- **min_width**: Deferred. CSS layout concern, not plugin responsibility. Can be added later without architectural impact.
-- **viewBox adjustment**: Not needed. foreignObject fix constrains content within existing rect bounds already inside viewBox.
-- **mmdc `--width` flag**: Not used. The foreignObject bug is in text measurement, not viewport. Post-processing is the correct fix.
-- **Always post-process**: Yes. foreignObject fix is a bug correction benefiting all users. `max_width` is an additional optional constraint.
-- **Cache migration**: Handled automatically — new cache key format (includes max_width metadata) differs from old format, causing one-time regeneration on first build after upgrade.
+## Emoji Detection Strategy
 
-## Test Plan (TDD)
+Ruby approach for counting emoji that need width compensation:
 
-### Behaviors to Verify
+```ruby
+# Match characters that render as wide pictographic emoji.
+# \p{Extended_Pictographic} covers emoji from Unicode 11+.
+# Excludes text-presentation symbols, variation selectors, ZWJ joiners.
+EMOJI_RE = /\p{Extended_Pictographic}/
 
-#### SvgPostProcessor
+def count_emoji(text)
+  text.scan(EMOJI_RE).length
+end
+```
 
-- **B1**: foreignObject narrower than parent rect → width corrected to `rect_width - 8px`
-- **B2**: Label `<g>` transform re-centered after foreignObject widening
-- **B3**: foreignObject already matches rect width → no change
-- **B4**: SVG without node groups → returned unchanged (no-op)
-- **B5**: Root `<svg>` `max-width` removed when no `max_width` configured
-- **B6**: Root `<svg>` `max-width` set to configured value when `max_width` provided
-- **B7**: Root `<svg>` without style attribute → no error
-- **B8**: Other inline styles on root `<svg>` preserved (only `max-width` affected)
-- **B9a**: Root `<svg>` always has `width="100%"` after post-processing (defensive set)
+Note: "no attempt to handle unicode funkiness" — we count individual Extended_Pictographic codepoints. ZWJ sequences (👨‍👩‍👧) count as multiple (each component is a codepoint). This over-compensates slightly for ZWJ sequences but is safe (extra trailing whitespace).
 
-#### Configuration
+## Mermaid Label Detection Strategy
 
-- **B9**: `max_width` defaults to nil when not configured
-- **B10**: `max_width` parses positive integer from config
-- **B11**: `max_width` rejects zero and negative values → nil
-- **B12**: `max_width` rejects non-integer values (string, float, boolean) → nil
+Node labels in Mermaid flowchart syntax appear as:
+- `NodeId["label"]` (rect)
+- `NodeId("label")` (rounded rect)
+- `NodeId{"label"}` (diamond)
+- `NodeId[/"label"/]` (parallelogram)
+- `NodeId(("label"))` (circle)
+- etc.
 
-#### Generator
+We need to find the label text within these delimiters and append `&nbsp;` padding after the last text character, before the closing delimiter.
 
-- **B13**: Post-processing called after successful mmdc render
-- **B14**: Post-processed content written to cache file
-- **B15**: `max_width` from config passed to SvgPostProcessor
-- **B16**: Failed mmdc render does not invoke post-processing
+Approach: regex to match node label patterns, extract the text content, count emoji, insert `&nbsp;` * (emoji_count * 2) before the closing delimiter.
 
-#### Processor (cache key)
+## Test Plan (TDD) — New Tests
 
-- **B17**: Same diagram source + different `max_width` → different cache keys
-- **B18**: `max_width=nil` → cache key differs from legacy format (auto-migration)
+### EmojiCompensator
 
-### Test Infrastructure
+- **E1**: Flowchart label with single emoji → appends 2 `&nbsp;` at end of label text
+- **E2**: Flowchart label with multiple emoji → appends 2 `&nbsp;` per emoji
+- **E3**: Flowchart label with no emoji → returns source unchanged
+- **E4**: Label with emoji and existing `&nbsp;` → adds compensation on top (doesn't strip existing)
+- **E5**: Multi-line label (contains `<br/>`) with emoji → padding appended at end of label
+- **E6**: Multiple nodes in one diagram, some with emoji, some without → only emoji nodes get padding
+- **E7**: Source that is not a compensated diagram type → returned unchanged
+- **E8**: Node label with HTML entities preserved (doesn't corrupt `&amp;` etc.)
+- **E9**: Various flowchart node shapes: `["..."]`, `("...")`, `{"..."}`, `(("..."))` → all compensated
+- **E10**: `graph LR` keyword detected as flowchart (alias)
 
-- Framework: RSpec (configured in `.rspec`)
-- Test location: `spec/jekyll_mermaid_prebuild/`
-- Conventions: One spec file per module, `instance_double` for dependencies, `@temp_dir` via `around` block
-- New test files: `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`
+### Diagram Type Detection
 
-### Integration Tests
+- **D1**: Bare `flowchart LR` on first line → detected as `flowchart`
+- **D2**: `graph TD` on first line → detected as `flowchart` (alias)
+- **D3**: YAML frontmatter (`---` block) before diagram type → type detected after frontmatter
+- **D4**: `%%` comment lines before diagram type → type detected after comments
+- **D5**: Frontmatter + comments + blank lines before diagram type → correct detection
+- **D6**: `sequenceDiagram` → detected as `sequence` (not flowchart)
+- **D7**: Empty/whitespace-only source → returns nil (no type detected)
 
-- No new integration tests needed. The post-processing is purely functional (string in → string out) and tested via unit tests. The Generator spec already mocks MmdcWrapper and tests the orchestration.
+### Configuration
+
+- **C1**: `emoji_width_compensation` not configured → returns empty hash
+- **C2**: `emoji_width_compensation: { flowchart: true }` → returns `{ "flowchart" => true }`
+- **C3**: `emoji_width_compensation: { flowchart: false }` → returns `{ "flowchart" => false }`
+- **C4**: Non-hash value for `emoji_width_compensation` → returns empty hash (rejected)
+
+### Processor (integration)
+
+- **P1**: Flowchart with emoji + compensation enabled for flowchart → EmojiCompensator called
+- **P2**: Flowchart with emoji + compensation NOT enabled for flowchart → EmojiCompensator NOT called
+- **P3**: Sequence diagram + compensation enabled for flowchart only → EmojiCompensator NOT called
+- **P4**: Cache key includes compensated source (different from uncompensated)
 
 ## Implementation Plan
 
-### Step 1: Add Nokogiri dependency
-
-- Files: `jekyll-mermaid-prebuild.gemspec`
-- Changes: Add `spec.add_dependency "nokogiri", ">= 1.13"` alongside the Jekyll dependency
-- Validation: `bundle install` succeeds
-
-### Step 2: Configuration — add `max_width` (TDD cycle)
+### Step 1: Configuration — add `emoji_width_compensation` (TDD cycle)
 
 - Files: `spec/jekyll_mermaid_prebuild/configuration_spec.rb`, `lib/jekyll-mermaid-prebuild/configuration.rb`
-- Tests: B9, B10, B11, B12
-- Changes:
-  - Add `attr_reader :max_width`
-  - Parse `config["max_width"]` with validation (positive integer or nil)
-  - Add private `parse_max_width` method
+- Tests: C1, C2, C3, C4
+- Changes: Add `attr_reader :emoji_width_compensation` + `parse_emoji_width_compensation` private method. Returns a frozen Hash mapping string diagram type names to booleans. Rejects non-Hash values.
 
-### Step 3: SvgPostProcessor — new module (TDD cycle)
+### Step 2: EmojiCompensator — new module (TDD cycle)
 
-- Files: `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb` (NEW), `lib/jekyll-mermaid-prebuild/svg_post_processor.rb` (NEW), `lib/jekyll-mermaid-prebuild.rb`
-- Tests: B1, B2, B3, B4, B5, B6, B7, B8, B9a
+- Files: `spec/jekyll_mermaid_prebuild/emoji_compensator_spec.rb` (NEW), `lib/jekyll-mermaid-prebuild/emoji_compensator.rb` (NEW), `lib/jekyll-mermaid-prebuild.rb`
+- Tests: E1–E10, D1–D7
 - Changes:
   - New module with `module_function` pattern
-  - Public: `process(svg_content, max_width: nil)` → returns post-processed SVG string
-  - Private: `fix_foreign_object_widths(doc)`, `adjust_root_svg_width(doc, max_width)` (also defensively sets `width="100%"` on root SVG)
-  - Add `require_relative` in main module file
+  - Public: `compensate(mermaid_source, diagram_type)` → returns padded source string
+  - Public: `detect_diagram_type(mermaid_source)` → returns normalized type string or nil
+  - Private: `compensate_flowchart_labels(source)` — regex finds node labels in flowchart syntax, counts emoji, appends `&nbsp;` padding
+  - Type detection: skip `---` frontmatter, `%%` comments, blank lines; first remaining line's first token is the diagram type. Normalize `graph` → `flowchart`.
 
-### Step 4: Generator — integrate post-processing (TDD cycle)
-
-- Files: `spec/jekyll_mermaid_prebuild/generator_spec.rb`, `lib/jekyll-mermaid-prebuild/generator.rb`
-- Tests: B13, B14, B15, B16
-- Changes:
-  - After `MmdcWrapper.render` succeeds: read SVG from `cache_path`, call `SvgPostProcessor.process(svg_content, max_width: @config.max_width)`, write result back to `cache_path`
-  - Existing mock setup in specs writes SVG content to file — adjust to verify post-processing
-  - **Preflight note**: Update existing `instance_double` for Configuration to include `max_width: nil` (or appropriate value) to avoid RSpec "unexpected message" errors
-
-### Step 5: Processor — cache key includes max_width (TDD cycle)
+### Step 3: Processor — integrate emoji compensation (TDD cycle)
 
 - Files: `spec/jekyll_mermaid_prebuild/processor_spec.rb`, `lib/jekyll-mermaid-prebuild/processor.rb`
-- Tests: B17, B18
+- Tests: P1, P2, P3, P4
 - Changes:
-  - `convert_block`: compute cache key as `DigestCalculator.content_digest("#{mermaid_source}\x00max_width=#{@config.max_width}")` instead of `DigestCalculator.content_digest(mermaid_source)`
-  - This naturally invalidates all pre-existing caches (format change)
-  - **Preflight note**: Update existing `instance_double` for Configuration to include `max_width: nil` in all existing test contexts
+  - Detect diagram type via `EmojiCompensator.detect_diagram_type(source)`
+  - Check `@config.emoji_width_compensation[diagram_type]`
+  - If truthy, call `EmojiCompensator.compensate(source, diagram_type)` and use the result for cache key + mmdc rendering
+  - If falsy, use original source unchanged
 
-### Step 6: Documentation
+### Step 4: Documentation + cleanup
 
 - Files: `README.md`
-- Changes:
-  - Add `max_width` to Configuration section and Options table
-  - Add note about SVG post-processing in Features section
-  - Update Caching section to note `max_width` affects cache keys
-
-## Technology Validation
-
-- **Nokogiri** (new runtime dependency): Standard Ruby XML library. Not currently in the gem's dependency tree (verified via `bundle list`). Will be added to gemspec and validated with `bundle install`. Nokogiri >= 1.13 supports Ruby >= 3.0, compatible with this gem's Ruby >= 3.3.0 requirement.
-
-## Challenges & Mitigations
-
-- **SVG namespace handling**: Nokogiri requires namespace-aware XPath. mmdc SVGs use the default SVG namespace. Mitigation: use namespace prefix mapping (`'svg' => 'http://www.w3.org/2000/svg'`) consistently in all XPath queries, as shown in the planning doc pseudocode.
-- **Diverse diagram types**: Not all Mermaid diagrams produce `g.node` groups with rect + foreignObject. Mitigation: all fixes are guarded by presence checks (`next unless rect && fo`), making them inherently no-op for non-matching structures.
-- **Transform parsing**: The label `<g>` transform is a `translate(x, y)` string that needs regex parsing. Mitigation: strict regex match (`/translate\(([-\d.]+),\s*([-\d.]+)\)/`); skip re-centering if transform format is unexpected.
-- **Nokogiri XML output**: `doc.to_xml` may add XML declaration or change whitespace. Mitigation: test that output is valid SVG; use `doc.to_xml(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)` if needed to control output format.
-- **Cache migration on upgrade**: Existing cached SVGs lack post-processing. Mitigation: cache key format change auto-invalidates old entries (one-time regeneration on first build).
+- Update feature description, config options table, known limitations
+- Example config showing `emoji_width_compensation` map
 
 ## Status
 
 - [x] Component analysis complete
-- [x] Open questions resolved
+- [x] Open questions resolved (via user testing + investigation)
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
-- [x] Technology validation complete
-- [x] Preflight (PASS — minor amendments applied)
-- [x] Build (COMPLETE — 76/76 tests pass, RuboCop clean)
-- [x] QA (PASS — 2 trivial fixes applied; all requirements verified)
+- [ ] Build — emoji compensation
+- [ ] Full test suite pass
+- [ ] Documentation update
