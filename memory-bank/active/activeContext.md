@@ -18,4 +18,4 @@
 - B5 test uses `.to_s` on the style attribute to gracefully handle `nil` when max-width is the only style (correctly removed entirely)
 
 ## Next Step
-- Proceed to Reflect phase (`/niko-reflect`)
+- Proceed to Archive phase (`/niko-archive`)

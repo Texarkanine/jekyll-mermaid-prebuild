@@ -74,3 +74,14 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
     - Both fixes were trivial (style/cleanup) — no design decisions needed
 * Insights
     - public/private alternation anti-pattern would have been caught by a stricter RuboCop config; worth noting for future
+
+## 2026-03-12 - REFLECT - COMPLETE
+
+* Work completed
+    - Full lifecycle review: requirements, plan accuracy, build, QA, cross-phase analysis
+    - Created `memory-bank/active/reflection/reflection-svg-post-processing.md`
+* Decisions made
+    - No retrospective plan changes needed — implementation matched plan cleanly
+* Insights extracted
+    - Technical: Nokogiri namespace-aware XPath, XML declaration handling, nil vs empty string for deleted attributes
+    - Process: stub placement matters (put in final location from start); preflight's instance_double gap check was highest-value contribution
