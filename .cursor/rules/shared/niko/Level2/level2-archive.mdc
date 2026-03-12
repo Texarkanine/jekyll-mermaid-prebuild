@@ -1,0 +1,74 @@
+---
+alwaysApply: false
+---
+
+# Archive Phase - Level 2: Simple Enhancement
+
+This document guides archiving for a Level 2 task. The archive is a concise record - summary, what changed, what was learned. A few paragraphs total.
+
+## Step 1: Load Memory Bank Files
+
+Read:
+- `memory-bank/active/tasks.md`
+- `memory-bank/active/activeContext.md`
+- `memory-bank/active/progress.md`
+- `memory-bank/active/projectbrief.md`
+- `memory-bank/active/reflection/` (all files)
+
+## Step 2: Verify Prerequisites
+
+- Check that `memory-bank/active/reflection/reflection-<task-id>.md` exists
+- If no reflection exists: 🛑 STOP - it does not make sense to archive work that hasn't been reflected on. Ask the operator for clarification, and wait for their instructions. You're done for now.
+
+## Step 3: Determine Archive Category
+
+Based on the task's nature (not its complexity level):
+- `bug-fixes/` - something was wrong, now corrected
+- `enhancements/` - an existing feature or capability improved or extended
+- `features/` - an entirely new feature or capability added
+- `systems/` - a major architectural or system-wide change
+
+## Step 4: Create Archive Document
+
+Create `memory-bank/archive/<category>/YYYYMMDD-<task-id>.md`.
+
+The archive format is defined in `.cursor/rules/shared/niko/memory-bank/archives.mdc` - follow that format. Keep it concise for Level 2: a brief summary, the key files changed, what was learned. Inline relevant content from the reflection file directly - the reflection file is about to be deleted.
+
+If a section has no meaningful content, include the section header with a brief note explaining why it's empty. Don't silently omit sections.
+
+## Step 5: Clear Ephemeral Files
+
+1. Delete the "ephemeral" memory-bank files.
+2. **PRESERVE** the "persistent" memory-bank files - do NOT touch them.
+
+## Step 6: Commit
+
+Commit all changes (the new archive document + the deleted ephemeral files) with:
+
+```
+chore: archive <task-id> and clear memory bank
+```
+
+## Step 7: Log Progress
+
+Print:
+
+~~~markdown
+# Archive Result
+
+## Summary
+
+Archived as `memory-bank/archive/<category>/YYYYMMDD-<task-id>.md`
+
+## Cleaned Up
+
+[List of ephemeral files deleted]
+
+## Next Steps
+
+Memory bank is clean and ready for the next task.
+
+Type `/niko` to begin.
+~~~
+
+Then, wait for operator input.

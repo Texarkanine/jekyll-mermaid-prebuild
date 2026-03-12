@@ -1,0 +1,82 @@
+---
+alwaysApply: false
+---
+
+# Archive Phase - Level 3: Intermediate Feature
+
+This document guides archiving for a Level 3 task. The archive is the full story of the feature - a reader should be able to understand what was built, why design decisions were made, and what was learned, entirely from this one document.
+
+For Level 4 tasks that load this document: additionally include architectural context (how this change fits into the broader system), deployment or migration notes if applicable, and maintenance considerations for future developers.
+
+## Step 1: Load Memory Bank Files
+
+Read:
+- `memory-bank/active/tasks.md`
+- `memory-bank/active/activeContext.md`
+- `memory-bank/active/progress.md`
+- `memory-bank/active/projectbrief.md`
+- `memory-bank/active/reflection/` (all files)
+- `memory-bank/active/creative/` (all files)
+
+## Step 2: Verify Prerequisites
+
+- Check that `memory-bank/active/reflection/reflection-<task-id>.md` exists
+- If no reflection exists: 🛑 STOP - it does not make sense to archive work that hasn't been reflected on. Ask the operator for clarification, and wait for their instructions. You're done for now.
+
+## Step 3: Determine Archive Category
+
+Based on the task's nature (not its complexity level):
+- `bug-fixes/` - something was wrong, now corrected
+- `enhancements/` - an existing feature or capability improved or extended
+- `features/` - an entirely new feature or capability added
+- `systems/` - a major architectural or system-wide change
+
+## Step 4: Create Archive Document
+
+Create `memory-bank/archive/<category>/YYYYMMDD-<task-id>.md`.
+
+The archive format is defined in `.cursor/rules/shared/niko/memory-bank/archives.mdc` - follow that format. For Level 3, this means full treatment:
+
+- **Inline all ephemeral content.** Creative phase decisions with rationale, reflection insights, plan details - all of it gets written into the archive document directly, because the ephemeral memory-bank files are about to be deleted. The archive must stand completely on its own.
+- **Document the implementation approach** and key files touched, so a future developer can understand how the feature was built.
+- **Inline creative phase decisions** with the options considered, the rationale for the choice, and any friction points discovered during implementation.
+- **Inline reflection insights** - both technical and process.
+
+If a section has no meaningful content (e.g., no technical improvements surfaced), include the section header with a brief note explaining why it's empty. Don't silently omit sections.
+
+## Step 5: Clear Ephemeral Files
+
+1. Delete the "ephemeral" memory-bank files.
+2. **PRESERVE** the "persistent" memory-bank files - do NOT touch them.
+
+## Step 6: Commit
+
+Commit all changes (the new archive document + the deleted ephemeral files) with:
+
+```
+chore: archive <task-id> and clear memory bank
+```
+
+## Step 7: Output to Operator
+
+When archiving is complete, print:
+
+~~~markdown
+# Archive Result
+
+## Summary
+
+Archived as `memory-bank/archive/<category>/YYYYMMDD-<task-id>.md`
+
+## Cleaned Up
+
+[List of ephemeral files deleted]
+
+## Next Steps
+
+Memory bank is clean and ready for the next task.
+
+Type `/niko` to begin.
+~~~
+
+Then, wait for operator input.

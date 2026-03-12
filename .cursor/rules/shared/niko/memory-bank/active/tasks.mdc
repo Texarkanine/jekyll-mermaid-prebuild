@@ -1,0 +1,45 @@
+---
+globs: memory-bank/active/tasks.md
+---
+
+# Tasks
+
+The "Tasks" file is the active task tracking: current task details, checklists, component lists.
+It contains an exhaustive checklist of all the necessary steps to do, in order, to complete the current task.
+
+## File
+
+`memory-bank/active/tasks.md`
+
+## How to Create
+
+When planning work, fill out the task list with sections of checklists appropriate to the complexity level of the current task.
+
+## When to Update
+
+🚨 **CRITICAL:** The task list is a living document and must be updated as work is completed. At most one subsection of the task list should be completed before stopping to update it!
+
+After any significantly-large changeset is made:
+
+* in terms of quantity of files affected
+* in terms of lines of content affected
+
+stop and 
+
+1. update the task list to indicate the progress of the work
+2. commit the changes AND the task list updates with commit message format: `chore: saving progress on [task name]`
+
+## Format
+
+The task list should begin with a header:
+
+~~~markdown
+# Current Task: [Task Name]
+
+**Complexity:** [complexity level]
+
+...
+
+~~~
+
+🚨 **CRITICAL:** Specific task list formats beyond the header come from the appropriate complexity-specific planning rules. Do NOT invent your own formats.

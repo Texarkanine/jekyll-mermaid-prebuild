@@ -1,0 +1,81 @@
+---
+alwaysApply: false
+---
+
+# Level 4 Workflow: Complex System
+
+Level 4 tasks are too large to plan and execute in one pass. They are composed of multiple L1/L2/L3 sub-runs, each corresponding to a milestone. Complexity analysis manages the milestone list and routes each sub-run to the appropriate level workflow. There are no dedicated Level 4 plan or build phases - those happen inside each sub-run at its own level.
+
+## Workflow Overview
+
+```mermaid
+graph TD
+
+    Start(("Complexity Analysis"))
+    CheckIfMilestones{"memory-bank/active/milestones.md<br>exists?"}
+
+    subgraph Init["First L4 Run"]
+        NikoPlan["😺 plan<br>(generate milestones)"]
+        NikoPreflight{"😺 preflight"}
+        ManualReview["🧑‍💻 review plan"]
+    end
+
+    subgraph ReEntry["L4 Milestone Management"]
+        CheckMilestoneCompletion{"All milestones complete?"}
+        Capstone[/"🧑‍💻 /niko-archive (capstone)"/]
+        Capstone -->Done("Done")
+        PrevDone{"activeContext shows<br>REFLECT COMPLETE?"}
+        CheckOff["Check off completed<br>milestone in milestones.md"]
+        Resume["Load context<br>prepare to re-enter workflow"]
+    end
+
+    subgraph SubWorkflow["L1-L3 Milestone Execution"]
+        NextSub(("😺 Complexity Analysis<br>Classify next unchecked<br>milestone as L1/L2/L3"))
+        SubRun("😺 Run L1/L2/L3 workflow")
+    end
+
+    Start --> CheckIfMilestones
+
+    CheckIfMilestones -->|"No"| NikoPlan
+    NikoPlan --> NikoPreflight
+    NikoPreflight -->|"FAIL"| NikoPlan
+
+    NikoPreflight -.->|"PASS"| ManualReview
+    ManualReview -.->|"🧑‍💻 /niko"| Start
+
+    CheckIfMilestones -->|"Yes"| CheckMilestoneCompletion
+    CheckMilestoneCompletion -.->|"Yes"| Capstone
+
+    CheckMilestoneCompletion -->|"No"| PrevDone
+    PrevDone --"Yes"--> CheckOff
+    CheckOff --> NextSub
+
+    PrevDone --"No"--> Resume
+    Resume --> SubRun
+
+    NextSub --> SubRun
+    SubRun -.->|"Sub-run reflect complete<br>🧑‍💻 /niko"| Start
+```
+
+> Legend:
+> - 🐱 = Phase executed autonomously
+> - 🧑‍💻 = Phase initiated by operator with explicit command
+> - Solid edge = Transition does not require operator input
+> - Dashed edge = Transition requires operator input
+
+The following require operator input; if you have arrived at one of these transitions, STOP and wait:
+
+- Sub-run reflect complete → next `/niko` invocation (operator decides when to continue)
+- All milestones checked → capstone archive (operator invokes `/niko-archive`)
+- Initial L4 milestone generation → first workflow execution (operator invokes `/niko`)
+
+## Phase Mappings
+
+To execute a phase for a level 4 task:
+
+1. Update `memory-bank/active/progress.md` to indicate completion of the phase you are leaving.
+2. 🚨 ***CRITICAL:*** Commit all changes - memory bank *and* other resources - to source control using a conventional commit in the following format: `chore: saving work before [phase] phase`.
+3. Read and follow the instructions in the appropriate locations:
+    - **Level 4 Plan Phase**: Load `.cursor/rules/shared/niko/level4/level4-plan.mdc`
+    - **Level 4 Preflight Phase**: Invoke the `niko-preflight` skill
+    - **Level 4 Archive Phase**: Load `.cursor/rules/shared/niko/level4/level4-archive.mdc`

@@ -1,0 +1,117 @@
+---
+alwaysApply: false
+---
+
+# Creative Phase: Architecture Design
+
+This document guides exploration of an open question about system structure - how components relate, what patterns to use, how to organize modules, where boundaries should be, or how data flows between subsystems. It is loaded by the `niko-creative` skill.
+
+## Inputs
+
+The `niko-creative` skill provides:
+- The open question (problem statement, why it's ambiguous, constraints)
+- Memory bank context (if available)
+
+## Step 1: Clarify Requirements & Constraints
+
+Before exploring options, nail down what the architecture must satisfy:
+- **Functional requirements**: What capabilities must the system provide?
+- **Quality attributes**: Which of scalability, performance, security, maintainability, and cost matter most? Rank them - architecture is about tradeoffs, and you cannot optimize for all simultaneously.
+- **Technical constraints**: Existing tech stack, team expertise, deployment environment, integration points, regulatory requirements
+- **Boundaries**: What is in scope for this decision? What is explicitly out of scope?
+
+## Step 2: Identify Components & Relationships
+
+Map the system's key components relevant to this decision:
+- What are the major components, and what is each one's single responsibility?
+- How do they communicate? (sync/async, request/response, event-driven, shared state)
+- Where are the boundaries between components? (process boundaries, network boundaries, trust boundaries)
+
+Use a mermaid diagram when the relationships are non-trivial - a component diagram for structure, a sequence diagram for interaction flows. Skip the diagram if the structure is simple enough that prose suffices.
+
+## Step 3: Enumerate Options
+
+Identify 2-4 viable architectural approaches. For each:
+- Name the pattern or approach (e.g., "monolith with module boundaries", "event-driven microservices", "hexagonal architecture")
+- One sentence describing how it addresses the open question
+- Note if existing system patterns (from `memory-bank/systemPatterns.md`) favor or conflict with this approach
+
+## Step 4: Evaluate Tradeoffs
+
+Compare options against the quality attributes ranked in Step 1. Use these evaluation criteria:
+
+1. **Fitness for requirements**: Does it satisfy the functional requirements without contortion?
+2. **Alignment with constraints**: Does it work within the stated technical constraints?
+3. **Simplicity**: Is this the simplest architecture that meets the quality attributes? Resist adding layers, services, or abstractions that aren't demanded by requirements.
+4. **Maintainability**: Can the team understand, modify, and debug it? Consider team size and expertise.
+5. **Scalability**: Does it handle projected growth without rearchitecting? (But don't design for 100x if 2x is the realistic horizon.)
+6. **Risk**: What is the blast radius if this choice is wrong? How reversible is it?
+
+Use a comparison table when three or more options are evaluated:
+
+| Criterion | Option A | Option B | Option C |
+|-----------|----------|----------|----------|
+| Fitness | ... | ... | ... |
+| Simplicity | ... | ... | ... |
+| Maintainability | ... | ... | ... |
+| Scalability | ... | ... | ... |
+| Risk | ... | ... | ... |
+
+Note key insights - where options diverge, what constraints eliminate options, and which quality attributes create tension.
+
+Guard against:
+- Distributed systems where a monolith suffices
+- Abstraction layers that serve no current requirement
+- Scale mismatch: Copying a "big company" architecture for a small-scale problem or vice-versa
+
+## Step 5: Decide
+
+Select the winning option. State:
+- Which option was selected
+- Why it won (tied to the ranked quality attributes from Step 1)
+- What was traded away (the key tradeoff(s) accepted, if any)
+- Implementation notes: component boundaries, integration approach, migration path if replacing existing architecture
+
+If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
+
+## Step 6: Output Document
+
+Write to `memory-bank/active/creative/creative-[question-name].md`:
+
+~~~markdown
+# Architecture Decision: [Question Name]
+
+## Requirements & Constraints
+[Ranked quality attributes, technical constraints, scope boundaries]
+
+## Components
+[Key components and their relationships - prose or mermaid diagram]
+
+## Options Evaluated
+- **[Option A]**: [one-line summary]
+- **[Option B]**: [one-line summary]
+
+## Analysis
+[Comparison table if 3+ options, or prose comparison for 2 options]
+
+Key insights:
+- [Where options diverge or constraints eliminate choices]
+- [Quality attribute tensions that shaped the decision]
+
+## Decision
+
+<!-- if a high-confidence result, use this format: -->
+
+**Selected**: [Option name]
+**Rationale**: [Why this won, tied to ranked quality attributes]
+**Tradeoff**: [What was accepted/sacrificed]
+
+## Implementation Notes
+- [Component boundaries]
+- [Integration approach]
+- [Migration path if applicable]
+
+<!-- if a low-confidence result, use this format: -->
+
+**Low-Confidence Result**: [Why no clear winner emerged]
+~~~

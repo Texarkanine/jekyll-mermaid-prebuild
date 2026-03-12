@@ -1,0 +1,13 @@
+---
+globs: memory-bank/active/.qa-validation-status
+---
+
+# QA Validation Status
+
+The QA validation status file is a simple text file used to track the status of the QA validation phase of a task.
+
+The QA validation status file is stored in the `memory-bank/active/.qa-validation-status` file.
+
+If QA validation passes, the file contains the text `PASS`.
+
+If QA validation fails, the file should contain the text `FAIL`.

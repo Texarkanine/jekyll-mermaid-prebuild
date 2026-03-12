@@ -1,0 +1,161 @@
+---
+alwaysApply: false
+description: Guidelines for using Mermaid diagrams during planning. Apply when planning non-trivial work involving multiple components, interactions, data models, or process flows.
+---
+# Visual Planning with Mermaid Diagrams
+
+When planning non-trivial work, **use Mermaid diagrams whenever they communicate structure, flow, or relationships more clearly than prose.** Don't diagram for the sake of diagramming - use diagrams when they earn their keep.
+
+## When to Diagram
+
+- **Architecture & component relationships** - what depends on what, how things connect
+- **Sequences of interactions** - API calls, user flows, event chains, multi-step processes
+- **Data models & entity relationships** - schemas, table relationships, domain models
+- **State machines & decision logic** - status transitions, branching workflows
+- **Class/module structure** - inheritance hierarchies, interface contracts, module boundaries
+
+If it takes more than a paragraph of prose to explain the structure and you keep wanting to say "and then" or "which connects to," or "if ...," it should be a diagram.
+
+## Choosing the Right Diagram Type
+
+Pick the diagram type that matches what you're communicating:
+
+| What you're showing | Diagram type | Mermaid syntax |
+|---|---|---|
+| Component dependencies, system topology, task breakdowns | **Flowchart** | `graph TD` or `graph LR` |
+| Request/response flows, API call sequences, multi-actor interactions | **Sequence diagram** | `sequenceDiagram` |
+| Database schemas, domain models, data relationships | **ER diagram** | `erDiagram` |
+| Inheritance, interfaces, module contracts | **Class diagram** | `classDiagram` |
+| Status lifecycles, workflow states | **State diagram** | `stateDiagram-v2` |
+
+Use `TD` (top-down) for hierarchies and dependencies. Use `LR` (left-right) for sequential flows.
+
+## Visual Elements for Rapid Scanning
+
+Use these visual elements sparingly to draw attention to critical areas of a diagram:
+
+```
+🎯 Main goals and objectives
+✅ Completed components  
+🔧 Technical implementation details
+🎨 User-facing features and interfaces
+⚠️ Risk areas, blockers, or dependencies
+🔄 Iterative or recurring processes
+📊 Data flow or state management
+🌐 External integrations or APIs
+```
+
+## Syntax Rules
+
+These prevent rendering failures:
+
+1. **Always quote node labels** with double quotes: `A["Node Label"]`
+2. **Escape special characters** - use `#quot;` for quotes inside labels, `#amp;` for ampersands. The `#` instead of `&` on-purpose and important: because Mermaid often renders within HTML documents, it uses its own entity format to ensure that the HTML renderer does NOT process it - only the Mermaid renderer.
+3. **Use `subgraph` blocks** to group related nodes - label them clearly
+4. **Use `classDef` + `:::className`** for styling - never inline `style` statements
+5. **Keep diagrams focused.** If a single diagram exceeds ~15-20 nodes, split it into multiple diagrams with clear titles explaining what each one covers.
+
+## Flowcharts
+
+Best for: architecture overviews, dependency graphs, decision trees, task breakdowns.
+
+```mermaid
+graph TD
+    classDef service fill:#e1f5fe,stroke:#01579b;
+    classDef store fill:#f3e5f5,stroke:#7b1fa2;
+    classDef external fill:#fff3e0,stroke:#ef6c00;
+
+    API["API Gateway"]:::service --> Auth["Auth Service"]:::service
+    API --> Orders["Order Service"]:::service
+    Orders --> DB["PostgreSQL"]:::store
+    Orders --> Queue["Event Bus"]:::external
+    Auth --> Cache["Redis Sessions"]:::store
+```
+
+## Sequence Diagrams
+
+Best for: API flows, user interactions, multi-service choreography, anything where **order matters**.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant G as API Gateway
+    participant A as Auth Service
+    participant S as Order Service
+
+    C->>G: POST /orders
+    G->>A: Validate token
+    A-->>G: 200 OK
+    G->>S: Create order
+    S-->>G: 201 Created
+    G-->>C: 201 Created
+```
+
+## ER Diagrams
+
+Best for: database design, domain modeling, data relationships.
+
+```mermaid
+erDiagram
+    USER ||--o{ ORDER : places
+    ORDER ||--|{ LINE_ITEM : contains
+    PRODUCT ||--o{ LINE_ITEM : "appears in"
+    USER {
+        int id PK
+        string email
+        string name
+    }
+    ORDER {
+        int id PK
+        int user_id FK
+        string status
+    }
+```
+
+## Class Diagrams
+
+Best for: OOP design, interface contracts, module boundaries.
+
+```mermaid
+classDiagram
+    class PaymentProcessor {
+        <<interface>>
+        +processPayment(amount, currency) Result
+        +refund(transactionId) Result
+    }
+    class StripeProcessor {
+        +processPayment(amount, currency) Result
+        +refund(transactionId) Result
+    }
+    class PayPalProcessor {
+        +processPayment(amount, currency) Result
+        +refund(transactionId) Result
+    }
+    PaymentProcessor <|.. StripeProcessor
+    PaymentProcessor <|.. PayPalProcessor
+```
+
+## State Diagrams
+
+Best for: lifecycle management, status workflows, FSMs.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Submitted : submit()
+    Submitted --> InReview : assign_reviewer()
+    InReview --> Approved : approve()
+    InReview --> Rejected : reject()
+    Rejected --> Draft : revise()
+    Approved --> [*]
+```
+
+## Planning Workflow
+
+When planning a non-trivial task:
+
+1. **Start with a flowchart** to map the components and their relationships
+2. **Add sequence diagrams** for any multi-step interactions that need to happen in a specific order
+3. **Add ER/class diagrams** if the work involves data model or interface design
+4. **Add state diagrams** if the work involves status/lifecycle management
+5. **Reference the diagrams** in your implementation plan - they are the plan's backbone, not decoration

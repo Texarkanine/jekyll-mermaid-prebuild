@@ -1,0 +1,123 @@
+---
+alwaysApply: false
+---
+
+# Creative Phase: UI/UX Design
+
+This document guides exploration of an open question about user-facing design - how to present information, interaction flows, visual layout, accessibility, or style decisions. It is loaded by the `niko-creative` skill.
+
+## Inputs
+
+The `niko-creative` skill provides:
+- The open question (problem statement, why it's ambiguous, constraints)
+- Memory bank context (if available)
+
+## Step 1: Design System Check
+
+Before anything else, check `memory-bank/techContext.md` for a "Design System" section.
+
+- **If present**: Load the referenced design authorities (Figma, Storybook, design tokens, component library, brand guidelines). All visual design proposals in this exploration must conform to them. Design system adherence is a mandatory evaluation criterion in Step 3.
+- **If absent**: Ask the operator whether the project has visual style authorities that should be referenced. If yes, add them to the Design System section of `memory-bank/techContext.md` before continuing. If no (e.g., greenfield project), note this and proceed - but flag that design decisions made here should become the foundation for a future design system.
+
+## Step 2: Understand the User & Context
+
+Clarify who is using this and what they need:
+- **Users**: Who are they? What are their goals, constraints, and skill level?
+- **Task**: What specific task or workflow does this UI support?
+- **Context**: Where does this appear in the broader application? What comes before and after?
+- **Constraints**: Device targets, accessibility requirements (WCAG level), platform conventions
+
+## Step 3: Enumerate Options
+
+Identify 2-4 viable design approaches. For each:
+- Name the approach (e.g., "wizard flow", "single-page form", "progressive disclosure dashboard")
+- One sentence describing the interaction model
+- A brief description or ASCII sketch of the layout - enough to convey the concept, not a pixel-perfect mockup
+
+Consider these dimensions when generating options:
+- **Information architecture**: How is content structured and navigated?
+- **Interaction model**: How does the user accomplish the task? (steps, direct manipulation, conversational)
+- **Visual hierarchy**: What draws attention first? How is importance communicated?
+
+## Step 4: Evaluate Tradeoffs
+
+Compare options against these criteria:
+
+1. **Usability**: Can the target users accomplish their task efficiently and without confusion?
+2. **Clarity**: Is the information hierarchy clear? Does the user always know where they are and what to do next?
+3. **Accessibility**: Does it meet the required WCAG level? Keyboard navigable? Sufficient contrast? Screen reader compatible?
+4. **Consistency**: Does it align with existing UI patterns in the application and with the design system (if one exists)?
+5. **Feasibility**: Can it be implemented with the project's tech stack without heroics?
+6. **Simplicity**: Is this the simplest design that meets the user's needs? Resist adding UI elements that don't serve a clear purpose.
+
+If a design system exists, add: **Design system adherence** - does the option conform to established colors, typography, spacing, and component patterns?
+
+Use a comparison table when three or more options are evaluated:
+
+| Criterion | Option A | Option B | Option C |
+|-----------|----------|----------|----------|
+| Usability | ... | ... | ... |
+| Clarity | ... | ... | ... |
+| Accessibility | ... | ... | ... |
+| Consistency | ... | ... | ... |
+| Feasibility | ... | ... | ... |
+
+Note key insights - where user needs create tension with feasibility, where accessibility requirements constrain visual options, or where consistency with existing patterns conflicts with optimal UX.
+
+Guard against:
+- Designing for edge cases at the expense of the primary flow
+- Visual complexity that impresses but confuses
+- Ignoring accessibility as a "nice to have"
+
+## Step 5: Decide
+
+Select the winning option. State:
+- Which option was selected
+- Why it won (tied to user needs and evaluation criteria)
+- What was traded away (the key tradeoff(s) accepted, if any)
+- Implementation notes: key interaction details, responsive behavior, accessibility implementation, design system references
+
+If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
+
+## Step 6:Output Document
+
+Write to `memory-bank/active/creative/creative-[question-name].md`:
+
+~~~markdown
+# UI/UX Decision: [Question Name]
+
+## User & Context
+[Who uses this, what task it supports, where it fits in the application]
+
+## Design System
+[References to design authorities used, or note that none exists]
+
+## Options Evaluated
+- **[Option A]**: [one-line summary + brief layout description]
+- **[Option B]**: [one-line summary + brief layout description]
+
+## Analysis
+[Comparison table if 3+ options, or prose comparison for 2 options]
+
+Key insights:
+- [Where user needs and feasibility create tension]
+- [Accessibility or consistency constraints that shaped the decision]
+
+## Decision
+
+<!-- if a high-confidence result, use this format: -->
+
+**Selected**: [Option name]
+**Rationale**: [Why this won, tied to user needs and criteria]
+**Tradeoff**: [What was accepted/sacrificed]
+
+## Implementation Notes
+- [Key interaction details]
+- [Responsive behavior]
+- [Accessibility implementation]
+- [Design system references]
+
+<!-- if a low-confidence result, use this format: -->
+
+**Low-Confidence Result**: [Why no clear winner emerged]
+~~~

@@ -1,0 +1,43 @@
+---
+alwaysApply: true
+---
+
+# CORE MEMORY BANK FILE LOCATIONS
+
+**CRITICAL:** All core Memory Bank files reside within the `memory-bank/` directory at the project root. Do NOT create or modify these files outside this directory unless explicitly instructed for archiving purposes.
+
+## Persistent Files
+
+These files contain relatively stable information and persist across tasks to guide & inform development and design:
+
+* **Product Context File:** `memory-bank/productContext.md` - Business context: target users, use cases, success criteria, constraints.
+* **System Patterns File:** `memory-bank/systemPatterns.md` - Architectural patterns: code organization, naming conventions, design patterns in use.
+* **Tech Context File:** `memory-bank/techContext.md` - Technical stack: languages, frameworks, build tools, file conventions, dependencies, design system references. Do NOT include session-specific info (current branch, current task).
+* **Archive Directory:** `memory-bank/archive/<kind>/YYYYMMDD-<task-id>.md`
+
+## Ephemeral Files
+
+These files are scoped to the current task, and will be updated as the task progresses.
+
+* **Project Brief File:** `memory-bank/active/projectbrief.md` - Current session deliverable: user story & requirements. This guides all development.
+* **Active Context File:** `memory-bank/active/activeContext.md` - Current session focus: what's being worked on now, recent decisions, immediate next steps. A pointer to the current phase.
+* **Tasks File:** `memory-bank/active/tasks.md` - Active task tracking: current task details, checklists, component lists. The work to do in the current phase.
+* **Progress File:** `memory-bank/active/progress.md` - Implementation progress: history of completed work and phase transitions.
+* **Creative Phase Docs:** `memory-bank/active/creative/creative-[feature_name].md`
+* **Reflection Docs:** `memory-bank/active/reflection/reflection-<task-id>.md`
+* **Preflight Status:** `memory-bank/active/.preflight-status` - Task-specific preflight validation status file (created by `/niko-preflight`, gates `/niko-build` for L3+ tasks)
+* **QA Validation Status:** `memory-bank/active/.qa-validation-status` - Task-specific QA validation status file (created by `/niko-qa`, gates `/niko-reflect` for L2+ tasks)
+* **L4 Milestone List:** `memory-bank/active/milestones.md` - L4-only. Ordered checklist of milestones for the current L4 project, each of which will be handled by separate L1/L2/L3 sub-runs. Deleted by the capstone archive phase when all milestones are done.
+
+**Verification Mandate:** Before any `create_file` or `edit_file` operation on core files, verify the path is correct for the file type:
+- **Persistent files** must reside directly under `memory-bank/` (e.g., `memory-bank/systemPatterns.md`).
+- **Ephemeral files** must reside under `memory-bank/active/` (e.g., `memory-bank/active/tasks.md`). Do NOT write ephemeral files to `memory-bank/` directly.
+
+## Level-Specific Niko Workflows
+
+Tasks are categorized into different levels of complexity. Each level has a specific workflow that guides the task through the different phases, and specific implementations of those phases. Phase execution and mappings must always be done as specified by the workflow that applies to the current task's complexity level.
+
+- Level 1: `.cursor/rules/shared/niko/level1/level1-workflow.mdc`
+- Level 2: `.cursor/rules/shared/niko/level2/level2-workflow.mdc`
+- Level 3: `.cursor/rules/shared/niko/level3/level3-workflow.mdc`
+- Level 4: `.cursor/rules/shared/niko/level4/level4-workflow.mdc`

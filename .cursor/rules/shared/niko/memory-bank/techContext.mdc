@@ -1,0 +1,65 @@
+---
+globs: memory-bank/techContext.md
+---
+
+# Tech Context
+
+The "Tech Context" summarizes how to work with the technology stack(s) in use in the project. It identifies the tools, commands, and frameworks that should be top-of-mind while working on the project. It does NOT include session-specific info (current branch, current task, local environment, etc).
+
+## File
+
+`memory-bank/techContext.md`
+
+## How to Create
+
+Scan the codebase for significant technologies (nonstandard or high-criticality) and document them. Look for design system authorities too - if the project has UI components, check for Figma links, Storybook configs, design token files, component library references, or brand guidelines.
+
+This is largely a free-form document designed to capture and surface information that would otherwise require time and effort to discover.
+
+Prefer to name things that are likely to remain static, and link out to configuration for those technologies, so that the document doesn't go stale.
+
+For example, instead of listing all test-related commands from a `package.json`, note something like 
+
+> Tests are run in the `jest` framework as configured in `package.json` and `jest.config.js`, and run with the `pnpm` tool.
+
+This ensures that even if the *specifics* of testing are free to change, the general guidance in this file remains valid.
+
+Err on the side of brevity - if you're not sure if something needs to be mentioned, don't document it. For example, if a project has a `package.json`, it probably uses `javascript` and so you don't need to document *that*. But if it has a `package.json` *and* a `pom.xml`, for example, well, that's unusual and probably worth investigating and documenting.
+
+### Avoid
+
+1. Cataloging dependencies - the package manager file (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.) is the source of truth. Only mention a dependency here if there is non-obvious context about it that a developer needs to know (e.g., a history of compatibility issues, a hard-won workaround, or a reason a seemingly-redundant dependency exists).
+2. Values that will drift without someone updating this file. Prefer indirection: say "version pinned in `.nvmrc`" instead of "version 20.18.0 in `.nvmrc`". Say "configured in `jest.config.js`" instead of listing the configuration. The goal is pointers that remain valid even as the pointed-to values change.
+3. Unverified claims. If you infer something (e.g., a tool is in use) but cannot confirm it from project files, do not include it.
+
+## Format
+
+Create the file in Markdown format, according to this template:
+
+~~~markdown
+
+# Tech Context
+
+short summary of the project's technology stack(s)
+
+## Environment Setup
+
+Any crucial environment setup instructions that must be followed and/or validated before the project can be worked on.
+
+## Build Tools
+
+Short punchlist of the build tool(s) in the project, with links to each tool's canonical configuration.
+
+## Testing Process
+
+Short punchlist of the tools and commands used to test and validate the project, with links to each tool's canonical configuration.
+
+## Design System
+
+(Include only if the project has user-facing UI.)
+
+Pointers to the canonical visual style authorities: design token files, Figma/Sketch URLs, Storybook instance, component library, brand guidelines. These are references, not definitions - the design system itself lives wherever the project keeps it.
+
+~~~
+
+It is acceptable to add sections to the file if needed for a project-specific situation, but be sparing.

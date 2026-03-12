@@ -1,0 +1,52 @@
+---
+globs: memory-bank/active/milestones.md
+---
+
+# L4 Milestone List
+
+`memory-bank/active/milestones.md` is the L4 project's plan and state tracker. It serves two purposes simultaneously:
+
+1. **In-flight signal**: its presence tells complexity analysis that an L4 project is active; skip the decision tree and enter re-entry routing.
+2. **State tracker**: the checklist records which milestones are complete and which remain.
+
+## File Format
+
+```markdown
+# Milestones: <task-id>
+
+[optional Mermaid flowchart showing dependency relationships between milestones - omit if all milestones are sequential]
+
+- [ ] <Milestone 1: one-line description of the deliverable>
+- [ ] <Milestone 2: one-line description of the deliverable>
+- [ ] <Milestone 3: one-line description of the deliverable>
+```
+
+Rules:
+- Header must be `# Milestones: <task-id>` where `task-id` matches the active task's ID in `memory-bank/active/tasks.md`
+- Each milestone is a standard GFM checkbox: `- [ ]` (unchecked) or `- [x]` (complete)
+- One milestone per line - no sub-bullets, no notes inline
+- Description is a single line: concise, action-oriented, specific enough that a future agent can classify it as L1/L2/L3 without additional context
+- The optional dependency flowchart (if present) precedes the checklist and is not a milestone - complexity analysis identifies milestones by the `- [ ]` / `- [x]` markers only
+
+## What Makes a Good Milestone
+
+Each milestone must satisfy all of these:
+
+- **Independently deliverable** - can be planned, built, tested, and committed as a self-contained sub-run with no dependency on future milestones
+- **L1/L2/L3 scoped** - small enough to pass through the complexity analysis decision tree without itself being classified L4
+- **Concrete** - the description names what is being built, not the activity ("Add user authentication flow" not "Work on auth")
+- **Non-overlapping** - milestones cover distinct ground; no two milestones should touch the same files for the same purpose
+
+If a milestone fails any of these criteria during preflight, it should be split, merged, or rewritten before sub-runs begin.
+
+## Lifecycle
+
+| Event | Who | Action |
+|-------|-----|--------|
+| L4 Plan phase | `.cursor/rules/shared/niko/level4/level4-plan.mdc` | Creates `memory-bank/active/milestones.md` |
+| `/niko` re-entry - sub-run reflect complete | `.cursor/rules/shared/niko/core/complexity-analysis.mdc` Step 1 | Checks off the completed milestone (`- [ ]` → `- [x]`) |
+| `/niko` re-entry - unchecked remain | `.cursor/rules/shared/niko/core/complexity-analysis.mdc` Step 1 | Classifies first unchecked as L1/L2/L3, initiates sub-run |
+| `/niko` re-entry - all `- [x]` | `.cursor/rules/shared/niko/core/complexity-analysis.mdc` Step 1 | Routes to capstone archive |
+| Capstone archive | `.cursor/rules/shared/niko/level4/level4-archive.mdc` | Deletes `memory-bank/active/milestones.md` |
+
+🚨 **Do not create or modify `memory-bank/active/milestones.md` outside of these lifecycle events.** Its presence is used as a binary signal by complexity analysis - creating it manually will cause complexity analysis to enter re-entry routing on the next `/niko` invocation.

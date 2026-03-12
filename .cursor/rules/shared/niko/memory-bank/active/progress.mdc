@@ -1,0 +1,105 @@
+---
+globs: memory-bank/active/progress.md
+---
+
+# Progress
+
+The "Progress" file tracks the journey of the current project from start to finish.
+For each work session, the work, decisions, and outcomes are recorded, along with the phase that it happened in.
+This file will accumulate the history of the project's journey from start to finish.
+
+## File
+
+`memory-bank/active/progress.md`
+
+## How to Create
+
+This file should be created when the first work session of a project is started.
+
+## When to Update
+
+When sufficient tasks in `memory-bank/active/tasks.md` have completed such that the `memory-bank/active/activeContext.md` is ready to be changed to a new focus, that information gets moved to a succinct section in this file.
+Each time this file is updated, a *new* section should be *appended* to the *bottom* of the file.
+
+🚨 **CRITICAL:** The progress **must** be updated whenever a phase is completed.
+
+## Format
+
+Create the file in Markdown format, according to this template:
+
+~~~markdown
+# Progress
+
+Short, high-level summary of the work that needs to be done in order to complete the work laid out in the `memory-bank/active/projectbrief.md` file.
+
+## [Date] - [Phase] - [Status]
+
+* Work completed
+    - [work completed 1]
+    - [work completed 2]
+    - ...
+* Decisions made
+    - [decision made 1]
+    - [decision made 2]
+    - ...
+* Insights
+    - [insight 1]
+    - [insight 2]
+    - ...
+
+## [Date] - [Phase] - [Status]
+
+* Work completed
+    - [work completed 1]
+    - [work completed 2]
+    - ...
+* Decisions made
+    - [decision made 1]
+    - [decision made 2]
+    - ...
+* Insights
+    - [insight 1]
+    - [insight 2]
+    - ...
+
+~~~
+
+## Example
+
+~~~markdown
+# Progress
+
+Building out and bootstrapping the new project w/ basic setup.
+
+**Complexity:** Level 3
+
+## 2024-06-12 - FEATURE DEVELOPMENT - IN-PROGRESS
+
+* Work completed
+    - Initialized new TypeScript webapp project with Vite
+    - Set up ESLint, Prettier, and basic lint/fmt scripts
+    - Added initial folder structure: `src/`, `public/`, `types/`
+    - Created basic HomePage and App shell components
+    - Configured project for strict type checking
+* Decisions made
+    - Decided to use Vite for fast development and hot module replacement
+    - Selected TypeScript strict mode to enforce better code quality
+
+## 2024-06-15 - FEATURE DEVELOPMENT - COMPLETE
+
+* Work completed
+    - Implemented authentication flow (login, logout, registration)
+    - Established API client with error handling and token refresh strategy
+    - Built reusable UI component library (Button, Input, Modal)
+    - Wrote unit and integration tests for auth and shared components
+    - Deployed staging app to Vercel
+* Decisions made
+    - Chose React Query for API state management
+    - Adopted CSS Modules for local component styling
+    - Standardized all API error responses to a common interface
+* Insights
+    - Integrating ESLint and Prettier early prevented many code style issues
+    - Building components with strict typesurfaced bugs before runtime
+    - Upfront investment in shared UI components accelerated feature work later
+
+~~~

@@ -1,0 +1,58 @@
+---
+globs: memory-bank/active/activeContext.md
+---
+
+# Active Context
+
+The "Active Context" is the current session focus: what's being worked on now, recent decisions, immediate next steps. A pointer to the current phase.
+This is a logical parent of the `memory-bank/active/tasks.md` task list, containing high-level objectives & results for the current session and phase.
+This file serves a pre-computed "compacted context" to enable pausing and resuming of work - concise summaries of the current thinking, decisions, and actions.
+
+## File
+
+`memory-bank/active/activeContext.md`
+
+## How to Create
+
+Once the current phase and its work have been identified, this file can be filled out.
+
+## When to Update
+
+As work is completed and decisions are made, this file can be updated.
+
+🚨 **CRITICAL:** All decisions made by the user after asking them for any kind of input should be recorded into this file as they are made.
+
+## Format
+
+Create the file in Markdown format, according to this template:
+
+~~~markdown
+# Active Context
+
+## Current Task: [Task Name]
+**Phase:** [phase name] - [status (READY / IN-PROGRESS / COMPLETE)]
+
+## What Was Done
+- [what was done]
+
+## Next Step
+- [next step]
+~~~
+
+## Example
+
+~~~markdown
+# Active Context
+
+## Current Task: niko-preflight-qa
+**Phase:** BUILD - COMPLETE (rework - all PR #38 review feedback addressed)
+
+## What Was Done
+- P0: Reverted 4 visual-maps files to main, applied surgical semantic edits (diff reduced from 2262 to 368 lines)
+- P1: Fixed workflow completeness - always archive for L2+, correct phase counts
+- P2: Trimmed duplication - commands reference `/niko-preflight` and `/niko-qa` instead of reproducing procedures; consolidated archive dotfile cleanup; nested build prerequisites by level
+- P3: Added "Output to Operator" section to all 6 commands; deleted 2 obsolete files; updated common-fixes.mdc for semantic QA
+
+## Next Step
+- QA PASSED - proceed to `/niko-reflect`
+~~~

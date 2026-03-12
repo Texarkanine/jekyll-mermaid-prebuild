@@ -1,0 +1,75 @@
+---
+globs: memory-bank/archive/**/*.md
+---
+
+# Archives
+
+Archives are the final documentation of a completed project.
+They are created after the project is verified as complete.
+
+## Files
+
+Archives are stored in the `memory-bank/archive/<kind>/` directory.
+Archive files are named in the format `YYYYMMDD-<task-id>.md`.
+
+Archives are categorized into one of the following kinds (no others):
+- `bug-fixes/` - something was wrong, but it has been corrected
+- `enhancements/` - an existing feature or capability has been improved or extended
+- `features/` - an entirely new feature or capability has been added
+- `systems/` - a major change to the system has been made
+
+## How to Create
+
+Each task complexity level has its own guidelines for creating an archive - different levels have different levels of detail and depth required.
+
+All important information from ephemeral files (such as reflections, creative docs, QA/testing status) should be ***inlined*** in the archive document, not linked, as ephemeral files are deleted after archiving. The archive document should stand on its own as a complete account of the work.
+
+If an archive section has no meaningful content, include it but add a small note as to why this work didn't produce any meaningful content for the section.
+
+## Format
+
+Archives use the following format:
+
+~~~markdown
+---
+task_id: [task-id]
+complexity_level: [n]
+date: YYYY-MM-DD
+status: completed
+---
+
+# TASK ARCHIVE: [Task Name]
+
+## SUMMARY
+
+[Brief description of what was accomplished, changed, or fixed.]
+
+## REQUIREMENTS
+
+[List the functional, quality, or process requirements that this work targeted. What was this archive supposed to achieve or fix? (Bullets or short summaries.)]
+
+## IMPLEMENTATION
+
+[Describe the implementation approach, key files touched, significant changes, and anything unique about how the requirements were met.]
+
+## TESTING
+
+[Describe verification steps taken: how was this work tested or validated? List manual checks, test runs, use of `/niko-qa`, etc.]
+
+## LESSONS LEARNED
+
+[List practical takeaways, patterns discovered, or recommendations for future work.]
+
+## PROCESS IMPROVEMENTS
+
+[Flag any process changes that would make similar work more efficient or robust next time.]
+
+## TECHNICAL IMPROVEMENTS
+
+[Optional: List any technical architecture, organization, or system suggestions for future improvement.]
+
+## NEXT STEPS
+
+[If there are actionable follow-ups or recommendations, list them here. Otherwise, "None."]
+
+~~~

@@ -1,0 +1,13 @@
+---
+globs: memory-bank/active/.preflight-status
+---
+
+# Preflight Status
+
+The preflight status file is a simple text file used to track the status of the preflight analysis phase of a task.
+
+The preflight status file is stored in the `memory-bank/active/.preflight-status` file.
+
+If pre-flight checks pass, the file contains the text `PASS`.
+
+If pre-flight checks fail, the file should contain the text `FAIL`.

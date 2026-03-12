@@ -1,0 +1,54 @@
+---
+globs: memory-bank/active/projectbrief.md
+---
+
+# Project Brief
+
+The "Project Brief" is the current session deliverable: user story & requirements. This serves as the "north star" to guide all development in the current session.
+
+## File
+
+`memory-bank/active/projectbrief.md`
+
+## How to Create
+
+Cleanly summarize the user's story and requirements for the current session.
+
+If the user has not provided a complete picture of the work to be done, or there are ambiguities, prompt the user for more information.
+
+## Format
+
+Create the file in Markdown format, according to this template:
+
+~~~markdown
+# Project Brief
+
+## User Story
+
+As a(n) [role], I want to [goal] so that [benefit].
+
+## Use-Case(s)
+
+### Use-Case 1
+
+### Use-Case 2
+
+## Requirements
+
+1. [requirement 1]
+2. [requirement 2]
+...
+
+## Constraints
+
+1. [constraint 1]
+2. [constraint 2]
+...
+
+## Acceptance Criteria
+
+1. [acceptance criterion 1]
+2. [acceptance criterion 2]
+...
+
+~~~
