@@ -101,6 +101,7 @@ Design decisions made without creative phase:
 - **B6**: Root `<svg>` `max-width` set to configured value when `max_width` provided
 - **B7**: Root `<svg>` without style attribute → no error
 - **B8**: Other inline styles on root `<svg>` preserved (only `max-width` affected)
+- **B9a**: Root `<svg>` always has `width="100%"` after post-processing (defensive set)
 
 #### Configuration
 
@@ -152,11 +153,11 @@ Design decisions made without creative phase:
 ### Step 3: SvgPostProcessor — new module (TDD cycle)
 
 - Files: `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb` (NEW), `lib/jekyll-mermaid-prebuild/svg_post_processor.rb` (NEW), `lib/jekyll-mermaid-prebuild.rb`
-- Tests: B1, B2, B3, B4, B5, B6, B7, B8
+- Tests: B1, B2, B3, B4, B5, B6, B7, B8, B9a
 - Changes:
   - New module with `module_function` pattern
   - Public: `process(svg_content, max_width: nil)` → returns post-processed SVG string
-  - Private: `fix_foreign_object_widths(doc)`, `adjust_root_svg_width(doc, max_width)`
+  - Private: `fix_foreign_object_widths(doc)`, `adjust_root_svg_width(doc, max_width)` (also defensively sets `width="100%"` on root SVG)
   - Add `require_relative` in main module file
 
 ### Step 4: Generator — integrate post-processing (TDD cycle)
@@ -166,6 +167,7 @@ Design decisions made without creative phase:
 - Changes:
   - After `MmdcWrapper.render` succeeds: read SVG from `cache_path`, call `SvgPostProcessor.process(svg_content, max_width: @config.max_width)`, write result back to `cache_path`
   - Existing mock setup in specs writes SVG content to file — adjust to verify post-processing
+  - **Preflight note**: Update existing `instance_double` for Configuration to include `max_width: nil` (or appropriate value) to avoid RSpec "unexpected message" errors
 
 ### Step 5: Processor — cache key includes max_width (TDD cycle)
 
@@ -174,6 +176,7 @@ Design decisions made without creative phase:
 - Changes:
   - `convert_block`: compute cache key as `DigestCalculator.content_digest("#{mermaid_source}\x00max_width=#{@config.max_width}")` instead of `DigestCalculator.content_digest(mermaid_source)`
   - This naturally invalidates all pre-existing caches (format change)
+  - **Preflight note**: Update existing `instance_double` for Configuration to include `max_width: nil` in all existing test contexts
 
 ### Step 6: Documentation
 
@@ -202,6 +205,6 @@ Design decisions made without creative phase:
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
 - [x] Technology validation complete
-- [ ] Preflight
+- [x] Preflight (PASS — minor amendments applied)
 - [ ] Build
 - [ ] QA

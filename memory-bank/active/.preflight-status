@@ -1,0 +1,7 @@
+PASS
+timestamp: 2026-03-12
+task: svg-post-processing
+findings:
+  - INFO: Existing instance_double mocks in generator_spec.rb and processor_spec.rb need max_width added. Plan amended with explicit notes.
+  - AMENDMENT: Added B9a test behavior - defensively set width="100%" on root SVG for robust responsive behavior.
+  - ADVISORY: Pluggable post-processor architecture would improve future extensibility but exceeds current scope.
