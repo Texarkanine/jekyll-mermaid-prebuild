@@ -8,18 +8,26 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
 
 ## Pinned Info
 
-### Data Flow (Post-Processing Integration)
+### Pipeline (Post-Processing Integration)
 
-Where `SvgPostProcessor` sits in the existing pipeline:
+Call order: where `SvgPostProcessor` sits in the existing pipeline.
 
 ```mermaid
-flowchart LR
-    P[Processor] -->|mermaid src + cache_key| G[Generator]
-    G -->|writes .mmd| MW[MmdcWrapper]
-    MW -->|writes .svg| G
-    G -->|reads SVG, calls| SPP["SvgPostProcessor<br/>(NEW)"]
-    SPP -->|returns fixed SVG| G
-    G -->|writes fixed SVG to cache| Cache[(Cache Dir)]
+sequenceDiagram
+    participant P as Processor
+    participant G as Generator
+    participant MW as MmdcWrapper
+    participant SPP as SvgPostProcessor (NEW)
+    participant Cache as Cache Dir
+
+    P->>G: generate(mermaid_source, cache_key)
+    G->>MW: render(source, output_path)
+    MW-->>G: true (writes .svg to output_path)
+    G->>G: read SVG from cache_path
+    G->>SPP: process(svg_content, max_width: config.max_width)
+    SPP-->>G: fixed SVG string
+    G->>Cache: write fixed SVG to cache_path
+    G-->>P: cache_path
 ```
 
 ### foreignObject Fix Logic
