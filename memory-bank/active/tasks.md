@@ -6,11 +6,28 @@
 
 ## Summary
 
-Two-pronged fix for mmdc-generated SVG rendering issues:
+Fix mmdc-generated SVG rendering issues caused by headless Chromium undermeasuring emoji glyph widths.
 
-1. **Emoji width compensation** (Mermaid source preprocessing): Puppeteer undermeasures emoji glyphs, producing foreignObject elements too narrow for the text. Fix: before passing Mermaid source to mmdc, detect emoji in node labels and append `&nbsp;` padding so Puppeteer allocates correct widths. Opt-in via config.
+**Emoji width compensation** (Mermaid source preprocessing): Headless Chromium (used by Puppeteer/mmdc) undermeasures emoji glyph widths on non-Mac platforms — a [known Chrome bug](https://stackoverflow.com/q/42016125). This produces foreignObject elements too narrow for the text, causing clipping. Fix: before passing Mermaid source to mmdc, detect emoji in node labels and append `&nbsp;` padding so Puppeteer allocates correct widths. Opt-in via config per diagram type.
 
-2. **Root SVG max-width handling** (SVG post-processing): mmdc hardcodes a `max-width` inline style tied to Puppeteer viewport width. Fix: remove it (or replace with user-configured value) and set `width="100%"` for responsive scaling. Already implemented and tested.
+### Why this belongs in the plugin (not manual `&nbsp;` in source)
+
+The `&nbsp;` padding is **only correct for the mmdc rendering path.** Mermaid source with manual `&nbsp;` padding renders incorrectly in every other context:
+- GitHub markdown preview (renders the trailing spaces visibly)
+- IDE markdown preview (same)
+- mermaid.live (same)
+- Client-side mermaid.js rendering (doesn't have the headless Chrome bug)
+
+The plugin is the only layer that sits between the author's clean Mermaid source and mmdc. It injects the compensation transparently — the source files stay clean and render correctly everywhere, while the mmdc-rendered output gets the padding it needs.
+
+### Why this is opt-in with clear documentation
+
+This is a workaround for a platform-specific headless Chromium bug, not a universal fix:
+- **Mac mmdc builds**: don't need compensation (emoji measure correctly)
+- **Linux/Windows mmdc builds**: need compensation (emoji undermeasured)
+- **Upstream fix possible**: if Chromium or mermaid fixes the emoji width measurement, this feature should be disabled — excess `&nbsp;` padding would over-widen nodes
+
+Documentation must clearly state: this compensates for a known headless Chromium emoji width measurement bug. Enable it only if you observe emoji text clipping in mmdc-rendered SVGs on your build platform.
 
 ## Pinned Info
 
@@ -34,27 +51,43 @@ Puppeteer handles centering, rect sizing, transforms — all correct natively.
 | Per-emoji px compensation in SVG | Fragile for multi-line labels; can't know which line constrains width |
 | `overflow: visible` on foreignObject | Asymmetric rightward overflow; centering wrong |
 | `overflow: visible` + flex CSS | Invasive; `display: table-cell` → `display: flex` swap has uncertain browser compat |
+| Root SVG max-width manipulation | User confirmed SVGs scale fine without it — was solving a non-problem. The real clipping was emoji width, not container compression. |
 
-### Pipeline (Updated)
+### Pipeline
 
 ```
 Processor.process_content
   ├─ extract mermaid block
   ├─ EmojiCompensator.compensate(source)  ← NEW (before mmdc)
-  ├─ compute cache_key (includes compensated source + max_width)
+  ├─ compute cache_key (includes compensated source)
   ├─ Generator.generate(compensated_source, cache_key)
-  │   ├─ MmdcWrapper.render (gets correct widths from padded source)
-  │   └─ SvgPostProcessor.process (root SVG max-width only)
+  │   └─ MmdcWrapper.render (gets correct widths from padded source)
   └─ build figure HTML
 ```
 
 ## Component Analysis
 
-### Affected Components (NEW for emoji compensation)
+### Components to ADD
 
 - **EmojiCompensator** (`lib/jekyll-mermaid-prebuild/emoji_compensator.rb`): **NEW** — Stateless module. Accepts a Mermaid source string and a diagram type. If the diagram type is enabled for compensation, detects emoji in node labels and appends `&nbsp;` padding. Each diagram type has its own label detection regex (flowcharts use `NodeId["label"]` patterns; other types have different syntax).
 - **Configuration** (`lib/jekyll-mermaid-prebuild/configuration.rb`): Add `emoji_width_compensation` config — a map of diagram types to booleans. Example: `emoji_width_compensation: { flowchart: true }`. Accessor returns a frozen Hash; empty hash if not configured.
 - **Processor** (`lib/jekyll-mermaid-prebuild/processor.rb`): Detect diagram type from Mermaid source, check if compensation is enabled for that type, call EmojiCompensator if so. Cache key includes the compensated source.
+
+### Components to REMOVE (max_width / SvgPostProcessor — no longer needed)
+
+User confirmed that removing mmdc's hardcoded `max-width` inline style is not needed: SVGs scale correctly without any manipulation. The original clipping symptom was caused by emoji width undermeasurement, not container compression.
+
+- **SvgPostProcessor** (`lib/jekyll-mermaid-prebuild/svg_post_processor.rb`): DELETE entire module
+- **SvgPostProcessor spec** (`spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`): DELETE entire spec
+- **Configuration** `max_width`: REMOVE `attr_reader :max_width` and `parse_max_width`
+- **Configuration spec**: REMOVE max_width test cases (B9–B12)
+- **Generator**: REMOVE `post_process_svg` method and `SvgPostProcessor` call
+- **Generator spec**: REMOVE SvgPostProcessor integration tests (B13–B16)
+- **Processor**: REMOVE `max_width` from cache key
+- **Processor spec**: REMOVE max_width cache key tests (B17–B18)
+- **Main require** (`lib/jekyll-mermaid-prebuild.rb`): REMOVE `require_relative "svg_post_processor"`
+- **Gemspec**: REMOVE `nokogiri` runtime dependency (no longer needed — emoji compensation is string manipulation, not XML parsing)
+- **README**: REMOVE max_width documentation
 
 ### Diagram Type Detection
 
@@ -75,13 +108,6 @@ Known diagram type keywords relevant to emoji compensation:
 - `graph`, `flowchart` → flowchart (both map to the same compensation logic)
 
 **Scope for this build: flowchart only.** Other diagram types (sequenceDiagram, classDiagram, stateDiagram, etc.) are future enhancements. The config map structure supports them without code changes — just add label detection regex for the new type. Unrecognized types in the config are silently ignored (no-op).
-
-### Already Complete (from prior build)
-
-- **SvgPostProcessor**: Root SVG max-width handling — tested and working
-- **Generator**: Post-processing integration — tested and working
-- **Gemspec**: Nokogiri dependency — added
-- **Configuration**: `max_width` parsing — tested and working
 
 ## Emoji Detection Strategy
 
@@ -155,6 +181,19 @@ Approach: regex to match node label patterns, extract the text content, count em
 
 ## Implementation Plan
 
+### Step 0: Remove max_width / SvgPostProcessor (cleanup)
+
+- Delete `lib/jekyll-mermaid-prebuild/svg_post_processor.rb`
+- Delete `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`
+- Remove `require_relative "svg_post_processor"` from `lib/jekyll-mermaid-prebuild.rb`
+- Remove `nokogiri` runtime dependency from gemspec; `bundle install`
+- Remove `max_width` from Configuration (attr_reader, parse method) and its tests (B9–B12)
+- Remove `post_process_svg` from Generator and its tests (B13–B16)
+- Remove `max_width` from Processor cache key and its tests (B17–B18)
+- Update config doubles across all specs that reference `max_width`
+- Remove max_width documentation from README
+- Run full test suite — should pass with fewer tests (removal only, no new behavior)
+
 ### Step 1: Configuration — add `emoji_width_compensation` (TDD cycle)
 
 - Files: `spec/jekyll_mermaid_prebuild/configuration_spec.rb`, `lib/jekyll-mermaid-prebuild/configuration.rb`
@@ -185,8 +224,19 @@ Approach: regex to match node label patterns, extract the text content, count em
 ### Step 4: Documentation + cleanup
 
 - Files: `README.md`
-- Update feature description, config options table, known limitations
-- Example config showing `emoji_width_compensation` map
+- Remove all max_width documentation
+- Document `emoji_width_compensation` config with explicit guidance:
+  - What it does: appends invisible `&nbsp;` padding to emoji-containing node labels before mmdc renders
+  - Why it exists: headless Chromium undermeasures emoji glyph widths on non-Mac platforms ([Chrome bug](https://stackoverflow.com/q/42016125))
+  - When to enable: only if you observe emoji text clipping in mmdc-rendered SVGs on your build platform
+  - When NOT to enable: Mac build environments, or if upstream fixes land
+  - Why it's in the plugin: manual `&nbsp;` in source would break GitHub preview, IDE preview, mermaid.live, and client-side rendering
+- Example config:
+  ```yaml
+  mermaid_prebuild:
+    emoji_width_compensation:
+      flowchart: true
+  ```
 
 ## Status
 
@@ -194,6 +244,9 @@ Approach: regex to match node label patterns, extract the text content, count em
 - [x] Open questions resolved (via user testing + investigation)
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
-- [ ] Build — emoji compensation
+- [ ] Step 0 — Remove max_width / SvgPostProcessor
+- [ ] Step 1 — Configuration (emoji_width_compensation)
+- [ ] Step 2 — EmojiCompensator module
+- [ ] Step 3 — Processor integration
+- [ ] Step 4 — Documentation
 - [ ] Full test suite pass
-- [ ] Documentation update

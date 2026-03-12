@@ -126,3 +126,20 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
     - Centering handled naturally by Puppeteer (no SVG post-processing needed)
     - Multi-line labels: padding goes at end of label; if emoji is on a non-constraining line, the wider padding line gives all lines more room (graceful degradation, not surgical but not broken)
 * Status: approach validated by user manually editing Mermaid source. Ready for automation in plugin.
+
+## 2026-03-12 - PLAN REVISION: max_width removed, scope narrowed to emoji compensation
+
+* Problem
+    - User tested removing mmdc's `max-width` inline style via Chrome DevTools on the live site
+    - SVGs scaled correctly without any manipulation — no compression, no clipping
+    - The original clipping was 100% caused by emoji width undermeasurement, not container compression
+    - `max_width` / `SvgPostProcessor` was solving a non-problem
+* Key insight: `&nbsp;` padding must be in the plugin, not manual in source
+    - Blog content is consumed by multiple rendering pipelines (GitHub preview, IDE preview, mermaid.live, client-side mermaid.js)
+    - `&nbsp;` padding renders incorrectly in every non-mmdc context
+    - The plugin is the only layer specific to the mmdc rendering path
+* Resolution
+    - Removed `max_width` and `SvgPostProcessor` from scope entirely
+    - Removed Nokogiri dependency (no longer needed — emoji compensation is string manipulation)
+    - New implementation plan: Step 0 (cleanup removal) → Steps 1-4 (emoji compensation feature)
+    - Single focused feature: emoji width compensation via Mermaid source preprocessing

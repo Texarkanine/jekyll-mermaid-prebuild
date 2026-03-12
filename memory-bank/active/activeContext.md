@@ -1,39 +1,34 @@
 # Active Context
 
 ## Current Task: svg-post-processing
-**Phase:** PLAN REVISION — incorporating emoji width compensation discovery
+**Phase:** PLAN — revised scope, ready for build
 
-## What Changed Since Build Completion
+## Scope Change: max_width / SvgPostProcessor removed
 
-After the initial build (foreignObject widening + max_width handling), user testing revealed:
+User confirmed via Chrome DevTools testing on the live site that SVGs scale correctly without any `max-width` manipulation. The original clipping symptom was entirely caused by emoji width undermeasurement, not container compression. The `SvgPostProcessor`, `max_width` config, Nokogiri dependency, and all related tests/integration are being removed.
 
-1. **foreignObject width manipulation breaks centering.** The inner `<div>` uses `display: table-cell` which shrink-wraps to content width. Widening the foreignObject creates empty space that the div doesn't fill, causing text to appear left- or right-aligned depending on transform adjustments. This was the wrong fix — removed entirely.
+## Current Scope: Emoji Width Compensation Only
 
-2. **The real clipping root cause is emoji width mismatch.** Puppeteer's headless Chrome undermeasures emoji glyphs when sizing foreignObject elements. Example: Puppeteer measures "🔧 Code" at 55.66px; the same string in desktop browsers needs ~63-65px due to wider emoji rendering. The foreignObject is sized to Puppeteer's measurement and clips in the viewing browser.
+Single focused feature: preprocess Mermaid source before mmdc to pad emoji-containing node labels with `&nbsp;`. This compensates for headless Chromium's emoji width undermeasurement on non-Mac platforms.
 
-3. **User discovered the fix:** Adding `&nbsp;` (non-breaking space) characters to Mermaid source labels compensates for emoji undermeasurement. Each emoji needs ~2 `&nbsp;` characters. The `&nbsp;` is "sacrificial" width — Puppeteer allocates space for it, and in the viewing browser the emoji's true wider rendering consumes that padding. Trailing whitespace is invisible or overflow-clipped.
-
-4. **max_width handling is correct and stays.** Removing/replacing the hardcoded `max-width` inline style on the root `<svg>` is the right approach for responsive sizing.
+Key constraint: the padding belongs in the plugin, NOT in the source files, because `&nbsp;` renders incorrectly in GitHub preview, IDE preview, mermaid.live, and client-side mermaid.js. The blog content is bound to multiple rendering pipelines.
 
 ## Current State of Code
 
-- `SvgPostProcessor.process` now only handles root SVG `adjust_root_svg_width` (max-width + width="100%")
-- foreignObject width manipulation, recenter_label_transform, FOREIGN_OBJECT_MARGIN, TRANSLATE_RE — all removed
-- 73/73 tests pass, RuboCop clean
-- Devblog builds correctly with centered, unmodified node content
+- `SvgPostProcessor` exists but is slated for deletion (Step 0)
+- `max_width` config exists but is slated for removal (Step 0)
+- Nokogiri dependency exists but is slated for removal (Step 0)
+- Generator has `post_process_svg` integration — slated for removal (Step 0)
+- 73/73 tests currently pass, RuboCop clean
 
-## New Approach: Mermaid Source Preprocessing
+## Implementation Plan
 
-Instead of post-processing the SVG output, preprocess the Mermaid source BEFORE passing it to mmdc:
-
-1. Parse node labels in the Mermaid source (text within `["..."]`, `("...")`, etc.)
-2. Count emoji characters per label (Ruby: `\p{Extended_Pictographic}` or codepoint ranges)
-3. For each emoji, append 2 `&nbsp;` to the label text
-4. Pass the padded source to mmdc — Puppeteer now measures correct widths natively
-5. Centering, layout, foreignObject sizing all handled correctly by Puppeteer
-
-This is opt-in via config: `emoji_width_compensation: true` (or similar).
+0. **Remove max_width / SvgPostProcessor** — delete dead code, remove Nokogiri, update tests
+1. **Configuration** — add `emoji_width_compensation` (Hash of diagram types to booleans)
+2. **EmojiCompensator** — new module: detect diagram type, find emoji in labels, append `&nbsp;`
+3. **Processor** — integrate: detect type → check config → compensate → cache key
+4. **Documentation** — README with clear when/why/how guidance
 
 ## Next Step
-- Update the task plan for the new preprocessing approach
-- Proceed to build the Mermaid source preprocessor
+
+Proceed to build (Step 0 first: cleanup removal)
