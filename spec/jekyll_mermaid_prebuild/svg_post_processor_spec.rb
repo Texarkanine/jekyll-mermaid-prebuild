@@ -73,14 +73,17 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
         end
       end
 
-      # B2: Label <g> transform re-centered after foreignObject widening
+      # B2: Label <g> transform is preserved unchanged when foreignObject is widened.
+      # Puppeteer sets translate_x = -content_width/2 to center the text; only the
+      # foreignObject clip boundary (fo_width) is buggy — the translate itself is correct.
+      # Changing translate_x would shift content left and introduce left-alignment.
       context "when foreignObject is widened" do
         let(:svg) { flowchart_svg(rect_width: 92, fo_width: 72, label_translate: "translate(-36, -13.5)") }
 
-        it "re-centers the label g translate x to -(new_fo_width / 2)" do
+        it "preserves the label g translate x unchanged" do
           result = described_class.process(svg)
 
-          expect(result_label_translate_x(result)).to eq(-42.0)
+          expect(result_label_translate_x(result)).to eq(-36.0)
         end
 
         it "preserves the label g translate y unchanged" do
@@ -90,9 +93,9 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
         end
       end
 
-      # B3: foreignObject already matches rect width → no change to dimensions
+      # B3: foreignObject already matches rect width → no change to fo_width; translate always preserved
       context "when foreignObject already matches rect_width minus margin" do
-        let(:svg) { flowchart_svg(rect_width: 92, fo_width: 84, label_translate: "translate(-42.0, -13.5)") }
+        let(:svg) { flowchart_svg(rect_width: 92, fo_width: 84, label_translate: "translate(-36.0, -13.5)") }
 
         it "keeps foreignObject width at the correct value" do
           result = described_class.process(svg)
@@ -100,10 +103,10 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
           expect(result_fo_width(result)).to eq(84.0)
         end
 
-        it "keeps the label g translate x at the correct value" do
+        it "keeps the label g translate x unchanged" do
           result = described_class.process(svg)
 
-          expect(result_label_translate_x(result)).to eq(-42.0)
+          expect(result_label_translate_x(result)).to eq(-36.0)
         end
       end
 

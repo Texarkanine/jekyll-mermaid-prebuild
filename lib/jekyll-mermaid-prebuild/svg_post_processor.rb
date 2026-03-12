@@ -9,8 +9,10 @@ module JekyllMermaidPrebuild
   #
   # 1. foreignObject width mismatch — mmdc renders <foreignObject> elements
   #    narrower than their parent <rect>, which clips node label text. The fix
-  #    widens each <foreignObject> to rect_width - FOREIGN_OBJECT_MARGIN and
-  #    re-centers the label <g> transform accordingly.
+  #    widens each <foreignObject> to rect_width - FOREIGN_OBJECT_MARGIN.
+  #    The label <g> transform is intentionally left unchanged: Puppeteer sets
+  #    translate_x = -content_width/2 to center the text, so the transform is
+  #    already correct — only the clip boundary (fo_width) is buggy.
   #
   # 2. Hardcoded max-width inline style — mmdc emits a `max-width` inline style
   #    on the root <svg> fixed to the Puppeteer viewport width. This prevents
@@ -43,8 +45,9 @@ module JekyllMermaidPrebuild
     end
 
     # Widen each <foreignObject> inside a g.node group to match its sibling
-    # <rect> width (minus FOREIGN_OBJECT_MARGIN) and re-center the label <g>
-    # transform.
+    # <rect> width (minus FOREIGN_OBJECT_MARGIN), preventing text clipping.
+    # The label <g> transform is left unchanged because Puppeteer already set
+    # translate_x = -content_width/2 to center the label text correctly.
     #
     # @param doc [Nokogiri::XML::Document] parsed SVG document (mutated in place)
     # @return [void]
@@ -54,27 +57,8 @@ module JekyllMermaidPrebuild
         fo = node_g.at_xpath(".//svg:foreignObject", NS)
         next unless rect && fo
 
-        rect_width = rect["width"].to_f
-        new_fo_width = rect_width - FOREIGN_OBJECT_MARGIN
-        fo["width"] = new_fo_width.to_s
-
-        recenter_label_transform(fo.parent, new_fo_width)
+        fo["width"] = (rect["width"].to_f - FOREIGN_OBJECT_MARGIN).to_s
       end
-    end
-
-    # Update the translate x on a label <g> to re-center it after widening.
-    #
-    # @param label_g [Nokogiri::XML::Node, nil] parent <g> element of foreignObject
-    # @param new_fo_width [Float] updated foreignObject width in pixels
-    # @return [void]
-    def recenter_label_transform(label_g, new_fo_width)
-      return unless label_g && label_g["transform"]
-
-      m = label_g["transform"].match(/translate\(([-\d.]+),\s*([-\d.]+)\)/)
-      return unless m
-
-      new_x = -(new_fo_width / 2)
-      label_g["transform"] = "translate(#{new_x}, #{m[2]})"
     end
 
     # Set width="100%" on the root <svg>, then remove the existing max-width
