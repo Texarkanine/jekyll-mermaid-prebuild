@@ -215,4 +215,4 @@ Design decisions made without creative phase:
 - [x] Technology validation complete
 - [x] Preflight (PASS — minor amendments applied)
 - [x] Build (COMPLETE — 76/76 tests pass, RuboCop clean)
-- [ ] QA
+- [x] QA (PASS — 2 trivial fixes applied; all requirements verified)

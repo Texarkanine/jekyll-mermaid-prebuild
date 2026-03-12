@@ -62,3 +62,15 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
 * Insights
     - Nokogiri namespace-aware XPath works cleanly against mmdc SVG structure; SVG namespace is `http://www.w3.org/2000/svg`
     - `doc.root` is more reliable than XPath for finding the root svg element (works with or without namespace)
+
+## 2026-03-12 - QA - PASS
+
+* Work completed
+    - Semantic review against all 7 requirements — all verified complete
+    - Fixed generator.rb: moved post_process_svg to end of class (consistent private-at-bottom pattern)
+    - Fixed svg_post_processor.rb: removed unused SVG_NS constant (YAGNI)
+    - 76/76 tests pass; RuboCop 0 offenses after fixes
+* Decisions made
+    - Both fixes were trivial (style/cleanup) — no design decisions needed
+* Insights
+    - public/private alternation anti-pattern would have been caught by a stricter RuboCop config; worth noting for future

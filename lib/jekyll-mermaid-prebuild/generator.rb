@@ -44,6 +44,18 @@ module JekyllMermaidPrebuild
       "/#{@config.output_dir}/#{cache_key}.svg"
     end
 
+    # Build figure HTML for a diagram
+    #
+    # @param svg_url [String] URL to the SVG file
+    # @return [String] HTML figure element
+    def build_figure_html(svg_url)
+      <<~HTML
+        <figure class="mermaid-diagram">
+        <a href="#{svg_url}"><img src="#{svg_url}" alt="Mermaid Diagram"></a>
+        </figure>
+      HTML
+    end
+
     private
 
     # Read the cached SVG, post-process it, and write the result back.
@@ -55,20 +67,6 @@ module JekyllMermaidPrebuild
       svg_content = File.read(cache_path)
       processed = SvgPostProcessor.process(svg_content, max_width: @config.max_width)
       File.write(cache_path, processed)
-    end
-
-    public
-
-    # Build figure HTML for a diagram
-    #
-    # @param svg_url [String] URL to the SVG file
-    # @return [String] HTML figure element
-    def build_figure_html(svg_url)
-      <<~HTML
-        <figure class="mermaid-diagram">
-        <a href="#{svg_url}"><img src="#{svg_url}" alt="Mermaid Diagram"></a>
-        </figure>
-      HTML
     end
   end
 end

@@ -19,8 +19,7 @@ module JekyllMermaidPrebuild
   module SvgPostProcessor
     module_function
 
-    SVG_NS = "http://www.w3.org/2000/svg"
-    NS = { "svg" => SVG_NS }.freeze
+    NS = { "svg" => "http://www.w3.org/2000/svg" }.freeze
 
     # Pixel margin subtracted from rect width when sizing each foreignObject.
     FOREIGN_OBJECT_MARGIN = 8
