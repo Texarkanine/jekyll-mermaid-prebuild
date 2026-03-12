@@ -4,74 +4,79 @@ date: 2026-03-12
 complexity_level: 3
 ---
 
-# Reflection: SVG Post-Processing
+# Reflection: Emoji Width Compensation (née SVG Post-Processing)
 
 ## Summary
 
-Built SVG post-processing for the jekyll-mermaid-prebuild plugin: a new `SvgPostProcessor` module that fixes mmdc's foreignObject text-clipping bug and removes/replaces the hardcoded `max-width` inline style for responsive diagram scaling. All 7 requirements were delivered; 76 tests pass; RuboCop clean.
+Built an emoji width compensation feature for the jekyll-mermaid-prebuild plugin that pads emoji-containing node labels with `&nbsp;` before mmdc rendering, fixing text clipping caused by headless Chromium's emoji width undermeasurement. The task succeeded, but only after a complete scope pivot — the original SvgPostProcessor / max_width approach was built, QA'd, reflected on, and then entirely discarded when user testing revealed the root cause was fundamentally different.
 
 ## Requirements vs Outcome
 
-All 7 requirements from the project brief were implemented as specified:
-- `max_width` optional config param (Configuration)
-- foreignObject width correction (SvgPostProcessor)
-- max-width style constraint/removal (SvgPostProcessor)
-- Nokogiri runtime dependency (gemspec)
-- No-op for diagrams without foreignObject pattern (guard checks in SvgPostProcessor)
-- Cache key includes max_width (Processor)
+The **final** requirements (emoji compensation) were fully delivered: all 6 requirements and 7 acceptance criteria met, verified by automated tests (75/75) and user testing on the live blog. No requirements were dropped or reinterpreted from the revised plan.
 
-One minor addition beyond the original plan: **B9a** — defensive `width="100%"` on root `<svg>`. This was identified during preflight and added as a minor improvement aligned with the responsive scaling goal. The requirement was small enough that it didn't require a creative phase.
+However, the **original** requirements (SvgPostProcessor + max_width) were a complete miss. The entire first implementation — 29 new tests, Nokogiri dependency, foreignObject manipulation, max_width config — solved a non-problem. The original symptom (text clipping) was correctly identified, but the root cause analysis was wrong: it wasn't container compression, it was Puppeteer undermeasuring emoji glyphs.
+
+Requirements that emerged during build (not in original plan):
+- Multi-line label strategy (pad only visually longest line)
+- `&nbsp;` HTML entity vs `\u00a0` Unicode (mmdc strips Unicode nbsp)
+- Documented constraints: double-quoted labels, `<br>` for line breaks, flowchart only
+- Manual `&nbsp;` fallback documentation
 
 ## Plan Accuracy
 
-The 6-step implementation sequence was accurate: dependencies first (gemspec → Configuration → SvgPostProcessor → Generator → Processor → docs). No reordering was needed. The file list was complete. The preflight correctly pre-identified the `instance_double` update requirement for generator_spec and processor_spec, which prevented a class of "unexpected message" test failures.
+**Original plan accuracy: low.** The plan was internally consistent and well-structured — the right steps in the right order for the wrong problem. The foreignObject centering failure (table-cell shrink-wrap) was not anticipated because the plan was based on static SVG analysis without testing the runtime CSS layout behavior.
 
-The documented challenges were all correctly anticipated:
-- Namespace-aware XPath: required `{ "svg" => "http://www.w3.org/2000/svg" }` prefix mapping — worked cleanly
-- Diverse diagram types: guard checks (`next unless rect && fo`) made the no-op path straightforward
-- Transform parsing: regex on `translate(x, y)` worked as planned
-- Cache migration: format change auto-invalidates as predicted
+**Revised plan accuracy: high.** The emoji compensation plan (Steps 0–4) executed cleanly with only minor adjustments:
+- Step 0 (cleanup) was additive scope not in the original task
+- Multi-line label strategy was added during build based on user feedback
+- `&nbsp;` vs `\u00a0` was a runtime discovery that required changing the padding mechanism
 
-No surprises emerged from outside the anticipated risk areas.
+The file list and scope were correct. No steps needed reordering. The identified challenges (regex brittleness for Mermaid syntax) were real and accepted as a documented trade-off.
 
 ## Creative Phase Review
 
-No creative phase was executed — all questions were resolved in planning with high confidence, and this held up during implementation without any friction. The decision to always apply foreignObject fix (unconditionally) and optionally apply max_width translated cleanly to code.
+No creative phase was executed. For the original plan, creative was skipped with "all questions resolved with high confidence" — the confidence was justified given the information available, but the underlying hypothesis was wrong. No amount of design exploration would have revealed the foreignObject table-cell interaction without runtime testing.
+
+For the revised scope, creative was appropriately skipped again — the user had already validated the `&nbsp;` approach by hand, so the design question was "how to automate" not "what approach to take."
 
 ## Build & QA Observations
 
-**Went smoothly**: TDD cycle was clean. Each module's tests failed predictably with stubs, then passed after implementation. No unexpected API differences with Nokogiri.
+**What went well:**
+- TDD discipline held throughout: tests first, then implementation, across both the original and revised builds
+- Scope removal (Step 0) was clean — deleting SvgPostProcessor + max_width + Nokogiri left no orphans
+- EmojiCompensator's `module_function` pattern integrated naturally with the codebase
+- Diagram type detection (frontmatter/comment skipping) was straightforward
+- User feedback loop was fast and productive: each round narrowed the problem
 
-**One iteration required**: The B5 test ("removes max-width inline style") initially failed after implementation. The root cause was a behavioral subtlety: when max-width is the only style declaration, the entire `style` attribute is deleted (returns `nil`) rather than set to `""`. The test's `not_to include("max-width")` cannot call `include?` on nil. Fix: `.to_s` on the style value — made the test more robust and revealed clearer intent.
+**What was hard:**
+- The original foreignObject approach: hours of work on something that fundamentally couldn't work (table-cell shrink-wrap prevents any foreignObject width manipulation from centering correctly)
+- `\u00a0` vs `&nbsp;`: the Unicode non-breaking space was silently stripped by the mmdc pipeline. Only discovered through user testing on the live blog. No unit test could catch this because it's a behavior of the external mmdc binary.
+- Multi-line label centering: the initial padding strategy (pad all emoji lines) caused short emoji lines to shift left when a longer non-emoji line determined the container width. Required the "pad only the longest line" refinement.
 
-**QA caught two issues**:
-1. The `public`/`private` alternation anti-pattern in `generator.rb` — `post_process_svg` was stubbed in the middle of the class and never moved to the end. Trivial fix: reorder methods.
-2. Unused `SVG_NS` constant in `SvgPostProcessor` — an artifact of early planning docs that referenced the namespace string directly; the final implementation only uses `NS`. Trivial fix: remove.
-
-Neither issue was substantive — both were pure style/cleanup.
+**QA findings:**
+- Original QA (v1): 2 trivial fixes (private method placement, unused constant)
+- Revised QA (v2): 1 trivial fix (dead circle regex with triple parens instead of double)
+- The dead circle regex survived because the E9 test assertion was too loose — it checked `include(nbsp)` on the result, which passed because the rounded-rect regex accidentally compensated the inner `("...")` portion. A more precise assertion (exact match on the transformed shape string) would have caught it.
 
 ## Cross-Phase Analysis
 
-- **Preflight → Build (positive)**: The explicit note about updating `instance_double` mocks saved time during the generator and processor TDD cycles. Without preflight's identification of this, those tests would have failed with confusing "unexpected message" errors.
+**Planning → Build gap (original):** The plan's root cause analysis was wrong. This wasn't a planning methodology failure — it was a hypothesis error that could only be falsified by runtime testing. The plan correctly identified the symptom and proposed a plausible mechanism, but the mechanism was wrong. Static analysis of SVG structure can't predict CSS layout interactions (`display: table-cell` shrink-wrap).
 
-- **Preflight → Build (B9a addition)**: Preflight's addition of B9a was correctly scoped. It added 1 test and ~1 line of implementation without complicating anything.
+**Build → User testing feedback loop (revised):** The most productive phase wasn't any formal phase — it was the iterative user testing between builds. Three rounds of feedback (centering failure → emoji root cause → `&nbsp;` fix → multi-line strategy) each delivered more value than the entire original plan-preflight-build-QA cycle.
 
-- **Plan → QA (generator method order)**: The stub-first approach placed `post_process_svg` between two public methods during scaffolding, which was never corrected during build. QA caught it. Better stubbing practice: place the stub in the architecturally correct position from the start (private methods at end of class), even when it's just a stub.
-
-- **Plan → QA (unused constant)**: `SVG_NS` was mentioned in early planning pseudocode as a reference namespace but the final implementation absorbed it into the `NS` hash inline. A minor YAGNI slip from documentation-in-progress to code.
+**QA's dead regex catch:** The dead circle regex was introduced during build (likely a typo: triple parens instead of double) and survived to QA. The test was too loose to catch it. This is a minor but real example of how test assertions that check for the presence of an artifact (rather than the exact transformation) can mask bugs.
 
 ## Insights
 
 ### Technical
 
-- **Nokogiri namespace-aware XPath for SVG**: When the SVG root has `xmlns="http://www.w3.org/2000/svg"`, all child elements are in the SVG namespace. XPath queries must use a namespace prefix map (`{ "svg" => "http://www.w3.org/2000/svg" }`). Without this, `//g[@class='node']` returns nothing. Using `doc.root` (instead of XPath) to find the root `<svg>` element is more reliable and namespace-agnostic.
-
-- **Nokogiri `to_xml` adds XML declaration**: `Nokogiri::XML::Document#to_xml` prepends `<?xml version="1.0" encoding="UTF-8"?>` unless suppressed. For SVG files that were originally declaration-free (all mmdc output), this produces format drift. The clean fix is `result.sub!(/\A<\?xml[^?]*\?>\n/, "") unless svg_content.start_with?("<?xml")` — preserves the original format contract.
-
-- **nil vs empty string for removed attributes in Nokogiri**: `element.delete("attr")` removes the attribute entirely (subsequent reads return `nil`). Conditional test helpers need `.to_s` or `&.include?` to handle this without `NoMethodError`.
+- **Mermaid's `display: table-cell` layout makes foreignObject manipulation futile.** The inner div shrink-wraps to content width regardless of the foreignObject's width. This means you cannot fix text clipping by widening the foreignObject — the only effective point of intervention is the Mermaid source itself (before Puppeteer measures).
+- **`\u00a0` is stripped by the mmdc pipeline; `&nbsp;` survives.** Mermaid renders node labels as HTML inside `<foreignObject>`, so HTML entities work. Unicode characters may be normalized away during Mermaid's internal parsing. This distinction is critical and not unit-testable (it's an external binary behavior).
+- **For multi-line labels, padding the visually longest line is sufficient.** Shorter lines center naturally within the container sized by the longest line. Padding non-constraining lines causes centering shift. The "emoji counts as 2 for visual length" heuristic is rough but effective.
+- **Regex-based Mermaid source preprocessing is acceptable as a documented monkeypatch.** It's inherently fragile (can't handle all Mermaid syntax), but the alternative (parsing the Mermaid AST) is vastly disproportionate to the value. Documenting the constraints (double-quoted labels, `<br>` line breaks, flowchart only) is the right trade-off.
 
 ### Process
 
-- **Place stubs in their final architectural position**: When stubbing a new private method during TDD preparation, put it at the end of the class (where private methods belong), not inline near where it's called. This prevents a QA finding about method ordering.
-
-- **Preflight's concrete impact**: The instance_double gap identification was the most concrete preflight contribution. It's worth noting that this type of "cross-file dependency impact" check (what tests need updating when a public interface gains a method?) is one of the highest-value things preflight can do for a Ruby/RSpec project.
+- **Hypothesis-driven development needs runtime validation early.** The original plan was internally sound but based on a wrong root cause. A 15-minute user test with Chrome DevTools invalidated hours of planning and implementation. For tasks involving CSS layout behavior or external tool interactions, prototype and validate before committing to a plan.
+- **Loose test assertions can mask dead code.** The E9 test for circle shape `(("🔧"))` passed because it checked `include(nbsp)` — which was satisfied by the rounded-rect regex accidentally matching the inner portion. A stricter assertion (exact match on the shape output) would have caught the dead triple-paren regex during build, not QA.
+- **The complete plan-preflight-build-QA cycle executing on the wrong problem is the most expensive failure mode.** All phases passed cleanly — for code that was entirely discarded. The workflow's value is in ensuring quality of implementation, but it can't validate whether the right thing is being built. That requires user testing / hypothesis validation, which should precede the formal build cycle for symptom-driven tasks.

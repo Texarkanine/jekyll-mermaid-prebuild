@@ -188,3 +188,13 @@ Add SVG post-processing to fix mmdc's foreignObject text clipping bug and suppor
 * Decisions made
     - Dead circle regex removed rather than fixed — fixing it would cause double-compensation (rounded-rect regex already matches inner `("...")`)
     - Single-quote rect pattern `['']` kept — it's valid Mermaid syntax and a harmless broader match
+
+## 2026-03-12 - REFLECT (REVISED SCOPE) - COMPLETE
+
+* Work completed
+    - Full lifecycle review covering both original (discarded) and revised (shipped) implementations
+    - Created `memory-bank/active/reflection/reflection-svg-post-processing.md`
+    - Key finding: the entire original plan-preflight-build-QA cycle executed cleanly on the wrong problem; runtime validation should precede formal build for symptom-driven tasks
+* Insights extracted
+    - Technical: foreignObject manipulation is futile with table-cell layout; `\u00a0` stripped by mmdc but `&nbsp;` survives; multi-line padding strategy (longest line only); regex monkeypatch is acceptable with documented constraints
+    - Process: hypothesis-driven tasks need runtime validation before committing to a plan; loose test assertions can mask dead code; executing the full workflow on the wrong problem is the most expensive failure mode
