@@ -95,4 +95,54 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       expect(config.cache_dir).to eq(".jekyll-cache/jekyll-mermaid-prebuild")
     end
   end
+
+  describe "#emoji_width_compensation" do
+    # C1: not configured → empty hash
+    context "with no emoji_width_compensation configured" do
+      it "returns empty hash" do
+        config = described_class.new(site)
+
+        expect(config.emoji_width_compensation).to eq({})
+      end
+    end
+
+    # C2: flowchart: true → { "flowchart" => true }
+    context "with emoji_width_compensation: { flowchart: true }" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "emoji_width_compensation" => { "flowchart" => true } } }
+      end
+
+      it "returns hash with flowchart => true" do
+        config = described_class.new(site)
+
+        expect(config.emoji_width_compensation).to eq("flowchart" => true)
+      end
+    end
+
+    # C3: flowchart: false → { "flowchart" => false }
+    context "with emoji_width_compensation: { flowchart: false }" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "emoji_width_compensation" => { "flowchart" => false } } }
+      end
+
+      it "returns hash with flowchart => false" do
+        config = described_class.new(site)
+
+        expect(config.emoji_width_compensation).to eq("flowchart" => false)
+      end
+    end
+
+    # C4: non-hash value → empty hash (rejected)
+    context "with emoji_width_compensation set to a non-hash value" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "emoji_width_compensation" => true } }
+      end
+
+      it "returns empty hash" do
+        config = described_class.new(site)
+
+        expect(config.emoji_width_compensation).to eq({})
+      end
+    end
+  end
 end

@@ -27,8 +27,6 @@ GEM
     ffi (1.17.3-arm-linux-gnu)
     ffi (1.17.3-arm-linux-musl)
     ffi (1.17.3-arm64-darwin)
-    ffi (1.17.3-x86-linux-gnu)
-    ffi (1.17.3-x86-linux-musl)
     ffi (1.17.3-x86_64-darwin)
     ffi (1.17.3-x86_64-linux-gnu)
     ffi (1.17.3-x86_64-linux-musl)
@@ -43,12 +41,6 @@ GEM
       bigdecimal
       rake (>= 13)
     google-protobuf (4.33.4-arm64-darwin)
-      bigdecimal
-      rake (>= 13)
-    google-protobuf (4.33.4-x86-linux-gnu)
-      bigdecimal
-      rake (>= 13)
-    google-protobuf (4.33.4-x86-linux-musl)
       bigdecimal
       rake (>= 13)
     google-protobuf (4.33.4-x86_64-darwin)
@@ -155,13 +147,9 @@ GEM
     sass-embedded (1.97.2)
       google-protobuf (~> 4.31)
       rake (>= 13)
-    sass-embedded (1.97.2-aarch64-linux-android)
-      google-protobuf (~> 4.31)
     sass-embedded (1.97.2-aarch64-linux-gnu)
       google-protobuf (~> 4.31)
     sass-embedded (1.97.2-aarch64-linux-musl)
-      google-protobuf (~> 4.31)
-    sass-embedded (1.97.2-arm-linux-androideabi)
       google-protobuf (~> 4.31)
     sass-embedded (1.97.2-arm-linux-gnueabihf)
       google-protobuf (~> 4.31)
@@ -169,15 +157,7 @@ GEM
       google-protobuf (~> 4.31)
     sass-embedded (1.97.2-arm64-darwin)
       google-protobuf (~> 4.31)
-    sass-embedded (1.97.2-riscv64-linux-android)
-      google-protobuf (~> 4.31)
-    sass-embedded (1.97.2-riscv64-linux-gnu)
-      google-protobuf (~> 4.31)
-    sass-embedded (1.97.2-riscv64-linux-musl)
-      google-protobuf (~> 4.31)
     sass-embedded (1.97.2-x86_64-darwin)
-      google-protobuf (~> 4.31)
-    sass-embedded (1.97.2-x86_64-linux-android)
       google-protobuf (~> 4.31)
     sass-embedded (1.97.2-x86_64-linux-gnu)
       google-protobuf (~> 4.31)
@@ -198,23 +178,15 @@ GEM
     webrick (1.9.2)
 
 PLATFORMS
-  aarch64-linux-android
   aarch64-linux-gnu
   aarch64-linux-musl
-  arm-linux-androideabi
   arm-linux-gnu
   arm-linux-gnueabihf
   arm-linux-musl
   arm-linux-musleabihf
   arm64-darwin
-  riscv64-linux-android
-  riscv64-linux-gnu
-  riscv64-linux-musl
-  ruby
-  x86-linux-gnu
-  x86-linux-musl
   x86_64-darwin
-  x86_64-linux-android
+  x86_64-linux
   x86_64-linux-gnu
   x86_64-linux-musl
 

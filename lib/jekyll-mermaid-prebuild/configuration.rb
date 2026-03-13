@@ -6,7 +6,7 @@ module JekyllMermaidPrebuild
     DEFAULT_OUTPUT_DIR = "assets/svg"
     CACHE_DIR = ".jekyll-cache/jekyll-mermaid-prebuild"
 
-    attr_reader :output_dir
+    attr_reader :output_dir, :emoji_width_compensation
 
     # Initialize configuration from Jekyll site
     #
@@ -15,6 +15,7 @@ module JekyllMermaidPrebuild
       config = site.config["mermaid_prebuild"] || {}
       @output_dir = parse_output_dir(config["output_dir"])
       @enabled = config.fetch("enabled", true)
+      @emoji_width_compensation = parse_emoji_width_compensation(config["emoji_width_compensation"])
     end
 
     # Check if the plugin is enabled
@@ -32,6 +33,17 @@ module JekyllMermaidPrebuild
     end
 
     private
+
+    # Returns a frozen Hash of diagram type (string) => boolean. Non-hash values are rejected → {}.
+    #
+    # @param value [Object] raw config value
+    # @return [Hash<String, Boolean>] frozen hash, empty if invalid/absent
+    def parse_emoji_width_compensation(value)
+      return {}.freeze unless value.is_a?(Hash)
+
+      result = value.transform_keys(&:to_s).transform_values { |v| [true, false].include?(v) ? v : false }
+      result.freeze
+    end
 
     def parse_output_dir(dir)
       return DEFAULT_OUTPUT_DIR unless dir.is_a?(String)

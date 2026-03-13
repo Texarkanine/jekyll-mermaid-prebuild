@@ -54,6 +54,12 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         expect(result).to eq(File.join(cache_dir, "#{cache_key}.svg"))
         expect(File.exist?(result)).to be true
       end
+
+      it "writes the mmdc output to the cache file" do
+        cache_path = generator.generate(mermaid_source, cache_key)
+
+        expect(File.read(cache_path)).to eq("<svg>generated</svg>")
+      end
     end
 
     context "when mmdc fails" do

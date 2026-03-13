@@ -30,8 +30,9 @@ module JekyllMermaidPrebuild
 
       # Generate SVG using mmdc
       success = MmdcWrapper.render(mermaid_source, cache_path)
+      return nil unless success
 
-      success ? cache_path : nil
+      cache_path
     end
 
     # Build SVG URL from cache key

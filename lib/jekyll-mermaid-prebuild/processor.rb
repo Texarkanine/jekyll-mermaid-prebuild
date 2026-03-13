@@ -52,8 +52,14 @@ module JekyllMermaidPrebuild
     # @return [Hash, nil] {cache_key:, cached_path:, html:} or nil if failed
     def convert_block(block)
       mermaid_source = block[:content]
-      cache_key = DigestCalculator.content_digest(mermaid_source)
-      cached_path = @generator.generate(mermaid_source, cache_key)
+      diagram_type = EmojiCompensator.detect_diagram_type(mermaid_source)
+      source_for_render = if diagram_type && @config.emoji_width_compensation[diagram_type]
+                            EmojiCompensator.compensate(mermaid_source, diagram_type)
+                          else
+                            mermaid_source
+                          end
+      cache_key = DigestCalculator.content_digest(source_for_render)
+      cached_path = @generator.generate(source_for_render, cache_key)
 
       return nil unless cached_path
 

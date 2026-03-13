@@ -94,6 +94,8 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
+  emoji_width_compensation:  # optional, see below
+    flowchart: true
 ```
 
 ### Options
@@ -102,14 +104,52 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
+| `emoji_width_compensation` | `{}` | Map of diagram types to booleans; see [Emoji width compensation](#emoji-width-compensation) below. |
+
+### Emoji width compensation
+
+Headless Chromium (used by mermaid-cli/mmdc) [undermeasures emoji glyph widths](https://stackoverflow.com/q/42016125) on non-Mac platforms. That can make node labels containing emoji clip in the generated SVG. This option tells the plugin to **append invisible `&nbsp;` padding** to emoji-containing node labels *before* passing the source to mmdc, so Puppeteer allocates correct widths.
+
+This is a **monkeypatch** for an upstream headless Chromium bug, not a general-purpose fix. It works within specific constraints; if upstream Chromium or Mermaid fix the emoji width measurement, disable this feature.
+
+- **When to enable:** Only if you see emoji text clipping in mmdc-rendered SVGs on your build platform (typically Linux/Windows).
+- **When not to enable:** Mac build environments (emoji measure correctly there), or if upstream Chromium/mermaid fixes the issue - extra padding would then over-widen nodes.
+- **Why it's in the plugin:** Adding `&nbsp;` manually in your Mermaid source would break GitHub preview, IDE preview, mermaid.live, and client-side mermaid.js, because those contexts don't have the headless-Chrome bug. The plugin injects padding only for the mmdc path, so your source stays clean everywhere.
+
+#### Requirements for emoji compensation to work
+
+The plugin uses regex to find node labels in Mermaid source. This means your source must follow these conventions for compensation to apply:
+
+1. **Use double-quoted labels** on nodes with emoji: `A["🔧 Code"]`, not `A[🔧 Code]`
+2. **Use `<br>` for line breaks** inside labels (variants `<br/>` and `<br />` also work)
+3. **Flowchart only** - `flowchart` and `graph` diagrams. Other diagram types are not supported for automatic compensation.
+
+Labels that don't match these patterns pass through unmodified - the plugin won't break your diagrams, it just won't compensate them.
+
+#### Multi-line label behavior
+
+For labels with `<br>` line breaks, the plugin only pads the **longest line** (if it contains emoji). Shorter lines center naturally within the container sized by the longest line. If the longest line has no emoji, no padding is applied - Puppeteer measures non-emoji text correctly, so the container is already the right size.
+
+#### Fallback: manual `&nbsp;`
+
+If you have a label that falls outside the supported patterns (e.g. Mermaid markdown strings with backtick delimiters), you can manually add `&nbsp;` entities to the label in your Mermaid source. Note that manual `&nbsp;` will render as visible trailing space in non-mmdc contexts (GitHub preview, mermaid.live, etc.).
+
+#### Example config
+
+```yaml
+mermaid_prebuild:
+  emoji_width_compensation:
+    flowchart: true
+```
 
 ## Caching
 
-Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content, so:
+Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content (and, when emoji compensation is enabled for that diagram type, the compensated source), so:
 
 - Unchanged diagrams are served from cache (fast rebuilds)
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
+- Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
 
 To clear the cache:
 
