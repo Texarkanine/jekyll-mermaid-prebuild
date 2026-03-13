@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.0...v0.3.1) (2026-03-13)
+
+
+### Bug Fixes
+
+* Avoid clipping flowchart labels when labels include emoji on non-mac build pipelines ([#12](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/12)) ([5ba9518](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/5ba951821fe89b6d0554b14ee28efe4932ed46a5))
+
 ## [0.3.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.2.1...v0.3.0) (2026-01-18)
 
 
