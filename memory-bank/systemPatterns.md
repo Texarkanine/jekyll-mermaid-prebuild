@@ -12,7 +12,7 @@ Content is processed **before** markdown rendering. This is a deliberate design 
 
 ### Fence Parsing: State Machine, Not Regex
 
-The processor uses a line-by-line state machine with a fence stack to track nesting depth. Only mermaid blocks at depth 0 (top level) are converted; blocks nested inside other code fences are preserved as literal code. The closing fence must match the opening fence's type (backtick vs. tilde) and minimum length. This cannot be done with regex — nesting depth requires state.
+The processor uses a line-by-line state machine with a fence stack to track nesting depth. Only mermaid blocks at depth 0 (top level) are converted; blocks nested inside other code fences are preserved as literal code. The closing fence must match the opening fence's type (backtick vs. tilde); for mermaid blocks, the length must match exactly, while nested non-mermaid fences follow CommonMark's "at least as long" rule.
 
 ### Shared State via `site.data`
 
