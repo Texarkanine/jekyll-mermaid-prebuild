@@ -16,7 +16,6 @@ The mermaid.js library is **~2MB** minified. This plugin renders your diagrams t
 - Intelligent caching - only regenerates changed diagrams
 - Clickable diagrams - link to full-size SVG for complex diagrams
 - Configurable output directory
-- **Optional emoji width compensation** — fixes emoji text clipping in mmdc-rendered SVGs on non-Mac platforms
 
 ## Requirements
 
@@ -114,7 +113,7 @@ Headless Chromium (used by mermaid-cli/mmdc) [undermeasures emoji glyph widths](
 This is a **monkeypatch** for an upstream headless Chromium bug, not a general-purpose fix. It works within specific constraints; if upstream Chromium or Mermaid fix the emoji width measurement, disable this feature.
 
 - **When to enable:** Only if you see emoji text clipping in mmdc-rendered SVGs on your build platform (typically Linux/Windows).
-- **When not to enable:** Mac build environments (emoji measure correctly there), or if upstream Chromium/mermaid fixes the issue — extra padding would then over-widen nodes.
+- **When not to enable:** Mac build environments (emoji measure correctly there), or if upstream Chromium/mermaid fixes the issue - extra padding would then over-widen nodes.
 - **Why it's in the plugin:** Adding `&nbsp;` manually in your Mermaid source would break GitHub preview, IDE preview, mermaid.live, and client-side mermaid.js, because those contexts don't have the headless-Chrome bug. The plugin injects padding only for the mmdc path, so your source stays clean everywhere.
 
 #### Requirements for emoji compensation to work
@@ -123,13 +122,13 @@ The plugin uses regex to find node labels in Mermaid source. This means your sou
 
 1. **Use double-quoted labels** on nodes with emoji: `A["🔧 Code"]`, not `A[🔧 Code]`
 2. **Use `<br>` for line breaks** inside labels (variants `<br/>` and `<br />` also work)
-3. **Flowchart only** — `flowchart` and `graph` diagrams. Other diagram types are not supported for automatic compensation.
+3. **Flowchart only** - `flowchart` and `graph` diagrams. Other diagram types are not supported for automatic compensation.
 
-Labels that don't match these patterns pass through unmodified — the plugin won't break your diagrams, it just won't compensate them.
+Labels that don't match these patterns pass through unmodified - the plugin won't break your diagrams, it just won't compensate them.
 
 #### Multi-line label behavior
 
-For labels with `<br>` line breaks, the plugin only pads the **longest line** (if it contains emoji). Shorter lines center naturally within the container sized by the longest line. If the longest line has no emoji, no padding is applied — Puppeteer measures non-emoji text correctly, so the container is already the right size.
+For labels with `<br>` line breaks, the plugin only pads the **longest line** (if it contains emoji). Shorter lines center naturally within the container sized by the longest line. If the longest line has no emoji, no padding is applied - Puppeteer measures non-emoji text correctly, so the container is already the right size.
 
 #### Fallback: manual `&nbsp;`
 
