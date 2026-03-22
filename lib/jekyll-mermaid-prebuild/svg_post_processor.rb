@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module JekyllMermaidPrebuild
-  # Post-processes mmdc-generated SVGs to fix cross-browser rendering issues.
+  # Post-processes mmdc-generated SVGs to fix rendering issues.
   #
-  # Three independent fixes:
+  # Four independent fixes:
   # 1. Text centering: Mermaid's CSS `text-align: center` targets SVG `<g>` elements where it
   #    has no effect on HTML inside `<foreignObject>`. We inject a CSS rule so that foreignObject
   #    content centers correctly regardless of text measurement differences between the generating
@@ -14,6 +14,9 @@ module JekyllMermaidPrebuild
   # 3. Edge label padding: Widens edge-label `<foreignObject>` widths in any diagram type to
   #    prevent clipping when the viewing browser renders text wider than headless Chromium measured.
   #    Opt-in via `postprocessing.edge_label_padding` config.
+  # 4. Transparent background: mmdc always emits `background-color: white` on the root `<svg>`
+  #    regardless of theme. For dark-themed SVGs this creates a visible white rectangle. Applied
+  #    only to dark variants; replaces `white` with `transparent`.
   module SvgPostProcessor
     module_function
 

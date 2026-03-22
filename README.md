@@ -94,7 +94,7 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
-  prefers_color_scheme: light  # light (default) | dark | auto — see below
+  prefers_color_scheme: light  # light (default) | dark | auto - see below
   postprocessing:
     text_centering: true         # default: true
     overflow_protection: true    # default: true
@@ -128,7 +128,7 @@ All cross-browser rendering fixes live under the `postprocessing:` key. Each can
 
 | Value | Behavior |
 |-------|----------|
-| `light` | One SVG per diagram using Mermaid’s default (light) theme — same as earlier plugin versions. |
+| `light` | One SVG per diagram using Mermaid’s default (light) theme - same as earlier plugin versions. |
 | `dark` | One SVG per diagram using mmdc’s dark theme (`mmdc -t dark`). |
 | `auto` | Two SVGs per diagram: `{digest}.svg` (light) and `{digest}-dark.svg` (dark). The embedded HTML uses two links (light and dark) with a small inline stylesheet so only the variant matching the user’s color scheme is shown. **Build cost:** each diagram runs `mmdc` twice until both files are cached. |
 

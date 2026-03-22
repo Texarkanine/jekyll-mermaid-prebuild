@@ -2,13 +2,13 @@
 
 ## Current Task: Dark mode / prefers-color-scheme (issue #11)
 
-**Phase:** BUILD — COMPLETE
+**Phase:** QA — PASS
 
 ## What Was Done
 
-- Implemented `mermaid_prebuild.prefers_color_scheme` (`light` default, `dark`, `auto`) across `Configuration`, `MmdcWrapper` (`theme:` on `render`), `Generator` (Hash return; dual SVG + post-process for `auto`), `Processor` (digest includes `pcs`, `merge!` for SVG map, dual `build_figure_html`), unchanged `Hooks` copy behavior.
-- RSpec: 143 examples; RuboCop clean. Devblog `bundle exec jekyll build` with `prefers_color_scheme: auto` succeeded (28 SVGs copied for 14 diagrams).
+- Build: Implemented `prefers_color_scheme` end-to-end. Fixed two post-build bugs (inline `display:none` specificity, white background on dark SVGs). 149 RSpec examples, RuboCop clean, devblog verified with 28 SVGs.
+- QA: Semantic review against plan — KISS, DRY, YAGNI, completeness, regression, integrity, documentation all clean. One trivial fix: updated `SvgPostProcessor` module doc from "Three" to "Four independent fixes."
 
 ## Next Step
 
-- Run **`/niko-qa`** for semantic QA, then **`/niko-reflect`** per Level 3 workflow.
+- Run **`/niko-reflect`** per Level 3 workflow.

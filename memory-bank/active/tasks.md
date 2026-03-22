@@ -152,4 +152,4 @@ No new technology — validation not required. Still depends on existing `@merma
 - [x] Technology validation complete
 - [x] Preflight — PASS (3 advisory, 0 blocking)
 - [x] Build
-- [ ] QA
+- [x] QA — PASS (1 trivial doc fix applied)
