@@ -1,6 +1,0 @@
-PASS
-task: block-edge-label-svg-pad
-date: 2026-03-22
-findings: 1 trivial (visibility fix applied)
-rspec: 96 examples, 0 failures
-rubocop: 0 offenses

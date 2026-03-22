@@ -1,4 +1,0 @@
-PASS
-date: 2026-03-22
-task_id: block-edge-label-svg-pad
-amendments: dropped Nokogiri in favor of regex; renamed module file to svg_post_processor.rb
