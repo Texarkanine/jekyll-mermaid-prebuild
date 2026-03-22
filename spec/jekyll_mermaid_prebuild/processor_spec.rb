@@ -15,7 +15,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       emoji_width_compensation: {},
       edge_label_padding: 0,
       text_centering: true,
-      overflow_protection: true
+      overflow_protection: true,
+      prefers_color_scheme: :light
     )
   end
   let(:generator) { instance_double(JekyllMermaidPrebuild::Generator) }
@@ -59,8 +60,11 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         <a href="/assets/svg/abc12345.svg"><img src="/assets/svg/abc12345.svg" alt="Mermaid Diagram"></a>
         </figure>
       HTML
-      allow(generator).to receive_messages(generate: File.join(cache_dir, "abc12345.svg"),
-                                           build_svg_url: "/assets/svg/abc12345.svg", build_figure_html: figure_html)
+      allow(generator).to receive_messages(
+        generate: { "abc12345" => File.join(cache_dir, "abc12345.svg") },
+        build_svg_url: "/assets/svg/abc12345.svg",
+        build_figure_html: figure_html
+      )
       File.write(File.join(cache_dir, "abc12345.svg"), "<svg>test</svg>")
     end
 
@@ -135,7 +139,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          edge_label_padding: 0, text_centering: true, overflow_protection: true
+          edge_label_padding: 0, text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         proc_with_comp = described_class.new(config_with_comp, generator)
         content = <<~MARKDOWN
@@ -146,7 +151,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         MARKDOWN
         allow(generator).to receive(:generate) do |source, key, **_kwargs|
           expect(source).to include("&nbsp;&nbsp;")
-          File.join(cache_dir, "#{key}.svg")
+          { key => File.join(cache_dir, "#{key}.svg") }
         end
 
         proc_with_comp.process_content(content, site)
@@ -162,9 +167,9 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
             A["🔧"] --> B
           ```
         MARKDOWN
-        allow(generator).to receive(:generate) do |source, _key, **_kwargs|
+        allow(generator).to receive(:generate) do |source, key, **_kwargs|
           expect(source).not_to include("&nbsp;&nbsp;")
-          File.join(cache_dir, "abc.svg")
+          { key => File.join(cache_dir, "#{key}.svg") }
         end
 
         processor.process_content(content, site)
@@ -178,7 +183,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          edge_label_padding: 0, text_centering: true, overflow_protection: true
+          edge_label_padding: 0, text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         proc_flowchart_only = described_class.new(config_flowchart_only, generator)
         content = <<~MARKDOWN
@@ -187,9 +193,9 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
             A->>B: 🔧
           ```
         MARKDOWN
-        allow(generator).to receive(:generate) do |source, _key, **_kwargs|
+        allow(generator).to receive(:generate) do |source, key, **_kwargs|
           expect(source).not_to include("&nbsp;&nbsp;")
-          File.join(cache_dir, "seq.svg")
+          { key => File.join(cache_dir, "#{key}.svg") }
         end
 
         proc_flowchart_only.process_content(content, site)
@@ -203,12 +209,13 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          edge_label_padding: 0, text_centering: true, overflow_protection: true
+          edge_label_padding: 0, text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         keys = []
         allow(generator).to receive(:generate) do |_source, key, **_kwargs|
           keys << key
-          File.join(cache_dir, "#{key}.svg")
+          { key => File.join(cache_dir, "#{key}.svg") }
         end
         content = "```mermaid\nflowchart LR\n  A[\"🔧\"] --> B\n```\n"
         processor.process_content(content, site)
@@ -232,7 +239,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           captured_keys << key
           path = File.join(cache_dir, "#{key}.svg")
           File.write(path, "<svg/>")
-          path
+          { key => path }
         end
       end
 
@@ -242,13 +249,15 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 4,
-          text_centering: true, overflow_protection: true
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         cfg8 = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 8,
-          text_centering: true, overflow_protection: true
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         described_class.new(cfg4, stub_generator).process_content(content, site)
         described_class.new(cfg8, stub_generator).process_content(content, site)
@@ -261,7 +270,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         2.times { described_class.new(cfg, stub_generator).process_content(content, site) }
         expect(captured_keys.uniq.size).to eq(1)
@@ -273,13 +283,15 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         cfg_off = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: false, overflow_protection: true
+          text_centering: false, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         described_class.new(cfg_on, stub_generator).process_content(content, site)
         described_class.new(cfg_off, stub_generator).process_content(content, site)
@@ -292,17 +304,97 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
         )
         cfg_off = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: false
+          text_centering: true, overflow_protection: false,
+          prefers_color_scheme: :light
         )
         described_class.new(cfg_on, stub_generator).process_content(content, site)
         described_class.new(cfg_off, stub_generator).process_content(content, site)
         expect(captured_keys.uniq.size).to eq(2)
+      end
+
+      it "uses different cache keys when prefers_color_scheme changes" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
+        cfg_light = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :light
+        )
+        cfg_dark = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: true, overflow_protection: true,
+          prefers_color_scheme: :dark
+        )
+        described_class.new(cfg_light, stub_generator).process_content(content, site)
+        described_class.new(cfg_dark, stub_generator).process_content(content, site)
+        expect(captured_keys.uniq.size).to eq(2)
+      end
+    end
+
+    context "when prefers_color_scheme is :auto" do
+      let(:config_auto) do
+        instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir,
+          output_dir: "assets/svg",
+          enabled?: true,
+          emoji_width_compensation: {},
+          edge_label_padding: 0,
+          text_centering: true,
+          overflow_protection: true,
+          prefers_color_scheme: :auto
+        )
+      end
+      let(:processor_auto) { described_class.new(config_auto, generator) }
+      let(:content_with_mermaid) do
+        <<~MARKDOWN
+          ```mermaid
+          graph TD
+          A-->B
+          ```
+        MARKDOWN
+      end
+
+      it "merges light and dark SVG entries into svgs_to_copy" do
+        allow(generator).to receive(:generate) do |_source, key, **_kwargs|
+          {
+            key => File.join(cache_dir, "#{key}.svg"),
+            "#{key}-dark" => File.join(cache_dir, "#{key}-dark.svg")
+          }
+        end
+        allow(generator).to receive(:build_svg_url) { |stem| "/assets/svg/#{stem}.svg" }
+        allow(generator).to receive(:build_figure_html).and_return("<figure>auto</figure>")
+
+        _result, _count, svgs = processor_auto.process_content(content_with_mermaid, site)
+
+        expect(svgs.size).to eq(2)
+        expect(svgs.keys).to include(match(/\A[a-f0-9]{8}\z/), match(/\A[a-f0-9]{8}-dark\z/))
+      end
+
+      it "builds figure HTML with dark_url" do
+        allow(generator).to receive(:generate) do |_source, key, **_kwargs|
+          {
+            key => File.join(cache_dir, "#{key}.svg"),
+            "#{key}-dark" => File.join(cache_dir, "#{key}-dark.svg")
+          }
+        end
+        allow(generator).to receive(:build_svg_url) { |stem| "/assets/svg/#{stem}.svg" }
+        expect(generator).to receive(:build_figure_html).with(
+          a_string_matching(%r{\A/assets/svg/[a-f0-9]{8}\.svg\z}),
+          hash_including(dark_url: a_string_matching(%r{\A/assets/svg/[a-f0-9]{8}-dark\.svg\z}))
+        ).and_return("<figure/>")
+
+        processor_auto.process_content(content_with_mermaid, site)
       end
     end
 

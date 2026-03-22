@@ -115,6 +115,33 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
     end
   end
 
+  describe ".render" do
+    let(:status_ok) { instance_double(Process::Status, success?: true) }
+
+    it "invokes mmdc without -t for default theme" do
+      expect(Open3).to receive(:capture3).with(
+        "mmdc", "-i", a_string_matching(/\.mmd\z/), "-o", "/tmp/out.svg", "-e", "svg"
+      ).and_return(["", "", status_ok])
+
+      described_class.render("graph TD\nA-->B", "/tmp/out.svg", theme: :default)
+    end
+
+    it "appends -t dark when theme is :dark" do
+      expect(Open3).to receive(:capture3).with(
+        "mmdc", "-i", a_string_matching(/\.mmd\z/), "-o", "/tmp/out.svg", "-e", "svg", "-t", "dark"
+      ).and_return(["", "", status_ok])
+
+      described_class.render("graph TD\nA-->B", "/tmp/out.svg", theme: :dark)
+    end
+
+    it "returns false when mmdc fails" do
+      bad = instance_double(Process::Status, success?: false)
+      allow(Open3).to receive(:capture3).and_return(["", "err", bad])
+
+      expect(described_class.render("x", "/tmp/nope.svg")).to be false
+    end
+  end
+
   describe ".mermaid_fence_pattern" do
     let(:pattern) { described_class.mermaid_fence_pattern }
 

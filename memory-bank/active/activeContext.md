@@ -2,13 +2,13 @@
 
 ## Current Task: Dark mode / prefers-color-scheme (issue #11)
 
-**Phase:** PREFLIGHT — PASS
+**Phase:** BUILD — COMPLETE
 
 ## What Was Done
 
-- Preflight validated the plan against all source modules and specs. No blocking issues.
-- Three advisory findings documented (see progress.md); advisory #1 resolved: operator chose two-`<a>` + CSS toggle over `<picture>` so the click-through link is always correct per color scheme. Plan and project brief updated.
+- Implemented `mermaid_prebuild.prefers_color_scheme` (`light` default, `dark`, `auto`) across `Configuration`, `MmdcWrapper` (`theme:` on `render`), `Generator` (Hash return; dual SVG + post-process for `auto`), `Processor` (digest includes `pcs`, `merge!` for SVG map, dual `build_figure_html`), unchanged `Hooks` copy behavior.
+- RSpec: 143 examples; RuboCop clean. Devblog `bundle exec jekyll build` with `prefers_color_scheme: auto` succeeded (28 SVGs copied for 14 diagrams).
 
 ## Next Step
 
-- Run **`/niko-build`** to begin TDD implementation.
+- Run **`/niko-qa`** for semantic QA, then **`/niko-reflect`** per Level 3 workflow.

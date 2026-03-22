@@ -6,7 +6,8 @@ module JekyllMermaidPrebuild
     DEFAULT_OUTPUT_DIR = "assets/svg"
     CACHE_DIR = ".jekyll-cache/jekyll-mermaid-prebuild"
 
-    attr_reader :output_dir, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation
+    attr_reader :output_dir, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation,
+                :prefers_color_scheme
 
     # Initialize configuration from Jekyll site
     #
@@ -15,6 +16,7 @@ module JekyllMermaidPrebuild
       config = site.config["mermaid_prebuild"] || {}
       @output_dir = parse_output_dir(config["output_dir"])
       @enabled = config.fetch("enabled", true)
+      @prefers_color_scheme = parse_prefers_color_scheme(config["prefers_color_scheme"])
 
       pp = config["postprocessing"] || {}
       @text_centering = pp.fetch("text_centering", true)
@@ -38,6 +40,26 @@ module JekyllMermaidPrebuild
     end
 
     private
+
+    # Normalize prefers_color_scheme to :light, :dark, or :auto.
+    #
+    # @param value [Object] raw site config value
+    # @return [Symbol] :light, :dark, or :auto
+    def parse_prefers_color_scheme(value)
+      return :light if value.nil?
+
+      s = value.to_s.strip.downcase
+      return :light if s.empty?
+
+      case s
+      when "light" then :light
+      when "dark" then :dark
+      when "auto" then :auto
+      else
+        Jekyll.logger.warn "MermaidPrebuild:", "Invalid prefers_color_scheme #{value.inspect}; using light"
+        :light
+      end
+    end
 
     # Returns a frozen Hash of diagram type (string) => boolean. Non-hash values are rejected → {}.
     #

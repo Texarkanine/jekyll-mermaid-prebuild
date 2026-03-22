@@ -33,3 +33,13 @@
   1. ~~`<a>` link target in `<picture>` mode~~ → **RESOLVED:** Operator chose two-`<a>` + CSS toggle approach. Plan updated: `build_figure_html` emits `.mermaid-diagram__light` and `.mermaid-diagram__dark` `<a>` elements with inline `<style>` `@media (prefers-color-scheme: dark)` to swap visibility. Each `<a>` links to its own SVG variant — link is always correct.
   2. Devblog integration: plan step 7 needs `prefers_color_scheme: auto` added to devblog's `_config.yaml` to exercise the feature beyond the default path.
   3. Future extensibility: hardcoded light=default/dark=dark themes. An optional `mermaid_theme` config could let users pick `forest`, `neutral`, etc. Scope expansion — noted for future.
+
+## 2026-03-22 — BUILD — COMPLETE
+
+* **Work completed**
+  - Landed `prefers_color_scheme` end-to-end in the gem (config, mmdc `-t dark`, dual cache files for `auto`, two-`<a>` + `@media (prefers-color-scheme: dark)` HTML, digest includes `pcs`).
+  - Extended RSpec (`configuration`, `mmdc_wrapper`, `generator`, `processor`, `hooks`); documented in README; set `prefers_color_scheme: auto` in devblog `_config.yaml`.
+* **Decisions made**
+  - `Generator#generate` returns `Hash{stem => path}` everywhere for a single call shape; `nil` on any required render failure in `auto`.
+* **Verification**
+  - `bundle exec rspec` and `bundle exec rubocop` in jekyll-mermaid-prebuild; `bundle exec jekyll build` in devblog with path gem.

@@ -49,6 +49,26 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       end
     end
 
+    context "with light and dark stems (auto mode)" do
+      let(:svgs) do
+        {
+          "abc12345" => File.join(cache_dir, "abc12345.svg"),
+          "abc12345-dark" => File.join(cache_dir, "abc12345-dark.svg")
+        }
+      end
+
+      before do
+        svgs.each_value { |path| File.write(path, "<svg/>") }
+      end
+
+      it "copies both SVGs including the -dark suffix filename" do
+        described_class.copy_svgs_to_site(site, config, svgs)
+
+        expect(File.exist?(File.join(dest_dir, "assets/svg/abc12345.svg"))).to be true
+        expect(File.exist?(File.join(dest_dir, "assets/svg/abc12345-dark.svg"))).to be true
+      end
+    end
+
     context "with empty SVGs hash" do
       it "does nothing" do
         expect { described_class.copy_svgs_to_site(site, config, {}) }.not_to raise_error

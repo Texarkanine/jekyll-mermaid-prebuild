@@ -151,5 +151,5 @@ No new technology — validation not required. Still depends on existing `@merma
 - [x] Implementation plan complete
 - [x] Technology validation complete
 - [x] Preflight — PASS (3 advisory, 0 blocking)
-- [ ] Build
+- [x] Build
 - [ ] QA

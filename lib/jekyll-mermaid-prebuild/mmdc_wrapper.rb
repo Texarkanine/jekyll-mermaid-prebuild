@@ -95,8 +95,9 @@ module JekyllMermaidPrebuild
     #
     # @param mermaid_source [String] mermaid diagram definition
     # @param output_path [String] path to write SVG file
+    # @param theme [Symbol] :default (mermaid default theme) or :dark (mmdc -t dark)
     # @return [Boolean] true if successful
-    def render(mermaid_source, output_path)
+    def render(mermaid_source, output_path, theme: :default)
       input_file = Tempfile.new(["mermaid", ".mmd"])
 
       begin
@@ -104,6 +105,7 @@ module JekyllMermaidPrebuild
         input_file.close
 
         cmd = ["mmdc", "-i", input_file.path, "-o", output_path, "-e", "svg"]
+        cmd += ["-t", "dark"] if theme == :dark
         _stdout, _stderr, status = Open3.capture3(*cmd)
 
         status.success?

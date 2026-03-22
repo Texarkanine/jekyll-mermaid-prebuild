@@ -94,6 +94,7 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
+  prefers_color_scheme: light  # light (default) | dark | auto — see below
   postprocessing:
     text_centering: true         # default: true
     overflow_protection: true    # default: true
@@ -108,6 +109,7 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
+| `prefers_color_scheme` | `light` | Mermaid theme / visitor color preference. See [Color scheme](#color-scheme-mermaid-theme). |
 
 #### `postprocessing` group
 
@@ -119,6 +121,18 @@ All cross-browser rendering fixes live under the `postprocessing:` key. Each can
 | `overflow_protection` | `true` | Inject `overflow: visible` on `<foreignObject>` elements to prevent clipping. Set `false` to disable. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
 | `edge_label_padding` | `0` | Extra SVG user units added to edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). Applies to all diagram types. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
 | `emoji_width_compensation` | `{}` | Map of diagram types to booleans; see [Emoji width compensation](#emoji-width-compensation) below. |
+
+### Color scheme (Mermaid theme)
+
+`prefers_color_scheme` controls how diagrams are rendered and, for `auto`, how HTML picks the right asset for the visitor’s system preference (`prefers-color-scheme`).
+
+| Value | Behavior |
+|-------|----------|
+| `light` | One SVG per diagram using Mermaid’s default (light) theme — same as earlier plugin versions. |
+| `dark` | One SVG per diagram using mmdc’s dark theme (`mmdc -t dark`). |
+| `auto` | Two SVGs per diagram: `{digest}.svg` (light) and `{digest}-dark.svg` (dark). The embedded HTML uses two links (light and dark) with a small inline stylesheet so only the variant matching the user’s color scheme is shown. **Build cost:** each diagram runs `mmdc` twice until both files are cached. |
+
+Invalid or empty values fall back to `light` with a warning in the build log. The cache digest includes this setting so theme changes never reuse the wrong SVG.
 
 ### Cross-browser text rendering fixes
 
@@ -179,7 +193,7 @@ Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
-- Changing `edge_label_padding`, `text_centering`, or `overflow_protection` invalidates cache keys
+- Changing `edge_label_padding`, `text_centering`, `overflow_protection`, or `prefers_color_scheme` invalidates cache keys
 
 To clear the cache:
 

@@ -37,7 +37,7 @@ module JekyllMermaidPrebuild
         next unless result
 
         converted_count += 1
-        svgs_to_copy[result[:cache_key]] = result[:cached_path]
+        svgs_to_copy.merge!(result[:svgs])
         processed[block[:start]...block[:end]] = result[:html]
       end
 
@@ -51,6 +51,7 @@ module JekyllMermaidPrebuild
     # @return [String] input to MD5 for cache key
     def digest_string_for_cache(source, _diagram_type)
       parts = [source]
+      parts << "pcs=#{@config.prefers_color_scheme}"
       parts << "tc=#{@config.text_centering}" unless @config.text_centering
       parts << "op=#{@config.overflow_protection}" unless @config.overflow_protection
       pad = @config.edge_label_padding
@@ -61,7 +62,7 @@ module JekyllMermaidPrebuild
     # Convert a single mermaid block to SVG
     #
     # @param block [Hash] block info with :content key
-    # @return [Hash, nil] {cache_key:, cached_path:, html:} or nil if failed
+    # @return [Hash, nil] {:svgs, :html} or nil if failed
     def convert_block(block)
       mermaid_source = block[:content]
       diagram_type = EmojiCompensator.detect_diagram_type(mermaid_source)
@@ -72,12 +73,19 @@ module JekyllMermaidPrebuild
                           end
       digest_input = digest_string_for_cache(source_for_render, diagram_type)
       cache_key = DigestCalculator.content_digest(digest_input)
-      cached_path = @generator.generate(source_for_render, cache_key, diagram_type: diagram_type)
+      paths = @generator.generate(source_for_render, cache_key, diagram_type: diagram_type)
 
-      return nil unless cached_path
+      return nil if paths.nil? || paths.empty?
 
-      svg_url = @generator.build_svg_url(cache_key)
-      { cache_key: cache_key, cached_path: cached_path, html: @generator.build_figure_html(svg_url) }
+      light_url = @generator.build_svg_url(cache_key)
+      html = if @config.prefers_color_scheme == :auto
+               dark_url = @generator.build_svg_url("#{cache_key}-dark")
+               @generator.build_figure_html(light_url, dark_url: dark_url)
+             else
+               @generator.build_figure_html(light_url)
+             end
+
+      { svgs: paths, html: html }
     end
 
     # Find all top-level mermaid code blocks (not nested inside other fences)

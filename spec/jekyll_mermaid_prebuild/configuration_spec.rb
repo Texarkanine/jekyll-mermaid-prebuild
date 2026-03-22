@@ -237,4 +237,67 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
   end
+
+  describe "#prefers_color_scheme" do
+    context "when not configured" do
+      it "defaults to :light" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:light)
+      end
+    end
+
+    context "with string light / dark / auto" do
+      it "parses light" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => "light" } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:light)
+      end
+
+      it "parses dark" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => "dark" } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:dark)
+      end
+
+      it "parses auto" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => "auto" } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:auto)
+      end
+
+      it "is case-insensitive" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => "DaRk" } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:dark)
+      end
+    end
+
+    context "with symbol values" do
+      it "parses :auto" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => :auto } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:auto)
+      end
+    end
+
+    context "with empty or whitespace" do
+      it "treats empty string as :light" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => "" } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:light)
+      end
+
+      it "treats whitespace as :light" do
+        cfg = { "mermaid_prebuild" => { "prefers_color_scheme" => "   " } }
+        expect(described_class.new(instance_double(Jekyll::Site, config: cfg)).prefers_color_scheme).to eq(:light)
+      end
+    end
+
+    context "with invalid value" do
+      let(:site_config) { { "mermaid_prebuild" => { "prefers_color_scheme" => "banana" } } }
+
+      it "falls back to :light" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:light)
+      end
+
+      it "logs a warning" do
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /Invalid prefers_color_scheme/)
+
+        described_class.new(site)
+      end
+    end
+  end
 end
