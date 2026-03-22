@@ -6,7 +6,7 @@ Fix (plan and implement) SVG edge-label clipping for Mermaid **block** diagrams 
 
 ## Phase
 
-PLAN — COMPLETE (post-processing approach). Next: Level 2 Preflight (`/niko-preflight`).
+PREFLIGHT — PASS. Next: Level 2 Build (`/niko-build`).
 
 ## What Was Done
 
@@ -17,7 +17,7 @@ PLAN — COMPLETE (post-processing approach). Next: Level 2 Preflight (`/niko-pr
 
 ## Next Step
 
-1. Run `/niko-preflight` against the plan in `tasks.md`, then Build (TDD) per Level 2 workflow.
+1. Run `/niko-build` to implement the plan (TDD) per Level 2 workflow.
 
 ## Key Artifacts
 

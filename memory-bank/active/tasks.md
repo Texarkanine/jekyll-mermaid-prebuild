@@ -29,56 +29,55 @@
 - Framework: **RSpec** (`bundle exec rspec`)
 - Test location: `spec/jekyll_mermaid_prebuild/`
 - Conventions: one spec file per module (`*_spec.rb`), `describe`/`context`/`it` matching existing style
-- New test files: `spec/jekyll_mermaid_prebuild/block_edge_label_svg_post_processor_spec.rb`; extend `spec/jekyll_mermaid_prebuild/configuration_spec.rb`, `spec/jekyll_mermaid_prebuild/processor_spec.rb`, and `spec/jekyll_mermaid_prebuild/generator_spec.rb` as needed
+- New test files: `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`; extend `spec/jekyll_mermaid_prebuild/configuration_spec.rb`, `spec/jekyll_mermaid_prebuild/processor_spec.rb`, and `spec/jekyll_mermaid_prebuild/generator_spec.rb` as needed
 
 ## Implementation Plan
 
-1. **Configuration**  
-   - Files: `lib/jekyll-mermaid-prebuild/configuration.rb`, `spec/jekyll_mermaid_prebuild/configuration_spec.rb`  
+1. **Configuration**
+   - Files: `lib/jekyll-mermaid-prebuild/configuration.rb`, `spec/jekyll_mermaid_prebuild/configuration_spec.rb`
    - Changes: Parse `block_edge_label_padding` from `mermaid_prebuild` config (numeric: Integer or Float; `0`, `nil`, or `false` = off). Expose reader e.g. `#block_edge_label_padding` returning numeric or 0.
 
-2. **Post-processor module (stub → implement)**  
-   - Files: `lib/jekyll-mermaid-prebuild/block_edge_label_svg_post_processor.rb`, `require` from `lib/jekyll-mermaid-prebuild.rb`  
-   - Changes: Module/class with `apply(svg_string, padding:)` — if `padding` not positive, return `svg_string`. Else parse SVG, detect block diagram via root `aria-roledescription="block"`, find `g` with `class` containing `edgeLabel`, descendant `foreignObject` elements, add `padding` to numeric `width` attribute only. Preserve document structure; prefer attribute-only mutation to minimize XHTML churn.
+2. **Post-processor module (stub → implement)**
+   - Files: `lib/jekyll-mermaid-prebuild/svg_post_processor.rb`, `require` from `lib/jekyll-mermaid-prebuild.rb`
+   - Changes: Stateless `module_function` module `SvgPostProcessor` with `apply(svg_string, padding:)`. If `padding` not positive or SVG lacks `aria-roledescription="block"`, return unchanged. Otherwise use a targeted regex: match `<g class="edgeLabel"...><g class="label"...><foreignObject ... width="N" ...>` and increase `N` by `padding`. No XML parser — mmdc output is deterministic single-line SVG; regex is scoped to block edge labels only. Consistent with EmojiCompensator's regex-based approach.
 
-3. **Unit specs for post-processor**  
-   - Files: `spec/jekyll_mermaid_prebuild/block_edge_label_svg_post_processor_spec.rb`  
-   - Changes: Implement B1–B5, E1–E3 with fixture strings (trimmed excerpts from real mmdc block SVG acceptable).
+3. **Unit specs for post-processor**
+   - Files: `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`
+   - Changes: Implement B1–B5, E1–E3 with fixture strings (trimmed excerpts from real mmdc block SVG). B5 simplifies: no XML round-trip to worry about since we're doing string replacement, but still assert XHTML content is intact.
 
-4. **Digest / Processor**  
-   - Files: `lib/jekyll-mermaid-prebuild/processor.rb`, `spec/jekyll_mermaid_prebuild/processor_spec.rb`  
+4. **Digest / Processor**
+   - Files: `lib/jekyll-mermaid-prebuild/processor.rb`, `spec/jekyll_mermaid_prebuild/processor_spec.rb`
    - Changes: When `EmojiCompensator.detect_diagram_type(source) == "block"` and `config.block_edge_label_padding.positive?`, append a deterministic NUL-separated suffix to the string passed to `DigestCalculator.content_digest` (e.g. `"\0block_edge_pad=#{padding}"`) so cache keys change when padding changes. Non-block diagrams: no suffix.
 
-5. **Generator hook**  
-   - Files: `lib/jekyll-mermaid-prebuild/generator.rb`, `spec/jekyll_mermaid_prebuild/generator_spec.rb`  
-   - Changes: After successful `MmdcWrapper.render`, if `config.block_edge_label_padding.positive?`, read `cache_path`, run post-processor, write back only when output differs or always rewrite processed string. **Detection:** either pass `diagram_type` from `Processor` into `generate(mermaid_source, cache_key, diagram_type:)` **or** run post-processor only when `BlockEdgeLabelSvgPostProcessor.block_diagram?(svg)` after first read — prefer passing `diagram_type` from `Processor` to avoid double-read and to skip XML parse for non-block diagrams.
+5. **Generator hook**
+   - Files: `lib/jekyll-mermaid-prebuild/generator.rb`, `spec/jekyll_mermaid_prebuild/generator_spec.rb`
+   - Changes: After successful `MmdcWrapper.render`, if `config.block_edge_label_padding.positive?`, read `cache_path`, run post-processor, write back. Pass `diagram_type` from `Processor` into `generate(mermaid_source, cache_key, diagram_type:)` to skip post-processing for non-block diagrams without reading the file.
 
-6. **Generator API signature**  
-   - Files: `processor.rb`, `generator.rb`, any internal callers of `generate`  
+6. **Generator API signature**
+   - Files: `processor.rb`, `generator.rb`, any internal callers of `generate`
    - Changes: `Generator#generate(mermaid_source, cache_key, diagram_type: nil)` — when `diagram_type == "block"` and padding positive, post-process written file.
 
-7. **Documentation**  
-   - Files: `README.md`, `CHANGELOG.md`  
+7. **Documentation**
+   - Files: `README.md`, `CHANGELOG.md`
    - Changes: Document `block_edge_label_padding` (purpose: block edge label stroke clipping on mmdc/Linux), recommended starting value (e.g. 4–8 SVG user units), cache behavior when toggling.
 
-8. **RuboCop + full suite**  
+8. **RuboCop + full suite**
    - Run `bundle exec rubocop` and `bundle exec rspec`; fix issues.
 
 ## Technology Validation
 
-- **Nokogiri:** Use for robust SVG attribute updates under namespaces. Jekyll already depends on Nokogiri transitively; add an **explicit** runtime dependency in `jekyll-mermaid-prebuild.gemspec` so standalone resolution and `require "nokogiri"` are reliable in CI and consumer bundles.  
-- **Validation:** `bundle install` succeeds; one spec parses a real-world block SVG fragment after `bundle exec`.
+No new technology — validation not required. The post-processor uses Ruby stdlib only (String, Regexp). Nokogiri was considered but rejected during preflight: it is not in the gem's bundle, would add a heavy native-extension runtime dependency, and the operation is narrow enough for regex on mmdc's deterministic output.
 
 ## Dependencies
 
-- New runtime gem: **nokogiri** (version floor aligned with Jekyll 4’s constraint, per `bundle exec ruby -e 'puts Gem.loaded_specs["jekyll"].dependencies'` or gemspec cross-check during build).
+None. No new runtime or development dependencies.
 
 ## Challenges & Mitigations
 
-- **XML round-trip alters `foreignObject` HTML:** Mitigation: touch only `foreignObject` `width` attributes via DOM API; add B5 regression test; if LibXML still mangles, narrow to regex-based width replacement scoped with a lightweight state machine or Ox — only as fallback.  
-- **Namespaces / default SVG namespace:** Mitigation: use Nokogiri namespaced queries (`svg|`, `xmlns`) as needed; test with real mmdc output.  
-- **Reintroducing post-processing after emoji-only preprocess:** Mitigation: document narrow scope (block + edgeLabel `foreignObject` width only); no generic `max_width` or flowchart hacks.  
-- **Padding too small/large:** Mitigation: configurable numeric; README suggests tuning; optional follow-up for height if multi-line edge labels clip vertically (not in current bug report).
+- **Regex fragility on SVG markup:** Mitigation: regex is tightly scoped to the known mmdc block edge label pattern (`<g class="edgeLabel"...><g class="label"...><foreignObject...width="N"...>`). If Mermaid changes its output structure, the regex simply won't match and text won't be padded — a safe no-op failure. Tested against real mmdc output.
+- **Reintroducing post-processing after prior removal:** Mitigation: the prior post-processor (SvgPostProcessor + Nokogiri + max_width) was removed because `display: table-cell` in flowchart labels made foreignObject widening futile. Block edge labels use `display: inline-block` — a different layout model where the foreignObject boundary IS the clipping boundary. Document this distinction. Scope: block + edgeLabel foreignObject width only; no generic max_width.
+- **Centering offset:** Widening foreignObject shifts the label ~padding/2 pixels rightward (the `<g class="label" translate(...)>` is based on original width). For 4–8px padding this is imperceptible. Mitigation: keep padding small; document tradeoff.
+- **Padding too small/large:** Mitigation: configurable numeric; README suggests starting value; optional follow-up for height if multi-line edge labels clip vertically (not in current bug report).
 
 ## Status
 
@@ -86,6 +85,6 @@
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
 - [x] Technology validation complete
-- [ ] Preflight
+- [x] Preflight
 - [ ] Build
 - [ ] QA

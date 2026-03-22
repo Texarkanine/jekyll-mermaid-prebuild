@@ -12,3 +12,12 @@
 - Operator selected **postprocessing** approach (not Mermaid source padding).
 - Wrote full Level 2 plan to `memory-bank/active/tasks.md`: `BlockEdgeLabelSvgPostProcessor`, config `block_edge_label_padding`, Nokogiri + gemspec dependency, digest suffix for `block` + positive padding, `Generator#generate(..., diagram_type:)` hook, RSpec coverage and README/CHANGELOG updates.
 - Updated `activeContext.md` phase to PLAN COMPLETE; next step Preflight.
+
+## 2026-03-22 — Preflight PASS (with plan amendments)
+
+- **Convention:** Renamed `block_edge_label_svg_post_processor.rb` → `svg_post_processor.rb` (shorter, consistent with existing module names).
+- **Critical amendment — dropped Nokogiri:** Verified Nokogiri is NOT in the gem's bundle (only in consumer sites via other plugins). Adding a C-extension runtime dependency for a simple `width` attribute bump is disproportionate. Replaced with targeted regex on mmdc's deterministic SVG output — consistent with EmojiCompensator's regex approach, zero new dependencies.
+- **Verified foreignObject widening is valid for block diagrams:** Block edge labels use `display: inline-block` (not `table-cell`). The archive's objection ("foreignObject width manipulation futile") applied specifically to flowchart `table-cell` layout where divs shrink-wrap; block edge labels clip at the foreignObject boundary, so widening it prevents clipping. No background `<rect>` exists in block edge labels — no secondary element to widen.
+- **Centering offset noted:** Small rightward shift (~padding/2 px) is acceptable for 4–8px values.
+- **All 6 block-type SVGs** in devblog confirmed to use identical structure: `<g class="edgeLabel"><g class="label"><foreignObject>` with stroked edge label text.
+- Preflight status written to `.preflight-status`. Plan amendments incorporated into `tasks.md`.
