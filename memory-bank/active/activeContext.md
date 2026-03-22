@@ -6,7 +6,7 @@ Fix (plan and implement) SVG edge-label clipping for Mermaid **block** diagrams 
 
 ## Phase
 
-QA — PASS. Next: `/niko-reflect` (Level 2 Reflect phase).
+REFLECT — COMPLETE. Next: `/niko-archive` (operator-initiated).
 
 ## What Was Done
 
@@ -16,7 +16,7 @@ QA — PASS. Next: `/niko-reflect` (Level 2 Reflect phase).
 
 ## Next Step
 
-1. Run `/niko-reflect` for post-implementation reflection.
+1. Run `/niko-archive` to create the archive document and finalize the current project.
 
 ## Key Artifacts
 

@@ -40,3 +40,8 @@
     - No KISS, DRY, YAGNI, completeness, integrity, or documentation issues.
 * Verification
     - `bundle exec rspec` — 96 examples, 0 failures; `bundle exec rubocop` — 0 offenses.
+
+## 2026-03-22 — Level 2 Reflect — COMPLETE
+
+* Reflection recorded in `memory-bank/active/reflection/reflection-block-edge-label-svg-pad.md`
+* Key insight: Preflight gate caught Nokogiri dependency issue before build, redirecting to zero-dependency regex approach. Block vs flowchart `display` model distinction documented for future SVG work.
