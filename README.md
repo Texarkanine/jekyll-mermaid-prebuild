@@ -140,8 +140,6 @@ mermaid_prebuild:
       dark: black          # default if omitted
 ```
 
-The Ruby API exposes the parsed mode as `Configuration#prefers_color_scheme` (`:light` / `:dark` / `:auto`).
-
 | `mode` | Behavior |
 |--------|----------|
 | `light` | One SVG per diagram using Mermaid’s default (light) theme. |
@@ -153,8 +151,6 @@ The Ruby API exposes the parsed mode as `Configuration#prefers_color_scheme` (`:
 **Transparency:** The standard CSS keyword **`transparent`** is supported and is the usual choice when you want that variant’s chart to show the page behind it (for example `dark: transparent` on a dark-themed site). Fully transparent RGBA such as `rgba(0, 0, 0, 0)` is also valid if you prefer explicit alpha.
 
 If `prefers-color-scheme` is not a hash (for example a bare string), the plugin uses `mode: light` and default backgrounds and logs a warning. Unknown `mode` values fall back to `light` with a warning. Omitting `mode` is treated as `light`.
-
-The cache digest includes `mode` and both background strings so theme and color changes never reuse the wrong SVG.
 
 ### Cross-browser text rendering fixes
 
