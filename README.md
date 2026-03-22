@@ -94,10 +94,10 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
-  prefers_color_scheme:
+  prefers-color-scheme:
     mode: light          # light (default) | dark | auto — see [Color scheme](#color-scheme-mermaid-theme)
     # Optional: override mmdc’s root SVG background (defaults: light=white, dark=black)
-    # background_color:
+    # background-color:
     #   light: white
     #   dark: black
   postprocessing:
@@ -114,7 +114,7 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
-| `prefers_color_scheme` | see below | **Hash** with `mode` (`light` / `dark` / `auto`) and optional `background_color` (or `background-color`) for chart backgrounds. See [Color scheme](#color-scheme-mermaid-theme). |
+| `prefers-color-scheme` | see below | **Hash** with `mode` (`light` / `dark` / `auto`) and optional `background-color` for chart backgrounds. See [Color scheme](#color-scheme-mermaid-theme). |
 
 #### `postprocessing` group
 
@@ -129,18 +129,18 @@ All cross-browser rendering fixes live under the `postprocessing:` key. Each can
 
 ### Color scheme (Mermaid theme)
 
-`prefers_color_scheme` must be a **YAML mapping** (hash). Use `mode` for the Mermaid theme / HTML behavior. You may also set per-variant **root SVG background** colors (mmdc always emits `background-color: white` on the root `<svg>`; the plugin rewrites that for each output file).
-
-**Top-level key:** `prefers_color_scheme` or `prefers-color-scheme` (hyphenated alias).
+Under `mermaid_prebuild`, the **`prefers-color-scheme`** key (hyphenated, like the CSS media feature) must be a **YAML mapping**. Use `mode` for the Mermaid theme / HTML behavior. Optionally nest **`background-color`** (same spelling as in CSS) with `light` / `dark` slots for each chart variant’s root SVG fill (mmdc always emits `background-color: white` on the root `<svg>`; the plugin rewrites that per file).
 
 ```yaml
 mermaid_prebuild:
-  prefers_color_scheme:
+  prefers-color-scheme:
     mode: auto
-    background_color:      # or: background-color
+    background-color:
       light: white         # default if omitted
       dark: black          # default if omitted
 ```
+
+The Ruby API exposes the parsed mode as `Configuration#prefers_color_scheme` (`:light` / `:dark` / `:auto`).
 
 | `mode` | Behavior |
 |--------|----------|
@@ -152,7 +152,7 @@ mermaid_prebuild:
 
 **Transparency:** The standard CSS keyword **`transparent`** is supported and is the usual choice when you want that variant’s chart to show the page behind it (for example `dark: transparent` on a dark-themed site). Fully transparent RGBA such as `rgba(0, 0, 0, 0)` is also valid if you prefer explicit alpha.
 
-If `prefers_color_scheme` is not a hash (for example a bare string), the plugin uses `mode: light` and default backgrounds and logs a warning. Unknown `mode` values fall back to `light` with a warning. Omitting `mode` is treated as `light`.
+If `prefers-color-scheme` is not a hash (for example a bare string), the plugin uses `mode: light` and default backgrounds and logs a warning. Unknown `mode` values fall back to `light` with a warning. Omitting `mode` is treated as `light`.
 
 The cache digest includes `mode` and both background strings so theme and color changes never reuse the wrong SVG.
 
@@ -215,7 +215,7 @@ Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
-- Changing `edge_label_padding`, `text_centering`, `overflow_protection`, `prefers_color_scheme` mode, or chart background colors invalidates cache keys
+- Changing `edge_label_padding`, `text_centering`, `overflow_protection`, `prefers-color-scheme` mode, or chart background colors invalidates cache keys
 
 To clear the cache:
 

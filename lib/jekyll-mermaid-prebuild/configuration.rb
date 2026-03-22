@@ -10,6 +10,10 @@ module JekyllMermaidPrebuild
     MAX_CHART_BACKGROUND_LENGTH = 256
     INVALID_CHART_BACKGROUND = /[\x00-\x1f"'<>;`\\]/
 
+    # YAML keys under mermaid_prebuild — hyphenated to align with CSS (@media (prefers-color-scheme), background-color).
+    PREFERS_COLOR_SCHEME_YAML_KEY = "prefers-color-scheme"
+    BACKGROUND_COLOR_YAML_KEY = "background-color"
+
     attr_reader :output_dir, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation,
                 :prefers_color_scheme, :chart_background_light, :chart_background_dark
 
@@ -20,7 +24,7 @@ module JekyllMermaidPrebuild
       config = site.config["mermaid_prebuild"] || {}
       @output_dir = parse_output_dir(config["output_dir"])
       @enabled = config.fetch("enabled", true)
-      pcs_raw = config["prefers_color_scheme"] || config["prefers-color-scheme"]
+      pcs_raw = config[PREFERS_COLOR_SCHEME_YAML_KEY]
       parse_prefers_color_scheme(pcs_raw)
 
       pp = config["postprocessing"] || {}
@@ -46,8 +50,9 @@ module JekyllMermaidPrebuild
 
     private
 
-    # Parse prefers_color_scheme from a Hash only (mode + optional background colors).
-    # Non-Hash values fall back to :light and default backgrounds with a warning.
+    # Parse the prefers-color-scheme block (see PREFERS_COLOR_SCHEME_YAML_KEY) from a Hash only
+    # (mode + optional background-color map). Non-Hash values fall back to :light and default
+    # backgrounds with a warning.
     #
     # @param value [Object] raw site config value
     # @return [void]
@@ -57,20 +62,22 @@ module JekyllMermaidPrebuild
         @chart_background_light = finalize_background(DEFAULT_CHART_BG_LIGHT)
         @chart_background_dark = finalize_background(DEFAULT_CHART_BG_DARK)
         unless value.nil?
-          Jekyll.logger.warn "MermaidPrebuild:",
-                             "Invalid prefers_color_scheme (expected a Hash); using light mode and default backgrounds"
+          Jekyll.logger.warn(
+            "MermaidPrebuild:",
+            "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} (expected a Hash); " \
+            "using light mode and default backgrounds"
+          )
         end
         return
       end
 
-      mode_raw = hash_fetch_flexible(value, "mode")
+      mode_raw = config_hash_fetch(value, "mode")
       @prefers_color_scheme = normalize_prefers_mode(mode_raw)
 
-      bg_container = hash_fetch_flexible(value, "background_color") ||
-                     hash_fetch_flexible(value, "background-color")
+      bg_container = config_hash_fetch(value, BACKGROUND_COLOR_YAML_KEY)
       if bg_container.is_a?(Hash)
-        light_raw = hash_fetch_flexible(bg_container, "light")
-        dark_raw = hash_fetch_flexible(bg_container, "dark")
+        light_raw = config_hash_fetch(bg_container, "light")
+        dark_raw = config_hash_fetch(bg_container, "dark")
         @chart_background_light = coerce_chart_background(light_raw, DEFAULT_CHART_BG_LIGHT, "light")
         @chart_background_dark = coerce_chart_background(dark_raw, DEFAULT_CHART_BG_DARK, "dark")
       else
@@ -92,30 +99,23 @@ module JekyllMermaidPrebuild
       when "dark" then :dark
       when "auto" then :auto
       else
-        Jekyll.logger.warn "MermaidPrebuild:", "Invalid prefers_color_scheme mode #{raw.inspect}; using light"
+        Jekyll.logger.warn(
+          "MermaidPrebuild:",
+          "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} mode #{raw.inspect}; using light"
+        )
         :light
       end
     end
 
-    # Read a key from a Hash accepting string/symbol and underscore/hyphen spellings.
+    # Read a config key from a Hash (string key as in YAML, or matching Symbol).
     #
-    # @param h [Hash]
-    # @param key [String] canonical key (underscore form preferred, e.g. "background_color")
+    # @param hash [Hash]
+    # @param key [String] exact key (e.g. "mode", "background-color", "light")
     # @return [Object, nil]
-    def hash_fetch_flexible(hash, key)
+    def config_hash_fetch(hash, key)
       return nil unless hash.is_a?(Hash)
 
-      base = key.to_s
-      candidates = [base, key.to_sym]
-      if base.include?("_")
-        candidates << base.tr("_", "-")
-      elsif base.include?("-")
-        candidates << base.tr("-", "_")
-      end
-      candidates.uniq.each do |c|
-        return hash[c] if hash.key?(c)
-      end
-      nil
+      hash[key] || hash[key.to_sym]
     end
 
     # @param value [Object] raw color string or nil (use default)

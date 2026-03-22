@@ -247,7 +247,7 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
 
     context "with nested hash (mode only)" do
       let(:site_config) do
-        { "mermaid_prebuild" => { "prefers_color_scheme" => { "mode" => "auto" } } }
+        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "auto" } } }
       end
 
       it "parses mode" do
@@ -261,21 +261,11 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
 
-    context "with hyphenated top-level key prefers-color-scheme" do
-      let(:site_config) do
-        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "dark" } } }
-      end
-
-      it "parses mode" do
-        expect(described_class.new(site).prefers_color_scheme).to eq(:dark)
-      end
-    end
-
-    context "with nested background_color and hyphenated inner keys" do
+    context "with nested background-color (string and symbol keys for slots)" do
       let(:site_config) do
         {
           "mermaid_prebuild" => {
-            "prefers_color_scheme" => {
+            "prefers-color-scheme" => {
               "mode" => "dark",
               "background-color" => { "light" => "#fff0aa", "dark" => "black" }
             }
@@ -291,13 +281,13 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
 
-    context "with background_color underscore key (equivalent)" do
+    context "with background-color using symbol keys for mode and slots" do
       let(:site_config) do
         {
           "mermaid_prebuild" => {
-            "prefers_color_scheme" => {
-              :mode => "auto",
-              "background_color" => { light: "rgb(1, 2, 3)", dark: "hsl(0 0% 0%)" }
+            "prefers-color-scheme" => {
+              mode: "auto",
+              "background-color" => { light: "rgb(1, 2, 3)", dark: "hsl(0 0% 0%)" }
             }
           }
         }
@@ -311,8 +301,8 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
 
-    context "with non-Hash prefers_color_scheme" do
-      let(:site_config) { { "mermaid_prebuild" => { "prefers_color_scheme" => "auto" } } }
+    context "with non-Hash prefers-color-scheme" do
+      let(:site_config) { { "mermaid_prebuild" => { "prefers-color-scheme" => "auto" } } }
 
       it "falls back to :light" do
         expect(described_class.new(site).prefers_color_scheme).to eq(:light)
@@ -327,7 +317,7 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
 
     context "with invalid mode in hash" do
       let(:site_config) do
-        { "mermaid_prebuild" => { "prefers_color_scheme" => { "mode" => "banana" } } }
+        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "banana" } } }
       end
 
       it "falls back to :light" do
@@ -335,7 +325,7 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
 
       it "logs a warning" do
-        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /Invalid prefers_color_scheme mode/)
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /Invalid prefers-color-scheme mode/)
 
         described_class.new(site)
       end
@@ -343,7 +333,7 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
 
     context "with empty mode string" do
       let(:site_config) do
-        { "mermaid_prebuild" => { "prefers_color_scheme" => { "mode" => "   " } } }
+        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "   " } } }
       end
 
       it "treats as :light" do
@@ -357,9 +347,9 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       let(:site_config) do
         {
           "mermaid_prebuild" => {
-            "prefers_color_scheme" => {
+            "prefers-color-scheme" => {
               "mode" => "light",
-              "background_color" => { "light" => 'white";', "dark" => "black" }
+              "background-color" => { "light" => 'white";', "dark" => "black" }
             }
           }
         }
@@ -376,9 +366,9 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       let(:site_config) do
         {
           "mermaid_prebuild" => {
-            "prefers_color_scheme" => {
+            "prefers-color-scheme" => {
               "mode" => "light",
-              "background_color" => { "light" => "", "dark" => "black" }
+              "background-color" => { "light" => "", "dark" => "black" }
             }
           }
         }
@@ -396,9 +386,9 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       let(:site_config) do
         {
           "mermaid_prebuild" => {
-            "prefers_color_scheme" => {
+            "prefers-color-scheme" => {
               "mode" => "light",
-              "background_color" => { "light" => long, "dark" => "black" }
+              "background-color" => { "light" => long, "dark" => "black" }
             }
           }
         }
