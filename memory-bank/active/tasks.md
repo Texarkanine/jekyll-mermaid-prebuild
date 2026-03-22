@@ -103,4 +103,4 @@ No new technology — validation not required.
 - [x] Technology validation complete
 - [x] Preflight
 - [x] Build
-- [ ] QA
+- [x] QA

@@ -31,3 +31,16 @@
 - User requested: config restructure into `postprocessing:` group with boolean toggles
 - Scope expanded: Configuration, SvgPostProcessor, Generator, Processor, docs
 - 5 implementation steps, breaking config change (pre-1.0)
+
+### Build (Amended) — COMPLETE
+- Step 1: Configuration rewritten — `postprocessing:` group with `text_centering`, `overflow_protection`, `edge_label_padding`, `emoji_width_compensation`
+- Step 2: SvgPostProcessor — removed `BLOCK_ROOT_MARKER`, padding now applies to all diagram types
+- Step 3: Generator — conditional postprocessing based on config booleans
+- Step 4: Processor — universal cache digest with `edge_pad=` prefix
+- Step 5: README, CHANGELOG, devblog `_config.yaml` all updated
+- 117/117 tests, 0 RuboCop offenses, 80% coverage
+
+### QA (Amended) — PASS
+- One trivial fix: stale context name "block edge label padding" → "edge label padding" in processor_spec
+- All checks passed: KISS, DRY, YAGNI, completeness, regression, integrity, documentation
+- User confirmed local smoke test — diagrams not ruined

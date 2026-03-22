@@ -215,7 +215,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       end
     end
 
-    context "block edge label padding cache digest" do
+    context "edge label padding cache digest" do
       let(:stub_generator) do
         instance_double(
           JekyllMermaidPrebuild::Generator,
