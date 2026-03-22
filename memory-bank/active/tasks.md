@@ -4,7 +4,7 @@
 * **Complexity:** Level 3
 * **Type:** feature
 
-Add `mermaid_prebuild.prefers_color_scheme` (`light` default, `dark`, `auto`). `light` keeps current single-SVG default theme; `dark` renders one SVG with Mermaid CLI dark theme; `auto` renders `{digest}.svg` (light) and `{digest}-dark.svg` (dark) and embeds `<picture>` + `prefers-color-scheme` so the browser picks one asset. Digest input must include the mode so cache entries do not cross themes.
+Add `mermaid_prebuild.prefers_color_scheme` (`light` default, `dark`, `auto`). `light` keeps current single-SVG default theme; `dark` renders one SVG with Mermaid CLI dark theme; `auto` renders `{digest}.svg` (light) and `{digest}-dark.svg` (dark) and embeds two `<a>` elements (one per variant) with CSS `@media (prefers-color-scheme: dark)` toggling visibility so the correct link + image is shown for the user's preference. Digest input must include the mode so cache entries do not cross themes.
 
 ## Pinned Info
 
@@ -38,10 +38,10 @@ sequenceDiagram
 
 - **`Configuration`** (`lib/jekyll-mermaid-prebuild/configuration.rb`): Parse `mermaid_prebuild.prefers_color_scheme` from site config. Normalize to internal enum `:light`, `:dark`, `:auto`. Invalid/missing → `:light` and `Jekyll.logger.warn` (same pattern as other defensive config in the codebase).
 - **`MmdcWrapper`** (`lib/jekyll-mermaid-prebuild/mmdc_wrapper.rb`): Extend `render` with a `theme` (or boolean `dark:`) argument; append `-t`, `dark` to argv when generating the dark variant. `test_render` may remain default theme (smoke test only); document in plan if changed.
-- **`Generator`** (`lib/jekyll-mermaid-prebuild/generator.rb`): Branch on `config.prefers_color_scheme`. Produce one or two files under cache dir: `#{digest}.svg` and optionally `#{digest}-dark.svg`. Run `post_process_svg` on each file written or refreshed. **Change `generate` return type** from `String|nil` to `Hash<String,String>|nil`: keys are **file stems** (e.g. `abc12345`, `abc12345-dark`) matching `Hooks` destination names. Return `nil` if any required `mmdc` call fails. Extend `build_figure_html` to accept optional dark URL and emit `<picture>` when both URLs are present; keep `<figure class="mermaid-diagram">` wrapper.
+- **`Generator`** (`lib/jekyll-mermaid-prebuild/generator.rb`): Branch on `config.prefers_color_scheme`. Produce one or two files under cache dir: `#{digest}.svg` and optionally `#{digest}-dark.svg`. Run `post_process_svg` on each file written or refreshed. **Change `generate` return type** from `String|nil` to `Hash<String,String>|nil`: keys are **file stems** (e.g. `abc12345`, `abc12345-dark`) matching `Hooks` destination names. Return `nil` if any required `mmdc` call fails. Extend `build_figure_html` to accept optional dark URL and emit **two `<a>` elements** (`.mermaid-diagram__light` visible by default, `.mermaid-diagram__dark` hidden via `style="display:none"`) with an inline `<style>` block containing `@media (prefers-color-scheme: dark)` that swaps visibility; keep `<figure class="mermaid-diagram">` wrapper.
 - **`Processor`** (`lib/jekyll-mermaid-prebuild/processor.rb`): Append `prefers_color_scheme` (and any future theme-affecting flag) to `digest_string_for_cache`. Update `convert_block` to merge **all** entries from `generator.generate` into `svgs_to_copy`, and build HTML via the updated `build_figure_html`.
 - **`Hooks`** (`lib/jekyll-mermaid-prebuild/hooks.rb`): No logic change expected if `copy_svgs_to_site` already uses dynamic `#{cache_key}.svg` (it does).
-- **`README.md`**: Document key, values, `auto` behavior (two files, `<picture>`), and build cost (double `mmdc` for `auto`).
+- **`README.md`**: Document key, values, `auto` behavior (two files, CSS-toggled `<a>` elements), and build cost (double `mmdc` for `auto`).
 
 ### Cross-Module Dependencies
 
@@ -51,7 +51,7 @@ sequenceDiagram
 ### Boundary Changes
 
 - **`Generator#generate`**: Return `Hash<String,String>|nil` instead of `String|nil` (internal to gem; only `Processor` calls it).
-- **`Generator#build_figure_html`**: Signature gains optional second URL (or keyword `dark_url:`) for `auto` HTML.
+- **`Generator#build_figure_html`**: Signature gains optional keyword `dark_url:` for `auto` HTML (two `<a>` + CSS toggle instead of `<picture>`).
 
 ### Alignment with `systemPatterns.md`
 
@@ -67,7 +67,7 @@ sequenceDiagram
 
 ## Open Questions
 
-None — implementation approach is clear (per `projectbrief.md` investigation: `mmdc -t dark`, `{digest}-dark.svg`, `<picture>` with `prefers-color-scheme`).
+None — implementation approach is clear (per `projectbrief.md` investigation: `mmdc -t dark`, `{digest}-dark.svg`; preflight resolved HTML strategy: two `<a>` elements with CSS `@media (prefers-color-scheme: dark)` toggle instead of `<picture>`, so the click-through link is always correct for the user's color scheme).
 
 ## Test Plan (TDD)
 
@@ -81,7 +81,7 @@ None — implementation approach is clear (per `projectbrief.md` investigation: 
 - **Generator dark:** single file, `render` with dark theme.
 - **Generator auto:** two stems in hash; both post-processed; if one file exists and other missing, generates only the missing; if both exist, no `render`.
 - **Generator failure:** `render` false → `nil` (or empty hash treated as failure — pick one and test).
-- **build_figure_html:** single URL → current `<img>` shape; two URLs → `<picture>` with dark `source` media query and light `img` fallback; accessible `alt` preserved.
+- **build_figure_html:** single URL → current `<a><img></a>` shape; two URLs → two `<a>` elements (`.mermaid-diagram__light` visible, `.mermaid-diagram__dark` hidden) with inline `<style>` `@media (prefers-color-scheme: dark)` swapping visibility; each `<a>` links to its own SVG variant; accessible `alt` preserved on both `<img>` elements.
 - **Processor:** digest string changes when `prefers_color_scheme` changes (same mermaid body → different digest keys).
 - **Processor:** `process_content` merges two SVG entries into third return value when `auto`.
 - **Hooks:** `copy_svgs_to_site` copies `digest-dark` to `digest-dark.svg` (extend existing example hash).
@@ -150,6 +150,6 @@ No new technology — validation not required. Still depends on existing `@merma
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
 - [x] Technology validation complete
-- [ ] Preflight
+- [x] Preflight — PASS (3 advisory, 0 blocking)
 - [ ] Build
 - [ ] QA
