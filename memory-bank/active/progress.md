@@ -76,3 +76,18 @@
   - Desired default for dark charts: **opaque black** (`black`), not transparent.
   - Config should nest under a `prefers-color-scheme` (or equivalent) map: `mode` plus per-scheme `background-color` values that are pasted into the root SVG `style` as literal CSS (e.g. `#fff0aa`, `white`, `black`).
 * **Next phase:** Fresh Level 3 plan in `tasks.md`; then `/niko-preflight` before build.
+
+## 2026-03-22 — PREFLIGHT (rework) — PASS with ADVISORY
+
+* **Work completed**
+  - Validated rework plan against all 4 affected source modules (`Configuration`, `SvgPostProcessor`, `Generator`, `Processor`) and all 4 spec files.
+  - Convention compliance: all proposed changes follow existing patterns (parse_* methods, module_function, digest parts). PASS.
+  - Dependency impact: ~20 `instance_double(Configuration, ...)` declarations need new attrs. No unaccounted downstream. PASS.
+  - Conflict detection: `ensure_transparent_background` removal safe (internal only). No duplication-in-waiting. PASS.
+  - Completeness: all 4 rework requirements map to concrete implementation steps with files identified. PASS.
+* **Decisions made**
+  - **Operator decision:** Flat string `prefers_color_scheme` form **dropped** — dark mode hasn't shipped, no backward compat needed. `parse_prefers_color_scheme` is a clean rewrite (Hash-only); existing flat-string specs replaced; devblog config migration required.
+* **Advisory findings**
+  1. Spec instance_double volume (~20 locations) — recommend shared helper for default config attrs.
+  2. Generator spec dark-background assertions change from `transparent` to `black`.
+  3. Unused `_diagram_type` parameter in `post_process_svg` — minor tech debt, not in scope.

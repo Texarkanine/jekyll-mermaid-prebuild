@@ -61,7 +61,7 @@ As a site author, I want **consistent opaque chart backgrounds** for light and d
 ### Requirements (addendum)
 
 1. **Background behavior:** Stop replacing dark-variant root SVG backgrounds with `transparent`. Apply the **configured dark background** (default `black`) so dark charts match a dark UI. Light variant uses the **configured light background** (default `white`). Both paths should use the same mechanism (replace mmdc’s `background-color: white` on the root `<svg>` with the configured value).
-2. **Config shape:** Support a nested mapping (in addition to backward-compatible flat `prefers_color_scheme: light|dark|auto`), for example:
+2. **Config shape:** Support a nested mapping as the **only** form (flat string form dropped — feature hasn't shipped, no backward-compat needed), for example:
 
    ```yaml
    mermaid_prebuild:
