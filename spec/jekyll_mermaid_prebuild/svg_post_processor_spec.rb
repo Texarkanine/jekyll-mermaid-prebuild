@@ -192,4 +192,33 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
       expect(described_class.ensure_text_centering(svg)).to eq(svg)
     end
   end
+
+  describe ".ensure_transparent_background" do
+    let(:dark_svg) do
+      '<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" ' \
+        'style="max-width: 500px; background-color: white;" viewBox="0 0 500 200">' \
+        "<style>#my-svg{fill:#ccc;}</style></svg>"
+    end
+
+    it "replaces background-color:white with transparent" do
+      out = described_class.ensure_transparent_background(dark_svg)
+      expect(out).to include("background-color: transparent;")
+      expect(out).not_to include("background-color: white")
+    end
+
+    it "leaves SVGs without background-color:white unchanged" do
+      no_bg = '<svg style="max-width: 500px;" viewBox="0 0 500 200"></svg>'
+      expect(described_class.ensure_transparent_background(no_bg)).to eq(no_bg)
+    end
+
+    it "returns non-string input unchanged" do
+      expect(described_class.ensure_transparent_background(nil)).to be_nil
+    end
+
+    it "returns the original string on error" do
+      svg = dark_svg.dup
+      allow(svg).to receive(:sub).and_raise(StandardError, "boom")
+      expect(described_class.ensure_transparent_background(svg)).to eq(svg)
+    end
+  end
 end

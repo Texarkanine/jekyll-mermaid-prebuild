@@ -93,10 +93,15 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         )
       end
 
+      let(:dark_svg) do
+        '<svg id="x" style="max-width: 500px; background-color: white;" viewBox="0 0 500 200">' \
+          "<style>#x{fill:#ccc;}</style></svg>"
+      end
+
       before do
         FileUtils.mkdir_p(cache_dir)
-        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path, theme: :default|
-          File.write(output_path, "<svg>theme-#{theme}</svg>")
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path, **_opts|
+          File.write(output_path, dark_svg)
           true
         end
       end
@@ -115,6 +120,13 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         paths = generator.generate(mermaid_source, cache_key)
         expect(paths[cache_key]).to eq(File.join(cache_dir, "#{cache_key}.svg"))
       end
+
+      it "makes the background transparent" do
+        paths = generator.generate(mermaid_source, cache_key)
+        svg = File.read(paths[cache_key])
+        expect(svg).to include("background-color: transparent")
+        expect(svg).not_to include("background-color: white")
+      end
     end
 
     context "when prefers_color_scheme is :auto" do
@@ -130,11 +142,15 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         )
       end
 
+      let(:mmdc_svg) do
+        '<svg id="x" style="max-width: 500px; background-color: white;" viewBox="0 0 500 200">' \
+          "<style>#x{fill:#ccc;}</style></svg>"
+      end
+
       before do
         FileUtils.mkdir_p(cache_dir)
-        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path, theme: :default|
-          label = theme == :dark ? "dark" : "light"
-          File.write(output_path, "<svg>#{label}</svg>")
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path, **_opts|
+          File.write(output_path, mmdc_svg)
           true
         end
       end
@@ -143,8 +159,17 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         paths = generator.generate(mermaid_source, cache_key)
 
         expect(paths.keys).to contain_exactly(cache_key, "#{cache_key}-dark")
-        expect(File.read(paths[cache_key])).to include("light")
-        expect(File.read(paths["#{cache_key}-dark"])).to include("dark")
+      end
+
+      it "makes the dark SVG background transparent but leaves the light SVG untouched" do
+        paths = generator.generate(mermaid_source, cache_key)
+
+        light_svg = File.read(paths[cache_key])
+        dark_svg = File.read(paths["#{cache_key}-dark"])
+
+        expect(light_svg).to include("background-color: white")
+        expect(dark_svg).to include("background-color: transparent")
+        expect(dark_svg).not_to include("background-color: white")
       end
 
       context "when light exists but dark does not" do
@@ -155,7 +180,8 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         it "renders only the dark variant" do
           expect(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render).once
           paths = generator.generate(mermaid_source, cache_key)
-          expect(File.read(paths["#{cache_key}-dark"])).to include("dark")
+          expect(paths).to have_key("#{cache_key}-dark")
+          expect(File.exist?(paths["#{cache_key}-dark"])).to be true
         end
       end
 

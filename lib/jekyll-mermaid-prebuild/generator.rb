@@ -57,7 +57,7 @@ module JekyllMermaidPrebuild
           }
           </style>
           <a class="mermaid-diagram__light" href="#{svg_url}"><img src="#{svg_url}" alt="Mermaid Diagram"></a>
-          <a class="mermaid-diagram__dark" href="#{dark_url}" style="display:none"><img src="#{dark_url}" alt="Mermaid Diagram"></a>
+          <a class="mermaid-diagram__dark" href="#{dark_url}"><img src="#{dark_url}" alt="Mermaid Diagram"></a>
           </figure>
         HTML
       end
@@ -79,7 +79,7 @@ module JekyllMermaidPrebuild
       FileUtils.mkdir_p(@config.cache_dir)
       return nil unless MmdcWrapper.render(mermaid_source, cache_path, theme: theme)
 
-      post_process_svg(cache_path, diagram_type)
+      post_process_svg(cache_path, diagram_type, dark: theme == :dark)
       { stem => cache_path }
     end
 
@@ -101,18 +101,19 @@ module JekyllMermaidPrebuild
       unless File.exist?(dark_path)
         return nil unless MmdcWrapper.render(mermaid_source, dark_path, theme: :dark)
 
-        post_process_svg(dark_path, diagram_type)
+        post_process_svg(dark_path, diagram_type, dark: true)
       end
 
       { light_stem => light_path, dark_stem => dark_path }
     end
 
-    def post_process_svg(cache_path, _diagram_type)
+    def post_process_svg(cache_path, _diagram_type, dark: false)
       raw = File.read(cache_path)
       svg = raw
 
       svg = SvgPostProcessor.ensure_text_centering(svg) if @config.text_centering
       svg = SvgPostProcessor.ensure_foreignobject_overflow(svg) if @config.overflow_protection
+      svg = SvgPostProcessor.ensure_transparent_background(svg) if dark
 
       pad = @config.edge_label_padding
       svg = SvgPostProcessor.apply(svg, padding: pad) if pad.is_a?(Numeric) && pad.positive?

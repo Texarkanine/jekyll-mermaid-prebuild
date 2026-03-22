@@ -75,6 +75,23 @@ module JekyllMermaidPrebuild
       svg_string
     end
 
+    # Replace `background-color: white` on the root <svg> style attribute with transparent.
+    # mmdc always emits `background-color: white` regardless of theme; for dark-theme SVGs
+    # this creates a jarring white rectangle on dark pages. Idempotent, safe on non-dark SVGs.
+    #
+    # @param svg_string [String] full SVG document from mmdc
+    # @return [String] SVG with transparent background, or original on no-op / error
+    def ensure_transparent_background(svg_string)
+      return svg_string unless svg_string.is_a?(String)
+
+      svg_string.sub(
+        /(<svg\b[^>]*\bstyle="[^"]*?)background-color:\s*white;?/,
+        '\1background-color: transparent;'
+      )
+    rescue StandardError
+      svg_string
+    end
+
     def apply_edge_label_padding(svg_string, padding)
       svg_string.gsub(EDGE_LABEL_FOREIGN_OBJECT_RE) do
         prefix = Regexp.last_match(1)
