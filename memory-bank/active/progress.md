@@ -58,3 +58,12 @@
   - README and YARD docs complete.
 * **Verification**
   - 149 RSpec examples, 0 failures; 21 files, 0 RuboCop offenses (after trivial doc fix).
+
+## 2026-03-22 — REFLECT — COMPLETE
+
+* **Work completed**
+  - Full lifecycle review (plan accuracy, creative phase, build/QA observations, cross-phase analysis).
+  - Reflection document: `memory-bank/active/reflection/reflection-issue-11-prefers-color-scheme.md`.
+* **Key insights**
+  - Technical: mmdc always emits `background-color: white` regardless of `-t dark`; inline `style` overrides `@media` queries.
+  - Process: Visual integration testing is essential for CSS/SVG features; investigation phase should inspect actual tool output, not just CLI flags.
