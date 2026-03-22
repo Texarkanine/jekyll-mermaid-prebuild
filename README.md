@@ -105,7 +105,7 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
-| `block_edge_label_padding` | `0` | Extra SVG user units added to **block** diagram edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). See [Block diagram edge labels](#block-diagram-edge-labels). |
+| `block_edge_label_padding` | `0` | Extra SVG user units added to **block** diagram edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
 | `emoji_width_compensation` | `{}` | Map of diagram types to booleans; see [Emoji width compensation](#emoji-width-compensation) below. |
 
 ### Cross-browser text rendering fixes
