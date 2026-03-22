@@ -67,3 +67,12 @@
 * **Key insights**
   - Technical: mmdc always emits `background-color: white` regardless of `-t dark`; inline `style` overrides `@media` queries.
   - Process: Visual integration testing is essential for CSS/SVG features; investigation phase should inspect actual tool output, not just CLI flags.
+
+## 2026-03-22 — REWORK — initiated (pre-PR scope expansion)
+
+* **Trigger:** Operator requested chart background consistency and a richer config shape before opening the PR.
+* **Feedback captured**
+  - Dark variants currently force `background-color: transparent` while light variants keep mmdc’s `white` — asymmetric and visually inconsistent on dark pages.
+  - Desired default for dark charts: **opaque black** (`black`), not transparent.
+  - Config should nest under a `prefers-color-scheme` (or equivalent) map: `mode` plus per-scheme `background-color` values that are pasted into the root SVG `style` as literal CSS (e.g. `#fff0aa`, `white`, `black`).
+* **Next phase:** Fresh Level 3 plan in `tasks.md`; then `/niko-preflight` before build.

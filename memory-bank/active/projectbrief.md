@@ -51,3 +51,34 @@ Source: [Issue #11 — dark-mode awareness](https://github.com/Texarkanine/jekyl
 | **Hooks** | `copy_svgs_to_site` already iterates `cache_key => path`; destination is `#{cache_key}.svg` — works if dark key is literally `abc12345-dark`. |
 | **HTML (`auto`)** | ~~Originally considered `<picture>` but that prevents the `<a>` click-through link from matching the displayed variant.~~ **Decision (preflight):** Two `<a>` elements (`.mermaid-diagram__light` visible by default, `.mermaid-diagram__dark` hidden via `style="display:none"`) with inline `<style>` block containing `@media (prefers-color-scheme: dark)` to swap visibility. Each `<a>` wraps its own `<img>` and links to the correct SVG variant. Keep `<figure class="mermaid-diagram">` wrapper; BEM modifiers for styling hooks. |
 | **Risk** | Doubles `mmdc` invocations and cache size for `auto`; document cost. |
+
+## Rework (2026-03-22 — pre-PR)
+
+### User story (addendum)
+
+As a site author, I want **consistent opaque chart backgrounds** for light and dark SVG variants and **configurable CSS background values** so diagrams match my theme without one variant being transparent and the other not.
+
+### Requirements (addendum)
+
+1. **Background behavior:** Stop replacing dark-variant root SVG backgrounds with `transparent`. Apply the **configured dark background** (default `black`) so dark charts match a dark UI. Light variant uses the **configured light background** (default `white`). Both paths should use the same mechanism (replace mmdc’s `background-color: white` on the root `<svg>` with the configured value).
+2. **Config shape:** Support a nested mapping (in addition to backward-compatible flat `prefers_color_scheme: light|dark|auto`), for example:
+
+   ```yaml
+   mermaid_prebuild:
+     prefers_color_scheme:
+       mode: auto   # light | dark | auto
+       background_color:
+         light: white
+         dark: black
+   ```
+
+   - Values are **CSS fragments** inserted into the SVG `style` attribute (e.g. `#fff0aa`, `rgb(0,0,0)`, named colors). Document safe usage; validate/sanitize to avoid breaking out of the attribute.
+   - **YAML key aliases:** Accept hyphenated keys (`prefers-color-scheme`, `background-color`) as equivalents when reading from `site.config`, matching common `_config.yml` style. Top-level key remains `mermaid_prebuild` (existing sites); optional: also accept `mermaid-prebuild` if the same hash is duplicated under that key (low priority if Jekyll never surfaces it).
+3. **Cache / digest:** Include serialized background settings in the digest input so changing colors invalidates cached SVGs.
+4. **Tests & docs:** Update `SvgPostProcessor` / `Generator` specs and README for the new defaults and nested config. Devblog `_config.yaml` updated to the new shape when the build lands.
+
+### Acceptance criteria (addendum)
+
+- RSpec covers nested config parsing, legacy flat string still works, invalid colors warned or rejected with safe fallback.
+- Dark + `auto` dark branch produce root SVG background `black` by default (not `transparent`).
+- README documents defaults and nested YAML with examples.

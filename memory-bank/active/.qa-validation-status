@@ -1,6 +1,0 @@
-QA_STATUS=PASS
-TASK_ID=issue-11-prefers-color-scheme
-TIMESTAMP=2026-03-22
-FINDINGS=1 trivial (module doc count), fixed in-place
-RSPEC=149 examples, 0 failures
-RUBOCOP=21 files, 0 offenses

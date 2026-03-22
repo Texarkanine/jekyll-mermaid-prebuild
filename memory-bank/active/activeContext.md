@@ -1,15 +1,15 @@
 # Active Context
 
-## Current Task: Dark mode / prefers-color-scheme (issue #11)
+## Current Task: Issue #11 rework — chart backgrounds + nested `prefers_color_scheme` config
 
-**Phase:** REFLECT — COMPLETE
+**Phase:** PLAN — COMPLETE (rework)
 
 ## What Was Done
 
-- Build: Implemented `prefers_color_scheme` end-to-end. Fixed two post-build bugs (inline `display:none` specificity, white background on dark SVGs). 149 RSpec examples, RuboCop clean, devblog verified with 28 SVGs.
-- QA: Semantic review — PASS. One trivial doc fix.
-- Reflect: Full lifecycle review. Key insights: mmdc always embeds `background-color: white` regardless of theme; visual integration testing is essential for CSS/SVG features; investigation phase should inspect actual tool output.
+- Niko **rework** initiated after REFLECT COMPLETE: appended `projectbrief.md` / `progress.md`, cleared preflight/QA gate files.
+- **Complexity:** Level 3 (Configuration + `SvgPostProcessor` + `Generator` + `Processor` digest + specs + README + devblog config).
+- Authored fresh implementation plan in `memory-bank/active/tasks.md`: nested config with `mode` + `background_color` map, defaults `white` / `black`, hyphenated YAML key aliases, digest includes background strings, replace `ensure_transparent_background` with parameterized root background application.
 
 ## Next Step
 
-- Run **`/niko-archive`** to finalize the task.
+- Run **`/niko-preflight`** to validate the plan, then **`/niko-build`** (TDD).
