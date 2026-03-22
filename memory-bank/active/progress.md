@@ -110,3 +110,11 @@
   - README: explicit **Transparency** subsection (`transparent`, `rgba(0, 0, 0, 0)`).
 * **Verification**
   - `bundle exec rspec` (158 examples, 0 failures); `bundle exec rubocop` (clean).
+
+## 2026-03-22 — REFLECT (rework chart backgrounds) — COMPLETE
+
+* **Work completed**
+  - Reflection: `memory-bank/active/reflection/reflection-issue-11-rework-chart-backgrounds.md`.
+* **Key insights**
+  - Technical: Root SVG post-process remains coupled to mmdc’s `background-color: white` token; digest must track every cache-affecting post-process input (backgrounds included).
+  - Process: Preflight advisories on spec doubles matched actual build work—useful predictor for similar config surface changes.

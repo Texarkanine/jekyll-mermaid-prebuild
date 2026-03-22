@@ -141,3 +141,4 @@ No new technology — validation not required.
 - [x] Preflight (PASS w/ advisory — see `.preflight-status`)
 - [x] Build
 - [x] QA (PASS — see `.qa-validation-status`; README transparency note added in QA pass)
+- [x] Reflect (`memory-bank/active/reflection/reflection-issue-11-rework-chart-backgrounds.md`)
