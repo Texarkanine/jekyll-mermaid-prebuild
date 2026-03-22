@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.4.0...v0.5.0) (2026-03-22)
+
+
+### Features
+
+* support "dark mode" (resolves [#11](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/11)) ([#20](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/20)) ([1ae9322](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/1ae93225d9f6089d3d85ce18d06f44310fea3895))
+
 ## [0.4.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.2...v0.4.0) (2026-03-22)
 
 
