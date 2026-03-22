@@ -12,3 +12,7 @@
 - Fix: `foreignObject{overflow:visible;}` CSS injection, same pattern as centering
 - 2 TDD cycles: (1) SvgPostProcessor method + tests, (2) Generator wiring + integration test
 - No new dependencies, no config changes, consumer needs no changes
+
+### Preflight — PASS
+- Convention, dependency, conflict, completeness all clear
+- Advisory: centering + overflow could unify later; not worth scope change now
