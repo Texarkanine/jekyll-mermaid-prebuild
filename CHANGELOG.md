@@ -15,6 +15,7 @@
 
 ### Bug Fixes
 
+* Inject `foreignObject { overflow: visible }` into every generated SVG so that node and edge labels are never clipped when the viewing browser renders text wider than the generating headless Chromium measured. Different build environments (e.g. local WSL vs GitHub Actions) can produce foreignObject widths that differ by 7–22% for identical Mermaid source; this fix is agnostic to the magnitude of mismatch.
 * Inject `foreignObject > div { display: block !important; text-align: center }` into every generated SVG so that label text centers correctly when the viewing browser's font metrics differ from the generating headless Chromium. Fixes left-shifted labels visible when mmdc runs on a different OS than the viewer.
 
 ## [0.3.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.0...v0.3.1) (2026-03-13)

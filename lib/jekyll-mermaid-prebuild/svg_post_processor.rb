@@ -36,6 +36,26 @@ module JekyllMermaidPrebuild
       svg_string
     end
 
+    OVERFLOW_RULE = "foreignObject{overflow:visible;}"
+
+    # Injects a CSS rule into the SVG <style> block that sets overflow:visible on foreignObject
+    # elements. By default foreignObject clips content (overflow:hidden); when the generating
+    # browser measures text narrower than the viewing browser renders it, labels are silently
+    # truncated. This rule prevents that regardless of the magnitude of measurement mismatch.
+    # Always applied, idempotent.
+    #
+    # @param svg_string [String] full SVG document from mmdc
+    # @return [String] SVG with overflow rule injected, or original on no-op / error
+    def ensure_foreignobject_overflow(svg_string)
+      return svg_string unless svg_string.is_a?(String)
+      return svg_string if svg_string.include?(OVERFLOW_RULE)
+      return svg_string unless svg_string.include?("</style>")
+
+      svg_string.sub("</style>", "#{OVERFLOW_RULE}</style>")
+    rescue StandardError
+      svg_string
+    end
+
     CENTERING_RULE = "foreignObject > div{display:block !important;text-align:center;}"
 
     # Injects a CSS rule into the SVG <style> block that centers text inside foreignObject divs.

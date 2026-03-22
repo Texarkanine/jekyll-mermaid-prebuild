@@ -16,3 +16,9 @@
 ### Preflight — PASS
 - Convention, dependency, conflict, completeness all clear
 - Advisory: centering + overflow could unify later; not worth scope change now
+
+### Build — COMPLETE
+- TDD Cycle 1: `ensure_foreignobject_overflow` + 6 tests → all green
+- TDD Cycle 2: Generator wiring + 1 integration test → green
+- Full suite: 110/110; RuboCop: 0 offenses
+- README + CHANGELOG updated

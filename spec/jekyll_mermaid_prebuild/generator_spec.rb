@@ -123,6 +123,11 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         path = generator.generate(mermaid_source, cache_key)
         expect(File.read(path)).to include("text-align:center")
       end
+
+      it "injects foreignObject overflow:visible CSS into the SVG" do
+        path = generator.generate(mermaid_source, cache_key)
+        expect(File.read(path)).to include("overflow:visible")
+      end
     end
 
     context "when padding is enabled but diagram_type is not block" do

@@ -110,13 +110,15 @@ mermaid_prebuild:
 
 ### Cross-browser text rendering fixes
 
-When mmdc renders a diagram, headless Chromium measures text with `getBoundingClientRect()` and sets each `<foreignObject>` to exactly that width. If the viewing browser (different OS, different fonts) renders the same text at a different width, labels can clip or shift. The plugin applies two automatic fixes to every generated SVG:
+When mmdc renders a diagram, headless Chromium measures text with `getBoundingClientRect()` and sets each `<foreignObject>` to exactly that width. If the viewing browser (different OS, different fonts) renders the same text at a different width, labels can clip or shift. The plugin applies three fixes to every generated SVG:
 
-1. **Text centering** (always on, no config needed): Mermaid's CSS sets `text-align: center` on SVG `<g>` elements, but that has no effect on HTML inside `<foreignObject>`. The plugin injects a CSS rule (`foreignObject > div { display: block !important; text-align: center }`) so that label text centers within its container regardless of font metric differences. This is idempotent — if upstream Mermaid fixes this, the rule becomes redundant but harmless.
+1. **Text centering** (always on, no config needed): Mermaid's CSS sets `text-align: center` on SVG `<g>` elements, but that has no effect on HTML inside `<foreignObject>`. The plugin injects a CSS rule (`foreignObject > div { display: block !important; text-align: center }`) so that label text centers within its container regardless of font metric differences. This is idempotent - if upstream Mermaid fixes this, the rule becomes redundant but harmless.
 
-2. **Block edge label padding** (opt-in via `block_edge_label_padding`): Block diagram edge labels have zero padding between the `<foreignObject>` boundary and the text. If the viewing browser renders text wider than headless Chromium measured, the last character(s) clip. This option widens only **edge** label `<foreignObject>` elements (not node labels) in SVGs whose root has `aria-roledescription="block"`. Flowcharts and other diagram types are unchanged.
+2. **Overflow protection** (always on, no config needed): SVG `<foreignObject>` elements default to `overflow: hidden`, which silently clips any text that renders wider than the container. Since different build environments can produce foreignObject widths that differ by 7–22% (ish) for identical Mermaid source, the plugin injects `foreignObject { overflow: visible }` so that labels are never truncated regardless of the magnitude of measurement mismatch. This covers both node and edge labels across all diagram types.
 
-   - **When to enable:** If block diagram edge text clips in generated SVGs on your build host.
+3. **Block edge label padding** (opt-in via `block_edge_label_padding`): An additional fixed-pixel widening of **edge** label `<foreignObject>` elements in block diagrams (`aria-roledescription="block"`). This predates the overflow fix and is generally unnecessary when overflow protection is active, but remains available for users who want explicit width padding.
+
+   - **When to enable:** If you prefer explicit width padding over overflow-based rendering for block diagram edge labels.
    - **Starting value:** Try `4`-`8` (SVG user units); increase only if needed.
    - **Caching:** The cache key includes this padding for block diagrams only, so changing the value invalidates cached block SVGs without affecting flowcharts.
 
