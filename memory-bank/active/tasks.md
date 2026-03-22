@@ -87,4 +87,4 @@ None. No new runtime or development dependencies.
 - [x] Technology validation complete
 - [x] Preflight
 - [x] Build
-- [ ] QA
+- [x] QA

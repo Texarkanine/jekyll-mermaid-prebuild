@@ -6,7 +6,7 @@ Fix (plan and implement) SVG edge-label clipping for Mermaid **block** diagrams 
 
 ## Phase
 
-BUILD — COMPLETE. Next: `/niko-qa` (Level 2 QA phase).
+QA — PASS. Next: `/niko-reflect` (Level 2 Reflect phase).
 
 ## What Was Done
 
@@ -16,7 +16,7 @@ BUILD — COMPLETE. Next: `/niko-qa` (Level 2 QA phase).
 
 ## Next Step
 
-1. Run `/niko-qa` for semantic review.
+1. Run `/niko-reflect` for post-implementation reflection.
 
 ## Key Artifacts
 

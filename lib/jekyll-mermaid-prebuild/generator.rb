@@ -58,6 +58,8 @@ module JekyllMermaidPrebuild
       HTML
     end
 
+    private
+
     def maybe_pad_block_edge_labels(cache_path, diagram_type)
       pad = @config.block_edge_label_padding
       return unless diagram_type == "block" && pad.is_a?(Numeric) && pad.positive?
