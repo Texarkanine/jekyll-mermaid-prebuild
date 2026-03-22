@@ -6,7 +6,7 @@ module JekyllMermaidPrebuild
     DEFAULT_OUTPUT_DIR = "assets/svg"
     CACHE_DIR = ".jekyll-cache/jekyll-mermaid-prebuild"
 
-    attr_reader :output_dir, :emoji_width_compensation
+    attr_reader :output_dir, :emoji_width_compensation, :block_edge_label_padding
 
     # Initialize configuration from Jekyll site
     #
@@ -16,6 +16,7 @@ module JekyllMermaidPrebuild
       @output_dir = parse_output_dir(config["output_dir"])
       @enabled = config.fetch("enabled", true)
       @emoji_width_compensation = parse_emoji_width_compensation(config["emoji_width_compensation"])
+      @block_edge_label_padding = parse_block_edge_label_padding(config["block_edge_label_padding"])
     end
 
     # Check if the plugin is enabled
@@ -53,6 +54,17 @@ module JekyllMermaidPrebuild
 
       # Strip leading/trailing slashes for consistency
       dir.gsub(%r{^/+|/+$}, "")
+    end
+
+    # @param value [Object] raw config (numeric or off)
+    # @return [Numeric] non-negative padding in SVG user units; 0 means disabled
+    def parse_block_edge_label_padding(value)
+      return 0 if value.nil? || value == false
+
+      num = value.is_a?(Numeric) ? value : nil
+      return 0 unless num
+
+      num.negative? ? 0 : num
     end
   end
 end

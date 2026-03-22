@@ -94,6 +94,7 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
+  block_edge_label_padding: 0   # optional; see Block diagrams below
   emoji_width_compensation:  # optional, see below
     flowchart: true
 ```
@@ -104,7 +105,16 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
+| `block_edge_label_padding` | `0` | Extra SVG user units added to **block** diagram edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). See [Block diagram edge labels](#block-diagram-edge-labels). |
 | `emoji_width_compensation` | `{}` | Map of diagram types to booleans; see [Emoji width compensation](#emoji-width-compensation) below. |
+
+### Block diagram edge labels
+
+Mermaid **block** diagrams render edge labels as HTML with a text **stroke** (outline). Headless Chromium’s layout can size the `<foreignObject>` slightly narrower than the painted glyphs, so the last character(s) may clip on Linux/WSL builds. This option widens only **edge** label `foreignObject` elements (not node labels) in SVGs whose root has `aria-roledescription="block"`. Flowcharts and other diagram types are unchanged.
+
+- **When to enable:** If block diagram edge text clips in generated SVGs on your build host.
+- **Starting value:** Try `4`–`8` (SVG user units); increase only if needed.
+- **Caching:** The cache key includes this padding for block diagrams only, so changing the value invalidates cached block SVGs without affecting flowcharts.
 
 ### Emoji width compensation
 
@@ -144,12 +154,13 @@ mermaid_prebuild:
 
 ## Caching
 
-Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content (and, when emoji compensation is enabled for that diagram type, the compensated source), so:
+Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content (and, when emoji compensation is enabled for that diagram type, the compensated source; when `block_edge_label_padding` is positive, block diagrams also mix in that value), so:
 
 - Unchanged diagrams are served from cache (fast rebuilds)
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
+- Changing `block_edge_label_padding` invalidates cache keys for **block** diagrams only
 
 To clear the cache:
 

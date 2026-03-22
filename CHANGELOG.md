@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+* Optional `block_edge_label_padding` widens block-diagram edge-label `<foreignObject>` widths after mmdc to reduce stroked-text clipping on non-Mac build hosts.
+
 ## [0.3.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.0...v0.3.1) (2026-03-13)
 
 

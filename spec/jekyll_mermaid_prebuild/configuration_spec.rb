@@ -145,4 +145,52 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
   end
+
+  describe "#block_edge_label_padding" do
+    context "when not configured" do
+      it "returns 0" do
+        expect(described_class.new(site).block_edge_label_padding).to eq(0)
+      end
+    end
+
+    context "when set to an integer" do
+      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => 6 } } }
+
+      it "returns that value" do
+        expect(described_class.new(site).block_edge_label_padding).to eq(6)
+      end
+    end
+
+    context "when set to a float" do
+      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => 4.5 } } }
+
+      it "returns that value" do
+        expect(described_class.new(site).block_edge_label_padding).to eq(4.5)
+      end
+    end
+
+    context "when set to false" do
+      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => false } } }
+
+      it "returns 0" do
+        expect(described_class.new(site).block_edge_label_padding).to eq(0)
+      end
+    end
+
+    context "when set to a negative number" do
+      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => -3 } } }
+
+      it "returns 0" do
+        expect(described_class.new(site).block_edge_label_padding).to eq(0)
+      end
+    end
+
+    context "when set to a non-numeric value" do
+      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => "wide" } } }
+
+      it "returns 0" do
+        expect(described_class.new(site).block_edge_label_padding).to eq(0)
+      end
+    end
+  end
 end

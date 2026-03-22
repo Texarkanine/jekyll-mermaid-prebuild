@@ -6,18 +6,17 @@ Fix (plan and implement) SVG edge-label clipping for Mermaid **block** diagrams 
 
 ## Phase
 
-PREFLIGHT — PASS. Next: Level 2 Build (`/niko-build`).
+BUILD — COMPLETE. Next: `/niko-qa` (Level 2 QA phase).
 
 ## What Was Done
 
-- **Complexity:** Level 2 — contained to gem SVG pipeline, multiple implementation options, new tests/config likely.
-- **Diagnosis:** Clipping is not from jekyll-mermaid-prebuild viewBox or CSS in the blog; it comes from Mermaid’s block renderer emitting `<foreignObject>` widths that are slightly too narrow for the **painted** edge label. Block edge labels use HTML/CSS **`stroke` + `stroke-width: 1.5px`** on the label text (faux outline); layout uses text metrics, while stroke extends outside the glyph box, so `foreignObject` clips the last glyph(s). Flowchart-v2 samples on the same site use different edge-label markup (`labelBkg`, `table-cell`) without that stroked-span pattern, so the issue shows up “there” (block edges) more than on flowcharts.
-- **Existing gem:** `emoji_width_compensation` only applies to **flowchart** and only **emoji-containing node** labels — it does not run for `block` diagrams or edge strings.
-- **Plan (operator choice):** Implement **SVG post-processing** after mmdc: optional `block_edge_label_padding` config; widen `foreignObject` width only under `g.edgeLabel` when root SVG has `aria-roledescription="block"`. Explicit **nokogiri** runtime dependency; cache digest suffix for `block` + positive padding. Details: `memory-bank/active/tasks.md`.
+- **Build delivered:** `block_edge_label_padding` config (numeric, `0`/`false`/omit = off), `SvgPostProcessor.apply` (regex on mmdc block `edgeLabel` → `label` → `foreignObject` width), digest suffix `\0block_edge_pad=` for block + positive padding, `Generator#generate(..., diagram_type:)` post-writes cached SVG after successful mmdc when rules apply.
+- **Paths touched:** `lib/jekyll-mermaid-prebuild/configuration.rb`, `svg_post_processor.rb` (new), `processor.rb`, `generator.rb`, `lib/jekyll-mermaid-prebuild.rb`; specs `configuration_spec.rb`, `svg_post_processor_spec.rb` (new), `processor_spec.rb`, `generator_spec.rb`; `README.md`, `CHANGELOG.md`; memory bank `tasks.md`, `activeContext.md`, `progress.md`.
+- **Deviations from early plan text:** No Nokogiri (preflight amendment); implementation matches `tasks.md` post-preflight (regex post-processor, file `svg_post_processor.rb`).
 
 ## Next Step
 
-1. Run `/niko-build` to implement the plan (TDD) per Level 2 workflow.
+1. Run `/niko-qa` for semantic review.
 
 ## Key Artifacts
 

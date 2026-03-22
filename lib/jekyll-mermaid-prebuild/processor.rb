@@ -46,6 +46,16 @@ module JekyllMermaidPrebuild
 
     private
 
+    # @param source [String] mermaid passed to mmdc (after optional emoji compensation)
+    # @param diagram_type [String, nil]
+    # @return [String] input to MD5 for cache key
+    def digest_string_for_cache(source, diagram_type)
+      pad = @config.block_edge_label_padding
+      return "#{source}\0block_edge_pad=#{pad}" if diagram_type == "block" && pad.is_a?(Numeric) && pad.positive?
+
+      source
+    end
+
     # Convert a single mermaid block to SVG
     #
     # @param block [Hash] block info with :content key
@@ -58,8 +68,9 @@ module JekyllMermaidPrebuild
                           else
                             mermaid_source
                           end
-      cache_key = DigestCalculator.content_digest(source_for_render)
-      cached_path = @generator.generate(source_for_render, cache_key)
+      digest_input = digest_string_for_cache(source_for_render, diagram_type)
+      cache_key = DigestCalculator.content_digest(digest_input)
+      cached_path = @generator.generate(source_for_render, cache_key, diagram_type: diagram_type)
 
       return nil unless cached_path
 
