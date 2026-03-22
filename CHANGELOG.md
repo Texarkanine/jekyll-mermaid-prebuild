@@ -9,18 +9,12 @@
 
 ## [Unreleased]
 
-### BREAKING CHANGES
-
-* **Config restructure:** All cross-browser rendering fixes now live under a `postprocessing:` key. `block_edge_label_padding` is renamed to `edge_label_padding` (no longer block-specific) and `emoji_width_compensation` moves under `postprocessing:`. See README for the new config format.
-
 ### Features
 
-* All postprocessing fixes (`text_centering`, `overflow_protection`, `edge_label_padding`, `emoji_width_compensation`) are individually toggleable via the new `postprocessing:` config group. Users with a perfect headless pipeline can disable any or all.
-* `edge_label_padding` (formerly `block_edge_label_padding`) now applies to all diagram types, not just block diagrams.
+* Optional `block_edge_label_padding` widens block-diagram edge-label `<foreignObject>` widths after mmdc to prevent clipping caused by cross-browser text measurement differences on non-Mac build hosts.
 
 ### Bug Fixes
 
-* Inject `foreignObject { overflow: visible }` into every generated SVG so that node and edge labels are never clipped when the viewing browser renders text wider than the generating headless Chromium measured. Different build environments (e.g. local WSL vs GitHub Actions) can produce foreignObject widths that differ by 7–22% for identical Mermaid source; this fix is agnostic to the magnitude of mismatch.
 * Inject `foreignObject > div { display: block !important; text-align: center }` into every generated SVG so that label text centers correctly when the viewing browser's font metrics differ from the generating headless Chromium. Fixes left-shifted labels visible when mmdc runs on a different OS than the viewer.
 
 ## [0.3.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.0...v0.3.1) (2026-03-13)
