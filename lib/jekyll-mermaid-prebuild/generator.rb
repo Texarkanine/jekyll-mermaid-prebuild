@@ -33,6 +33,7 @@ module JekyllMermaidPrebuild
       success = MmdcWrapper.render(mermaid_source, cache_path)
       return nil unless success
 
+      ensure_text_centering(cache_path)
       maybe_pad_block_edge_labels(cache_path, diagram_type)
 
       cache_path
@@ -59,6 +60,12 @@ module JekyllMermaidPrebuild
     end
 
     private
+
+    def ensure_text_centering(cache_path)
+      raw = File.read(cache_path)
+      updated = SvgPostProcessor.ensure_text_centering(raw)
+      File.write(cache_path, updated) if updated != raw
+    end
 
     def maybe_pad_block_edge_labels(cache_path, diagram_type)
       pad = @config.block_edge_label_padding

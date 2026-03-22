@@ -105,6 +105,26 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       end
     end
 
+    context "when SVG is freshly generated" do
+      let(:svg_with_style) do
+        '<svg id="my-svg"><style>#my-svg{font-family:sans-serif;}</style>' \
+          '<foreignObject width="100" height="24"><div>text</div></foreignObject></svg>'
+      end
+
+      before do
+        FileUtils.mkdir_p(cache_dir)
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
+          File.write(output_path, svg_with_style)
+          true
+        end
+      end
+
+      it "injects text-centering CSS into the SVG" do
+        path = generator.generate(mermaid_source, cache_key)
+        expect(File.read(path)).to include("text-align:center")
+      end
+    end
+
     context "when padding is enabled but diagram_type is not block" do
       let(:padded_config) do
         instance_double(

@@ -1,8 +1,16 @@
 # frozen_string_literal: true
 
 module JekyllMermaidPrebuild
-  # Widens block-diagram edge-label <foreignObject> widths after mmdc so stroked text is not clipped.
-  # Scoped to SVG roots with aria-roledescription="block" and <g class="edgeLabel">…<foreignObject width="…">.
+  # Post-processes mmdc-generated SVGs to fix cross-browser rendering issues.
+  #
+  # Two independent fixes:
+  # 1. Text centering: Mermaid's CSS `text-align: center` targets SVG `<g>` elements where it
+  #    has no effect on HTML inside `<foreignObject>`. We inject a CSS rule so that foreignObject
+  #    content centers correctly regardless of text measurement differences between the generating
+  #    and viewing browsers. Always applied, idempotent.
+  # 2. Block edge label padding: Widens block-diagram edge-label `<foreignObject>` widths to
+  #    prevent clipping when the viewing browser renders text wider than headless Chromium measured.
+  #    Opt-in via `block_edge_label_padding` config.
   module SvgPostProcessor
     module_function
 
@@ -24,6 +32,25 @@ module JekyllMermaidPrebuild
       return svg_string unless svg_string.include?(BLOCK_ROOT_MARKER)
 
       apply_edge_label_padding(svg_string, padding)
+    rescue StandardError
+      svg_string
+    end
+
+    CENTERING_RULE = "foreignObject > div{display:block !important;text-align:center;}"
+
+    # Injects a CSS rule into the SVG <style> block that centers text inside foreignObject divs.
+    # Mermaid's own `.node .label { text-align: center }` targets SVG <g> elements where
+    # text-align has no effect; this rule targets the HTML div directly.
+    # Idempotent: no visual effect when foreignObject width matches text width.
+    #
+    # @param svg_string [String] full SVG document from mmdc
+    # @return [String] SVG with centering rule injected, or original on no-op / error
+    def ensure_text_centering(svg_string)
+      return svg_string unless svg_string.is_a?(String)
+      return svg_string if svg_string.include?(CENTERING_RULE)
+      return svg_string unless svg_string.include?("</style>")
+
+      svg_string.sub("</style>", "#{CENTERING_RULE}</style>")
     rescue StandardError
       svg_string
     end

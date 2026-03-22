@@ -112,4 +112,44 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
       expect(described_class.apply(svg, padding: 2)).to eq(svg)
     end
   end
+
+  describe ".ensure_text_centering" do
+    let(:svg_with_style) do
+      '<svg id="my-svg"><style>#my-svg{font-family:sans-serif;}</style>' \
+        '<foreignObject width="100" height="24">' \
+        '<div style="display: table-cell;">text</div></foreignObject></svg>'
+    end
+
+    it "injects a text-align:center rule into the style block" do
+      out = described_class.ensure_text_centering(svg_with_style)
+      expect(out).to include("text-align:center")
+    end
+
+    it "keeps the rule inside the existing <style> element" do
+      out = described_class.ensure_text_centering(svg_with_style)
+      style_content = out[%r{<style>(.*?)</style>}m, 1]
+      expect(style_content).to include("text-align:center")
+    end
+
+    it "is idempotent — does not duplicate the rule on repeated calls" do
+      once = described_class.ensure_text_centering(svg_with_style)
+      twice = described_class.ensure_text_centering(once)
+      expect(twice).to eq(once)
+    end
+
+    it "returns the original string when there is no <style> tag" do
+      no_style = '<svg><foreignObject width="10" height="10"></foreignObject></svg>'
+      expect(described_class.ensure_text_centering(no_style)).to eq(no_style)
+    end
+
+    it "returns non-string input unchanged" do
+      expect(described_class.ensure_text_centering(nil)).to be_nil
+    end
+
+    it "returns the original string on error" do
+      svg = svg_with_style.dup
+      allow(svg).to receive(:include?).and_raise(StandardError, "boom")
+      expect(described_class.ensure_text_centering(svg)).to eq(svg)
+    end
+  end
 end
