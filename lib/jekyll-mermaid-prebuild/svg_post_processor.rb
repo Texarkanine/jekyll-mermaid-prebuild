@@ -3,14 +3,17 @@
 module JekyllMermaidPrebuild
   # Post-processes mmdc-generated SVGs to fix cross-browser rendering issues.
   #
-  # Two independent fixes:
+  # Three independent fixes:
   # 1. Text centering: Mermaid's CSS `text-align: center` targets SVG `<g>` elements where it
   #    has no effect on HTML inside `<foreignObject>`. We inject a CSS rule so that foreignObject
   #    content centers correctly regardless of text measurement differences between the generating
   #    and viewing browsers. Always applied, idempotent.
-  # 2. Block edge label padding: Widens block-diagram edge-label `<foreignObject>` widths to
+  # 2. Overflow protection: foreignObject defaults to overflow:hidden, which silently clips labels
+  #    when the viewing browser renders text wider than the generating Chromium measured. We inject
+  #    a CSS rule setting overflow:visible on all foreignObjects. Always applied, idempotent.
+  # 3. Edge label padding: Widens edge-label `<foreignObject>` widths in any diagram type to
   #    prevent clipping when the viewing browser renders text wider than headless Chromium measured.
-  #    Opt-in via `block_edge_label_padding` config.
+  #    Opt-in via `postprocessing.edge_label_padding` config.
   module SvgPostProcessor
     module_function
 
@@ -21,15 +24,12 @@ module JekyllMermaidPrebuild
       (>)
     /x
 
-    BLOCK_ROOT_MARKER = 'aria-roledescription="block"'
-
     # @param svg_string [String] full SVG document from mmdc
     # @param padding [Numeric] user units to add to each matching foreignObject width (must be positive)
     # @return [String] possibly widened SVG, or the original string on no-op / error
     def apply(svg_string, padding:)
       return svg_string unless svg_string.is_a?(String)
       return svg_string unless padding.is_a?(Numeric) && padding.positive?
-      return svg_string unless svg_string.include?(BLOCK_ROOT_MARKER)
 
       apply_edge_label_padding(svg_string, padding)
     rescue StandardError

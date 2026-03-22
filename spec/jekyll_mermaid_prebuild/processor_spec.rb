@@ -13,7 +13,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       output_dir: "assets/svg",
       enabled?: true,
       emoji_width_compensation: {},
-      block_edge_label_padding: 0
+      edge_label_padding: 0
     )
   end
   let(:generator) { instance_double(JekyllMermaidPrebuild::Generator) }
@@ -133,7 +133,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          block_edge_label_padding: 0
+          edge_label_padding: 0
         )
         proc_with_comp = described_class.new(config_with_comp, generator)
         content = <<~MARKDOWN
@@ -176,7 +176,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          block_edge_label_padding: 0
+          edge_label_padding: 0
         )
         proc_flowchart_only = described_class.new(config_flowchart_only, generator)
         content = <<~MARKDOWN
@@ -201,7 +201,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          block_edge_label_padding: 0
+          edge_label_padding: 0
         )
         keys = []
         allow(generator).to receive(:generate) do |_source, key, **_kwargs|
@@ -234,29 +234,29 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         end
       end
 
-      it "uses different cache keys for the same block source when padding differs" do
-        content = "```mermaid\nblock\n  a --> b\n```\n"
+      it "uses different cache keys for the same source when padding differs" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg4 = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, block_edge_label_padding: 4
+          emoji_width_compensation: {}, edge_label_padding: 4
         )
         cfg8 = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, block_edge_label_padding: 8
+          emoji_width_compensation: {}, edge_label_padding: 8
         )
         described_class.new(cfg4, stub_generator).process_content(content, site)
         described_class.new(cfg8, stub_generator).process_content(content, site)
         expect(captured_keys.uniq.size).to eq(2)
       end
 
-      it "does not vary digest with padding for non-block diagrams" do
+      it "does not vary digest when padding is zero" do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, block_edge_label_padding: 12
+          emoji_width_compensation: {}, edge_label_padding: 0
         )
         2.times { described_class.new(cfg, stub_generator).process_content(content, site) }
         expect(captured_keys.uniq.size).to eq(1)

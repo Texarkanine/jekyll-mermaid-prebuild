@@ -31,14 +31,14 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
       expect(out).to include('width="16.5"')
     end
 
-    it "does not modify flowchart-v2 SVGs" do
+    it "widens edge labels in non-block diagram types too" do
       svg = compact_svg(<<~SVG)
         <svg xmlns="http://www.w3.org/2000/svg" aria-roledescription="flowchart-v2">
         <g class="edgeLabel"><g class="label">
         <foreignObject width="100" height="24"></foreignObject></g></g></svg>
       SVG
       out = described_class.apply(svg, padding: 8)
-      expect(out).to eq(svg)
+      expect(out).to include('width="108"')
     end
 
     it "returns input unchanged when padding is zero" do

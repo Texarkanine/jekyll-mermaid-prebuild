@@ -11,7 +11,9 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       JekyllMermaidPrebuild::Configuration,
       cache_dir: cache_dir,
       output_dir: "assets/svg",
-      block_edge_label_padding: 0
+      text_centering: true,
+      overflow_protection: true,
+      edge_label_padding: 0
     )
   end
 
@@ -75,31 +77,33 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       end
     end
 
-    context "when diagram_type is block and block_edge_label_padding is positive" do
+    context "when edge_label_padding is positive" do
       let(:padded_config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir,
           output_dir: "assets/svg",
-          block_edge_label_padding: 5
+          text_centering: true,
+          overflow_protection: true,
+          edge_label_padding: 5
         )
       end
       let(:padded_generator) { described_class.new(padded_config) }
-      let(:block_svg_from_mmdc) do
-        '<svg xmlns="http://www.w3.org/2000/svg" aria-roledescription="block">' \
+      let(:svg_with_edge_labels) do
+        '<svg xmlns="http://www.w3.org/2000/svg" aria-roledescription="flowchart-v2">' \
           '<g class="edgeLabel"><g class="label"><foreignObject width="40" height="10"></foreignObject></g></g></svg>'
       end
 
       before do
         FileUtils.mkdir_p(cache_dir)
         allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
-          File.write(output_path, block_svg_from_mmdc)
+          File.write(output_path, svg_with_edge_labels)
           true
         end
       end
 
-      it "post-processes the file after mmdc" do
-        path = padded_generator.generate("block\n  a --> b", "edgepad1", diagram_type: "block")
+      it "widens edge label foreignObjects regardless of diagram type" do
+        path = padded_generator.generate("flowchart LR\n  A --> B", "edgepad1", diagram_type: "flowchart")
 
         expect(File.read(path)).to include('width="45"')
       end
@@ -130,33 +134,65 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       end
     end
 
-    context "when padding is enabled but diagram_type is not block" do
-      let(:padded_config) do
+    context "when text_centering is disabled" do
+      let(:no_centering_config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir,
           output_dir: "assets/svg",
-          block_edge_label_padding: 5
+          text_centering: false,
+          overflow_protection: true,
+          edge_label_padding: 0
         )
       end
-      let(:padded_generator) { described_class.new(padded_config) }
-      let(:flow_svg) do
-        '<svg aria-roledescription="flowchart-v2"><g class="edgeLabel"><g class="label">' \
-          '<foreignObject width="40" height="10"></foreignObject></g></g></svg>'
+      let(:no_centering_generator) { described_class.new(no_centering_config) }
+      let(:svg_with_style) do
+        '<svg id="my-svg"><style>#my-svg{font-family:sans-serif;}</style>' \
+          '<foreignObject width="100" height="24"><div>text</div></foreignObject></svg>'
       end
 
       before do
         FileUtils.mkdir_p(cache_dir)
         allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
-          File.write(output_path, flow_svg)
+          File.write(output_path, svg_with_style)
           true
         end
       end
 
-      it "writes mmdc output without widening" do
-        path = padded_generator.generate("flowchart LR\n  A --> B", "fc1", diagram_type: "flowchart")
+      it "does not inject centering CSS" do
+        path = no_centering_generator.generate("graph TD\nA-->B", "nocenter1")
+        expect(File.read(path)).not_to include("text-align:center")
+      end
+    end
 
-        expect(File.read(path)).to eq(flow_svg)
+    context "when overflow_protection is disabled" do
+      let(:no_overflow_config) do
+        instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir,
+          output_dir: "assets/svg",
+          text_centering: true,
+          overflow_protection: false,
+          edge_label_padding: 0
+        )
+      end
+      let(:no_overflow_generator) { described_class.new(no_overflow_config) }
+      let(:svg_with_style) do
+        '<svg id="my-svg"><style>#my-svg{font-family:sans-serif;}</style>' \
+          '<foreignObject width="100" height="24"><div>text</div></foreignObject></svg>'
+      end
+
+      before do
+        FileUtils.mkdir_p(cache_dir)
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
+          File.write(output_path, svg_with_style)
+          true
+        end
+      end
+
+      it "does not inject overflow CSS" do
+        path = no_overflow_generator.generate("graph TD\nA-->B", "nooverflow1")
+        expect(File.read(path)).not_to include("overflow:visible")
       end
     end
   end

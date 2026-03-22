@@ -49,9 +49,9 @@ module JekyllMermaidPrebuild
     # @param source [String] mermaid passed to mmdc (after optional emoji compensation)
     # @param diagram_type [String, nil]
     # @return [String] input to MD5 for cache key
-    def digest_string_for_cache(source, diagram_type)
-      pad = @config.block_edge_label_padding
-      return "#{source}\0block_edge_pad=#{pad}" if diagram_type == "block" && pad.is_a?(Numeric) && pad.positive?
+    def digest_string_for_cache(source, _diagram_type)
+      pad = @config.edge_label_padding
+      return "#{source}\0edge_pad=#{pad}" if pad.is_a?(Numeric) && pad.positive?
 
       source
     end

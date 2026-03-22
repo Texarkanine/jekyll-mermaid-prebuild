@@ -9,9 +9,14 @@
 
 ## [Unreleased]
 
+### BREAKING CHANGES
+
+* **Config restructure:** All cross-browser rendering fixes now live under a `postprocessing:` key. `block_edge_label_padding` is renamed to `edge_label_padding` (no longer block-specific) and `emoji_width_compensation` moves under `postprocessing:`. See README for the new config format.
+
 ### Features
 
-* Optional `block_edge_label_padding` widens block-diagram edge-label `<foreignObject>` widths after mmdc to prevent clipping caused by cross-browser text measurement differences on non-Mac build hosts.
+* All postprocessing fixes (`text_centering`, `overflow_protection`, `edge_label_padding`, `emoji_width_compensation`) are individually toggleable via the new `postprocessing:` config group. Users with a perfect headless pipeline can disable any or all.
+* `edge_label_padding` (formerly `block_edge_label_padding`) now applies to all diagram types, not just block diagrams.
 
 ### Bug Fixes
 

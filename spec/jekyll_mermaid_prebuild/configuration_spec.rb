@@ -96,8 +96,103 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
     end
   end
 
+  describe "#text_centering" do
+    context "when not configured" do
+      it "defaults to true" do
+        expect(described_class.new(site).text_centering).to be true
+      end
+    end
+
+    context "when set to false" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "text_centering" => false } } } }
+
+      it "returns false" do
+        expect(described_class.new(site).text_centering).to be false
+      end
+    end
+
+    context "when set to true explicitly" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "text_centering" => true } } } }
+
+      it "returns true" do
+        expect(described_class.new(site).text_centering).to be true
+      end
+    end
+  end
+
+  describe "#overflow_protection" do
+    context "when not configured" do
+      it "defaults to true" do
+        expect(described_class.new(site).overflow_protection).to be true
+      end
+    end
+
+    context "when set to false" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "overflow_protection" => false } } } }
+
+      it "returns false" do
+        expect(described_class.new(site).overflow_protection).to be false
+      end
+    end
+
+    context "when set to true explicitly" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "overflow_protection" => true } } } }
+
+      it "returns true" do
+        expect(described_class.new(site).overflow_protection).to be true
+      end
+    end
+  end
+
+  describe "#edge_label_padding" do
+    context "when not configured" do
+      it "returns 0" do
+        expect(described_class.new(site).edge_label_padding).to eq(0)
+      end
+    end
+
+    context "when set to an integer" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => 6 } } } }
+
+      it "returns that value" do
+        expect(described_class.new(site).edge_label_padding).to eq(6)
+      end
+    end
+
+    context "when set to a float" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => 4.5 } } } }
+
+      it "returns that value" do
+        expect(described_class.new(site).edge_label_padding).to eq(4.5)
+      end
+    end
+
+    context "when set to false" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => false } } } }
+
+      it "returns 0" do
+        expect(described_class.new(site).edge_label_padding).to eq(0)
+      end
+    end
+
+    context "when set to a negative number" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => -3 } } } }
+
+      it "returns 0" do
+        expect(described_class.new(site).edge_label_padding).to eq(0)
+      end
+    end
+
+    context "when set to a non-numeric value" do
+      let(:site_config) { { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => "wide" } } } }
+
+      it "returns 0" do
+        expect(described_class.new(site).edge_label_padding).to eq(0)
+      end
+    end
+  end
+
   describe "#emoji_width_compensation" do
-    # C1: not configured → empty hash
     context "with no emoji_width_compensation configured" do
       it "returns empty hash" do
         config = described_class.new(site)
@@ -106,10 +201,9 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
 
-    # C2: flowchart: true → { "flowchart" => true }
     context "with emoji_width_compensation: { flowchart: true }" do
       let(:site_config) do
-        { "mermaid_prebuild" => { "emoji_width_compensation" => { "flowchart" => true } } }
+        { "mermaid_prebuild" => { "postprocessing" => { "emoji_width_compensation" => { "flowchart" => true } } } }
       end
 
       it "returns hash with flowchart => true" do
@@ -119,10 +213,9 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
 
-    # C3: flowchart: false → { "flowchart" => false }
     context "with emoji_width_compensation: { flowchart: false }" do
       let(:site_config) do
-        { "mermaid_prebuild" => { "emoji_width_compensation" => { "flowchart" => false } } }
+        { "mermaid_prebuild" => { "postprocessing" => { "emoji_width_compensation" => { "flowchart" => false } } } }
       end
 
       it "returns hash with flowchart => false" do
@@ -132,64 +225,15 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
 
-    # C4: non-hash value → empty hash (rejected)
     context "with emoji_width_compensation set to a non-hash value" do
       let(:site_config) do
-        { "mermaid_prebuild" => { "emoji_width_compensation" => true } }
+        { "mermaid_prebuild" => { "postprocessing" => { "emoji_width_compensation" => true } } }
       end
 
       it "returns empty hash" do
         config = described_class.new(site)
 
         expect(config.emoji_width_compensation).to eq({})
-      end
-    end
-  end
-
-  describe "#block_edge_label_padding" do
-    context "when not configured" do
-      it "returns 0" do
-        expect(described_class.new(site).block_edge_label_padding).to eq(0)
-      end
-    end
-
-    context "when set to an integer" do
-      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => 6 } } }
-
-      it "returns that value" do
-        expect(described_class.new(site).block_edge_label_padding).to eq(6)
-      end
-    end
-
-    context "when set to a float" do
-      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => 4.5 } } }
-
-      it "returns that value" do
-        expect(described_class.new(site).block_edge_label_padding).to eq(4.5)
-      end
-    end
-
-    context "when set to false" do
-      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => false } } }
-
-      it "returns 0" do
-        expect(described_class.new(site).block_edge_label_padding).to eq(0)
-      end
-    end
-
-    context "when set to a negative number" do
-      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => -3 } } }
-
-      it "returns 0" do
-        expect(described_class.new(site).block_edge_label_padding).to eq(0)
-      end
-    end
-
-    context "when set to a non-numeric value" do
-      let(:site_config) { { "mermaid_prebuild" => { "block_edge_label_padding" => "wide" } } }
-
-      it "returns 0" do
-        expect(described_class.new(site).block_edge_label_padding).to eq(0)
       end
     end
   end
