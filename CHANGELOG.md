@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+* Optional `block_edge_label_padding` widens block-diagram edge-label `<foreignObject>` widths after mmdc to prevent clipping caused by cross-browser text measurement differences on non-Mac build hosts.
+
+### Bug Fixes
+
+* Inject `foreignObject > div { display: block !important; text-align: center }` into every generated SVG so that label text centers correctly when the viewing browser's font metrics differ from the generating headless Chromium. Fixes left-shifted labels visible when mmdc runs on a different OS than the viewer.
+
 ## [0.3.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.0...v0.3.1) (2026-03-13)
 
 

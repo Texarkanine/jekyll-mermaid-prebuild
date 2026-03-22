@@ -18,8 +18,9 @@ module JekyllMermaidPrebuild
     #
     # @param mermaid_source [String] mermaid diagram definition
     # @param cache_key [String] digest for caching
+    # @param diagram_type [String, nil] from EmojiCompensator.detect_diagram_type (e.g. "block")
     # @return [String, nil] path to cached SVG file or nil on failure
-    def generate(mermaid_source, cache_key)
+    def generate(mermaid_source, cache_key, diagram_type: nil)
       cache_path = File.join(@config.cache_dir, "#{cache_key}.svg")
 
       # Return cached file if it exists
@@ -31,6 +32,8 @@ module JekyllMermaidPrebuild
       # Generate SVG using mmdc
       success = MmdcWrapper.render(mermaid_source, cache_path)
       return nil unless success
+
+      post_process_svg(cache_path, diagram_type)
 
       cache_path
     end
@@ -53,6 +56,18 @@ module JekyllMermaidPrebuild
         <a href="#{svg_url}"><img src="#{svg_url}" alt="Mermaid Diagram"></a>
         </figure>
       HTML
+    end
+
+    private
+
+    def post_process_svg(cache_path, diagram_type)
+      raw = File.read(cache_path)
+      svg = SvgPostProcessor.ensure_text_centering(raw)
+
+      pad = @config.block_edge_label_padding
+      svg = SvgPostProcessor.apply(svg, padding: pad) if diagram_type == "block" && pad.is_a?(Numeric) && pad.positive?
+
+      File.write(cache_path, svg) if svg != raw
     end
   end
 end
