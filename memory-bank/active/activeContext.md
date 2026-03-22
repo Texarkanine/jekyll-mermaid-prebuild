@@ -1,25 +1,19 @@
 # Active Context
 
 ## Current Task: ci-foreignobject-clip-fix
-**Phase:** BUILD - COMPLETE
+**Phase:** PLAN - COMPLETE (amended)
 
 ## What Was Done
-- Built `SvgPostProcessor.ensure_foreignobject_overflow` — injects `foreignObject{overflow:visible;}` into SVG `<style>` block
-- Wired into `Generator#post_process_svg` (after centering, before optional padding)
-- 7 new tests (6 unit + 1 integration), all passing
-- Full suite: 110 examples, 0 failures; RuboCop: 0 offenses
-- Updated README (cross-browser section now lists 3 fixes) and CHANGELOG
+- Original overflow fix built and QA passed (7 new tests, 110 total)
+- User requested: (1) all postprocessing features togglable via config booleans, (2) `postprocessing:` config group, (3) `emoji_width_compensation` moves under it, (4) `block_edge_label_padding` renamed to `edge_label_padding` and block restriction dropped
+- Re-planned with 5 implementation steps across Configuration, SvgPostProcessor, Generator, Processor, docs
 
-## Files Modified
-- `lib/jekyll-mermaid-prebuild/svg_post_processor.rb` — added `OVERFLOW_RULE` constant + `ensure_foreignobject_overflow` method
-- `lib/jekyll-mermaid-prebuild/generator.rb` — added overflow call in `post_process_svg`
-- `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb` — 6 new test cases
-- `spec/jekyll_mermaid_prebuild/generator_spec.rb` — 1 new integration test
-- `README.md` — updated cross-browser section
-- `CHANGELOG.md` — added overflow fix entry
-
-## Deviations from Plan
-None — built to plan.
+## Key Decisions
+- Breaking config change (pre-1.0, clean break, no shimming)
+- `text_centering` and `overflow_protection` default to `true` (safe defaults)
+- `edge_label_padding` default `0` (opt-in, as before)
+- Padding applies to ALL diagram types, not just block
+- Overflow:visible fixes NODE labels (background is node shape); padding fixes EDGE labels (background is foreignObject container)
 
 ## Next Step
-- QA
+- Preflight → Build

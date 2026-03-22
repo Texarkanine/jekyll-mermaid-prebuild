@@ -4,38 +4,46 @@
 
 ## User Story
 
-Edge labels in block diagrams (e.g. "last touchpoint", "refined") render fully visible when built locally but are clipped on the right edge when built via GitHub Actions CI — despite both environments now using mmdc's bundled Chromium. The previous `block_edge_label_padding` fix (see archive `20260322-block-edge-label-svg-pad`) shipped and centering works, but the core clipping reappeared on the live site.
+Edge labels and node labels in block diagrams clip when built via GHA CI. Root cause: `<foreignObject>` defaults to `overflow: hidden`, and different build environments produce foreignObject widths that differ by 7–22% for identical Mermaid source due to system font differences.
 
-## Requirements
+## Requirements (Amended)
 
-1. Fix SVG edge label clipping that occurs only in GHA CI-built SVGs
-2. The fix must work identically regardless of build environment (local WSL vs GHA Ubuntu)
-3. **Constraints:**
-   - Stay on latest mermaid-cli locally & in CI (no version pinning, no divergent versions)
-   - Use same Chromium on both (bundled with mmdc)
-   - Not a brittle hack that breaks on the next mermaid update
+### R1: Fix node label clipping (overflow protection)
+Inject `foreignObject{overflow:visible;}` CSS into SVGs. This fixes node labels where the background is the node shape (SVG element), not the foreignObject.
 
-## Root Cause (Hypothesis)
+### R2: Fix edge label clipping (edge label padding)
+Existing `block_edge_label_padding` already works for edge labels. Rename to `edge_label_padding`, move under `postprocessing`, drop the block-only restriction (apply to all diagram types).
 
-Even with the same Chromium binary, font metrics differ between local WSL and GHA Ubuntu because system font libraries (fontconfig, freetype) and available system fonts differ. mmdc measures text widths during rendering using the host's font stack, so the same Mermaid source produces different `<foreignObject>` widths on different machines. When a viewing browser renders text slightly wider than the generating environment measured, the foreignObject clips the overflow.
+### R3: Config restructure — `postprocessing` group
+All cross-browser rendering workarounds must live under a `postprocessing:` nested config, separated from plugin behavior config (`enabled`, `output_dir`):
 
-**Additional observations:**
-- Font *sizes* themselves differ between local and remote SVG output (user-reported)
-- Comparing actual SVGs (CI `c9949931.svg` vs local `85b6de46.svg`): foreignObject widths differ by **7–22%** across labels, with no uniform scale factor. Local measures wider → no clipping; CI measures narrower → clips when a viewer browser renders text wider than CI measured.
-- The variation is per-label (not a simple DPI ratio), confirming different font stacks/metrics are in play.
-- This eliminates any fixed-pixel or fixed-percentage padding as a robust solution — the delta varies per label and per environment.
+```yaml
+mermaid_prebuild:
+  postprocessing:
+    text_centering: true              # boolean, default: true
+    overflow_protection: true         # boolean, default: true
+    edge_label_padding: 0             # numeric, default: 0 (off)
+    emoji_width_compensation:         # map, default: {} (off)
+      flowchart: true
+```
 
-## Additional Evidence
+- `text_centering` and `overflow_protection`: booleans, default true, can be set to false to disable
+- `edge_label_padding`: numeric, renamed from `block_edge_label_padding`, no longer block-specific
+- `emoji_width_compensation`: map, moved from top-level to under `postprocessing`
+- Breaking change (pre-1.0, clean break, no back-compat shimming)
 
-User enabled `block_edge_label_padding: 6` in devblog config. Result on CI:
-- Edge labels: all fixed (padding worked)
-- Node labels: "Specification" clips to "Specificatior" — the "n" is cut off
+### R4: All fixes must be individually disableable
+Users with a perfect headless pipeline can disable any/all postprocessing.
 
-The existing padding fix only targets `<g class="edgeLabel">` foreignObjects. Node labels (`<g class="node">`) use the same foreignObject mechanism but aren't covered by the regex. This confirms the fix must target ALL foreignObjects, not just edge labels.
+## Constraints
+- Stay on latest mermaid-cli (no version pinning)
+- Use same bundled Chromium on both environments
+- Not a brittle hack
 
 ## Acceptance Criteria
-
-- ALL foreignObject labels (edge AND node) render without clipping in both local and CI-built SVGs
-- The fix is unconditional (not gated behind environment detection or diagram type)
-- All existing tests pass; new tests cover the fix
-- No mermaid-cli version dependency introduced
+- All foreignObject labels (edge + node) render without clipping
+- All postprocessing features togglable via config booleans
+- `edge_label_padding` applies to all diagram types (not just block)
+- All existing tests updated, all new behavior tested
+- README, CHANGELOG updated
+- Full suite green, RuboCop clean

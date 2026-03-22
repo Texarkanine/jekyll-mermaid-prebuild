@@ -1,67 +1,99 @@
-# Task: CI foreignObject edge label clipping fix
+# Task: CI foreignObject clip fix + postprocessing config restructure
 
 * Task ID: ci-foreignobject-clip-fix
 * Complexity: Level 2
-* Type: Bug fix (cross-environment rendering)
+* Type: Bug fix + config restructure
 
-SVG edge labels AND node labels clip on the right edge when the SVG is built on GHA CI but viewed in a browser with wider font metrics than CI's headless Chromium used. Confirmed: with `block_edge_label_padding: 6` enabled, edge labels are fixed but node label "Specification" still clips to "Specificatior" — the existing padding only targets `<g class="edgeLabel">` foreignObjects. The root cause is that `<foreignObject>` defaults to `overflow: hidden` in SVG, so any text that renders wider than the foreignObject's baked-in width is silently clipped. The fix: inject `foreignObject{overflow:visible;}` into the SVG `<style>` block, using the same always-on idempotent pattern as the existing `ensure_text_centering` fix.
+Overflow protection (already built) fixes node labels. Edge label padding (existing) fixes edge labels. All cross-browser workarounds move under `postprocessing:` config group with boolean/numeric toggles. `block_edge_label_padding` renamed to `edge_label_padding` and block-only restriction dropped.
 
 ## Test Plan (TDD)
 
 ### Behaviors to Verify
 
-- **Overflow rule injection**: `ensure_foreignobject_overflow(svg_with_style)` → SVG contains `foreignObject{overflow:visible;}` before `</style>`
-- **Rule placement**: the injected rule lives inside the existing `<style>` element, not outside it
-- **Idempotency**: calling `ensure_foreignobject_overflow` twice produces the same output as calling it once
-- **No-op on missing `<style>`**: SVG without a `<style>` tag → returned unchanged
-- **Non-string input**: `nil` → returns `nil`
-- **Error resilience**: if an internal operation raises → returns original string
-- **Generator integration**: freshly generated SVGs have the overflow rule injected (alongside existing centering rule)
+**Configuration (new/changed):**
+- `postprocessing.text_centering` defaults to `true` when absent
+- `postprocessing.text_centering: false` → returns `false`
+- `postprocessing.overflow_protection` defaults to `true` when absent
+- `postprocessing.overflow_protection: false` → returns `false`
+- `postprocessing.edge_label_padding` defaults to `0` when absent
+- `postprocessing.edge_label_padding: 6` → returns `6`
+- `postprocessing.edge_label_padding` preserves existing validation (false→0, negative→0, non-numeric→0, float OK)
+- `postprocessing.emoji_width_compensation` reads from nested location, same parsing rules
+- Old top-level `block_edge_label_padding` and `emoji_width_compensation` keys ignored (no back-compat)
 
-### Edge Cases
+**Generator (changed):**
+- `text_centering: false` → SVG does NOT get centering CSS
+- `overflow_protection: false` → SVG does NOT get overflow CSS
+- `text_centering: true` (default) → SVG gets centering CSS (existing, unchanged behavior)
+- `overflow_protection: true` (default) → SVG gets overflow CSS (existing, unchanged behavior)
+- Padding applies regardless of `diagram_type` (no block restriction)
 
-- SVG that already has `foreignObject{overflow:visible;}` (from a previous run) → no duplicate
-- SVG with `</style>` but no foreignObject elements → rule injected harmlessly (CSS has no effect on missing elements)
+**SvgPostProcessor (changed):**
+- `.apply` widens edge label foreignObjects in ANY diagram type (not just block)
+- `.apply` no longer checks for `BLOCK_ROOT_MARKER`
+
+**Processor (changed):**
+- `digest_string_for_cache` includes padding for ALL diagram types (not just block)
+- Digest string uses `edge_pad=` prefix (not `block_edge_pad=`)
 
 ### Test Infrastructure
 
 - Framework: RSpec
 - Test location: `spec/jekyll_mermaid_prebuild/`
-- Conventions: one `_spec.rb` per module, `describe ".method_name"` blocks, `let` for fixtures
-- New test files: none — tests go in existing `svg_post_processor_spec.rb` and `generator_spec.rb`
+- New test files: none
+- Modified specs: `configuration_spec.rb`, `generator_spec.rb`, `processor_spec.rb`, `svg_post_processor_spec.rb`
 
 ## Implementation Plan
 
-1. **Stub + test `SvgPostProcessor.ensure_foreignobject_overflow`** (TDD cycle 1)
-   - Files: `lib/jekyll-mermaid-prebuild/svg_post_processor.rb`, `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`
-   - Changes:
-     - Add `OVERFLOW_RULE = "foreignObject{overflow:visible;}"` constant
-     - Add `ensure_foreignobject_overflow(svg_string)` method (same pattern as `ensure_text_centering`)
-     - Add `describe ".ensure_foreignobject_overflow"` test block with 6 test cases (injection, placement, idempotency, no-style, nil, error)
+### Step 1: Configuration — new `postprocessing` group (TDD cycle)
+- Files: `lib/jekyll-mermaid-prebuild/configuration.rb`, `spec/jekyll_mermaid_prebuild/configuration_spec.rb`
+- Changes:
+  - Parse `config["postprocessing"]` sub-hash
+  - New attrs: `text_centering` (bool, default true), `overflow_protection` (bool, default true)
+  - Rename: `block_edge_label_padding` → `edge_label_padding` (read from `postprocessing.edge_label_padding`)
+  - Move: `emoji_width_compensation` reads from `postprocessing.emoji_width_compensation`
+  - Update all spec `site_config` hashes to nest under `"postprocessing"`
 
-2. **Wire into Generator + integration test** (TDD cycle 2)
-   - Files: `lib/jekyll-mermaid-prebuild/generator.rb`, `spec/jekyll_mermaid_prebuild/generator_spec.rb`
-   - Changes:
-     - Add `svg = SvgPostProcessor.ensure_foreignobject_overflow(svg)` call in `post_process_svg`, after centering and before padding
-     - Add test case: freshly generated SVG contains `overflow:visible`
+### Step 2: SvgPostProcessor — remove block restriction (TDD cycle)
+- Files: `lib/jekyll-mermaid-prebuild/svg_post_processor.rb`, `spec/jekyll_mermaid_prebuild/svg_post_processor_spec.rb`
+- Changes:
+  - Remove `BLOCK_ROOT_MARKER` constant and its check from `.apply`
+  - Update test: "does not modify flowchart-v2 SVGs" → now it DOES widen edge labels in flowcharts
 
-3. **Update docs**
-   - Files: `README.md`, `CHANGELOG.md`
-   - Changes: note the new always-on overflow fix in the cross-browser section
+### Step 3: Generator — conditional postprocessing (TDD cycle)
+- Files: `lib/jekyll-mermaid-prebuild/generator.rb`, `spec/jekyll_mermaid_prebuild/generator_spec.rb`
+- Changes:
+  - `post_process_svg` reads `config.text_centering`, `config.overflow_protection`
+  - Centering called only when `text_centering` is truthy
+  - Overflow called only when `overflow_protection` is truthy
+  - Padding: drop `diagram_type == "block"` condition; use `config.edge_label_padding`
+  - Update all `instance_double` configs: `block_edge_label_padding:` → `edge_label_padding:`, add `text_centering: true, overflow_protection: true`
+  - Add tests for disabled centering/overflow
+
+### Step 4: Processor — update digest + config refs (TDD cycle)
+- Files: `lib/jekyll-mermaid-prebuild/processor.rb`, `spec/jekyll_mermaid_prebuild/processor_spec.rb`
+- Changes:
+  - `digest_string_for_cache`: use `config.edge_label_padding`, remove `diagram_type == "block"` check, change digest prefix to `edge_pad=`
+  - Update all `instance_double` configs: `block_edge_label_padding:` → `edge_label_padding:`
+  - Update padding digest tests to reflect all-diagram-type behavior
+
+### Step 5: Docs
+- Files: `README.md`, `CHANGELOG.md`
+- Changes: config examples, options table, cross-browser section, breaking change note
 
 ## Technology Validation
 
-No new technology — validation not required. Pure CSS rule injection using existing `<style>` manipulation pattern.
+No new technology — validation not required.
 
 ## Dependencies
 
-- None. No new gems, no new npm packages, no config changes required.
-- Consumer (devblog) needs no changes — the fix is unconditional in the gem.
+- None. Consumer (devblog) needs config YAML update: move `emoji_width_compensation` under `postprocessing:` and optionally add `edge_label_padding`.
 
 ## Challenges & Mitigations
 
-- **`overflow:visible` in `<img>` SVG context**: Some older browsers may not honor `overflow:visible` on foreignObject when the SVG is loaded via `<img src>`. Mitigation: modern browsers (Chrome, Firefox, Safari 15+) support this. The existing padding feature remains available as a belt-and-suspenders option for anyone who hits an edge case.
-- **Cache invalidation**: Existing cached SVGs won't have the new rule until regenerated. Mitigation: clearing `.jekyll-cache/jekyll-mermaid-prebuild/` forces regeneration. This is standard for any post-processing change.
+- **Breaking config change**: Pre-1.0, clean break. Document in CHANGELOG and README.
+- **Cache invalidation**: Digest string change (`block_edge_pad=` → `edge_pad=`) invalidates cached SVGs with padding. Standard for any postprocessing change.
+- **Padding now hits all diagram types**: Could widen edge labels in diagrams that don't need it. Low risk — padding is opt-in (default 0).
 
 ## Status
 
@@ -69,6 +101,6 @@ No new technology — validation not required. Pure CSS rule injection using exi
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
 - [x] Technology validation complete
-- [x] Preflight
-- [x] Build
+- [ ] Preflight
+- [ ] Build
 - [ ] QA

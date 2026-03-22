@@ -22,3 +22,12 @@
 - TDD Cycle 2: Generator wiring + 1 integration test → green
 - Full suite: 110/110; RuboCop: 0 offenses
 - README + CHANGELOG updated
+
+### QA — PASS
+- One trivial fix: module docstring "Two" → "Three" independent fixes
+- All checks passed: KISS, DRY, YAGNI, completeness, regression, integrity, documentation
+
+### Plan (Amended) — COMPLETE
+- User requested: config restructure into `postprocessing:` group with boolean toggles
+- Scope expanded: Configuration, SvgPostProcessor, Generator, Processor, docs
+- 5 implementation steps, breaking config change (pre-1.0)
