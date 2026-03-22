@@ -140,6 +140,12 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
 
       expect(described_class.render("x", "/tmp/nope.svg")).to be false
     end
+
+    it "raises ArgumentError for an unsupported theme" do
+      expect do
+        described_class.render("graph TD\nA-->B", "/tmp/out.svg", theme: :forest)
+      end.to raise_error(ArgumentError, /unsupported mmdc theme/)
+    end
   end
 
   describe ".mermaid_fence_pattern" do

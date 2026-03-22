@@ -7,6 +7,8 @@ module JekyllMermaidPrebuild
     CACHE_DIR = ".jekyll-cache/jekyll-mermaid-prebuild"
     DEFAULT_CHART_BG_LIGHT = "white"
     DEFAULT_CHART_BG_DARK = "black"
+    # Parsed mode when PCS is omitted, invalid, or empty (not the YAML string "light").
+    DEFAULT_PREFERS_COLOR_SCHEME_MODE = :light
     MAX_CHART_BACKGROUND_LENGTH = 256
     INVALID_CHART_BACKGROUND = /[\x00-\x1f"'<>;`\\]/
 
@@ -58,7 +60,7 @@ module JekyllMermaidPrebuild
     # @return [void]
     def parse_prefers_color_scheme(value)
       unless value.is_a?(Hash)
-        @prefers_color_scheme = :light
+        @prefers_color_scheme = DEFAULT_PREFERS_COLOR_SCHEME_MODE
         @chart_background_light = finalize_background(DEFAULT_CHART_BG_LIGHT)
         @chart_background_dark = finalize_background(DEFAULT_CHART_BG_DARK)
         unless value.nil?
@@ -89,10 +91,10 @@ module JekyllMermaidPrebuild
     # @param raw [Object]
     # @return [Symbol] :light, :dark, or :auto
     def normalize_prefers_mode(raw)
-      return :light if raw.nil?
+      return DEFAULT_PREFERS_COLOR_SCHEME_MODE if raw.nil?
 
       s = raw.to_s.strip.downcase
-      return :light if s.empty?
+      return DEFAULT_PREFERS_COLOR_SCHEME_MODE if s.empty?
 
       case s
       when "light" then :light
@@ -103,7 +105,7 @@ module JekyllMermaidPrebuild
           "MermaidPrebuild:",
           "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} mode #{raw.inspect}; using light"
         )
-        :light
+        DEFAULT_PREFERS_COLOR_SCHEME_MODE
       end
     end
 
@@ -115,7 +117,10 @@ module JekyllMermaidPrebuild
     def config_hash_fetch(hash, key)
       return nil unless hash.is_a?(Hash)
 
-      hash[key] || hash[key.to_sym]
+      return hash[key] if hash.key?(key)
+      return hash[key.to_sym] if hash.key?(key.to_sym)
+
+      nil
     end
 
     # @param value [Object] raw color string or nil (use default)
