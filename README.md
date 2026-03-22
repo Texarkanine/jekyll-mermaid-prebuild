@@ -173,13 +173,13 @@ mermaid_prebuild:
 
 ## Caching
 
-Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content (and, when emoji compensation is enabled for that diagram type, the compensated source; when `edge_label_padding` is positive, that value is mixed in), so:
+Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content and all output-affecting postprocessing config, so:
 
 - Unchanged diagrams are served from cache (fast rebuilds)
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
-- Changing `edge_label_padding` invalidates cache keys for all diagrams
+- Changing `edge_label_padding`, `text_centering`, or `overflow_protection` invalidates cache keys
 
 To clear the cache:
 
