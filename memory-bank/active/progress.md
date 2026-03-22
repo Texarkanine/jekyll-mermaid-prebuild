@@ -91,3 +91,14 @@
   1. Spec instance_double volume (~20 locations) — recommend shared helper for default config attrs.
   2. Generator spec dark-background assertions change from `transparent` to `black`.
   3. Unused `_diagram_type` parameter in `post_process_svg` — minor tech debt, not in scope.
+
+## 2026-03-22 — BUILD (rework chart backgrounds) — COMPLETE
+
+* **Work completed**
+  - `Configuration`: hash-only `prefers_color_scheme`, flexible keys, `chart_background_*` readers, sanitization + warnings.
+  - `SvgPostProcessor#apply_root_svg_background`; `Generator#post_process_svg` passes per-variant background; `Processor` digest includes background strings.
+  - RSpec helpers for doubles; README + devblog config migration.
+* **Decisions made**
+  - Reject chart background values matching control chars, quotes, backticks, `<`, `>`, `;`, `\`; max length 256.
+* **Verification**
+  - 158 RSpec examples, 0 failures; RuboCop clean; devblog `jekyll build` OK (path gem).

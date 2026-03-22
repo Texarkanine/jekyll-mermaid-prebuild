@@ -7,15 +7,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
 
   let(:cache_dir) { File.join(@temp_dir, "cache") }
   let(:config) do
-    instance_double(
-      JekyllMermaidPrebuild::Configuration,
-      cache_dir: cache_dir,
-      output_dir: "assets/svg",
-      text_centering: true,
-      overflow_protection: true,
-      edge_label_padding: 0,
-      prefers_color_scheme: :light
-    )
+    instance_double(JekyllMermaidPrebuild::Configuration, **configuration_generator_attrs(cache_dir))
   end
 
   describe "#initialize" do
@@ -84,12 +76,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       let(:config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir,
-          output_dir: "assets/svg",
-          text_centering: true,
-          overflow_protection: true,
-          edge_label_padding: 0,
-          prefers_color_scheme: :dark
+          **configuration_generator_attrs(cache_dir, prefers_color_scheme: :dark)
         )
       end
 
@@ -121,10 +108,10 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         expect(paths[cache_key]).to eq(File.join(cache_dir, "#{cache_key}.svg"))
       end
 
-      it "makes the background transparent" do
+      it "applies configured dark chart background (default black)" do
         paths = generator.generate(mermaid_source, cache_key)
         svg = File.read(paths[cache_key])
-        expect(svg).to include("background-color: transparent")
+        expect(svg).to include("background-color: black;")
         expect(svg).not_to include("background-color: white")
       end
     end
@@ -133,12 +120,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       let(:config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir,
-          output_dir: "assets/svg",
-          text_centering: true,
-          overflow_protection: true,
-          edge_label_padding: 0,
-          prefers_color_scheme: :auto
+          **configuration_generator_attrs(cache_dir, prefers_color_scheme: :auto)
         )
       end
 
@@ -161,14 +143,14 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         expect(paths.keys).to contain_exactly(cache_key, "#{cache_key}-dark")
       end
 
-      it "makes the dark SVG background transparent but leaves the light SVG untouched" do
+      it "applies light and dark chart backgrounds (default white / black)" do
         paths = generator.generate(mermaid_source, cache_key)
 
         light_svg = File.read(paths[cache_key])
         dark_svg = File.read(paths["#{cache_key}-dark"])
 
-        expect(light_svg).to include("background-color: white")
-        expect(dark_svg).to include("background-color: transparent")
+        expect(light_svg).to include("background-color: white;")
+        expect(dark_svg).to include("background-color: black;")
         expect(dark_svg).not_to include("background-color: white")
       end
 
@@ -219,12 +201,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       let(:padded_config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir,
-          output_dir: "assets/svg",
-          text_centering: true,
-          overflow_protection: true,
-          edge_label_padding: 5,
-          prefers_color_scheme: :light
+          **configuration_generator_attrs(cache_dir, edge_label_padding: 5)
         )
       end
       let(:padded_generator) { described_class.new(padded_config) }
@@ -278,12 +255,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       let(:no_centering_config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir,
-          output_dir: "assets/svg",
-          text_centering: false,
-          overflow_protection: true,
-          edge_label_padding: 0,
-          prefers_color_scheme: :light
+          **configuration_generator_attrs(cache_dir, text_centering: false)
         )
       end
       let(:no_centering_generator) { described_class.new(no_centering_config) }
@@ -310,12 +282,7 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       let(:no_overflow_config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir,
-          output_dir: "assets/svg",
-          text_centering: true,
-          overflow_protection: false,
-          edge_label_padding: 0,
-          prefers_color_scheme: :light
+          **configuration_generator_attrs(cache_dir, overflow_protection: false)
         )
       end
       let(:no_overflow_generator) { described_class.new(no_overflow_config) }

@@ -52,6 +52,8 @@ module JekyllMermaidPrebuild
     def digest_string_for_cache(source, _diagram_type)
       parts = [source]
       parts << "pcs=#{@config.prefers_color_scheme}"
+      parts << "bgL=#{@config.chart_background_light}"
+      parts << "bgD=#{@config.chart_background_dark}"
       parts << "tc=#{@config.text_centering}" unless @config.text_centering
       parts << "op=#{@config.overflow_protection}" unless @config.overflow_protection
       pad = @config.edge_label_padding

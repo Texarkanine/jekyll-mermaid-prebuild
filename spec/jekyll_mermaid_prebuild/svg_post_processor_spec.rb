@@ -193,32 +193,47 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
     end
   end
 
-  describe ".ensure_transparent_background" do
-    let(:dark_svg) do
+  describe ".apply_root_svg_background" do
+    let(:mmdc_svg) do
       '<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" ' \
         'style="max-width: 500px; background-color: white;" viewBox="0 0 500 200">' \
         "<style>#my-svg{fill:#ccc;}</style></svg>"
     end
 
-    it "replaces background-color:white with transparent" do
-      out = described_class.ensure_transparent_background(dark_svg)
-      expect(out).to include("background-color: transparent;")
+    it "replaces background-color:white with the given CSS value" do
+      out = described_class.apply_root_svg_background(mmdc_svg, "black")
+      expect(out).to include("background-color: black;")
       expect(out).not_to include("background-color: white")
+    end
+
+    it "supports hex colors" do
+      out = described_class.apply_root_svg_background(mmdc_svg, "#fff0aa")
+      expect(out).to include("background-color: #fff0aa;")
+    end
+
+    it "is idempotent when applied twice with the same target color" do
+      once = described_class.apply_root_svg_background(mmdc_svg, "black")
+      twice = described_class.apply_root_svg_background(once, "black")
+      expect(twice).to eq(once)
     end
 
     it "leaves SVGs without background-color:white unchanged" do
       no_bg = '<svg style="max-width: 500px;" viewBox="0 0 500 200"></svg>'
-      expect(described_class.ensure_transparent_background(no_bg)).to eq(no_bg)
+      expect(described_class.apply_root_svg_background(no_bg, "black")).to eq(no_bg)
     end
 
-    it "returns non-string input unchanged" do
-      expect(described_class.ensure_transparent_background(nil)).to be_nil
+    it "returns non-string svg unchanged" do
+      expect(described_class.apply_root_svg_background(nil, "black")).to be_nil
+    end
+
+    it "returns original when css_background is blank" do
+      expect(described_class.apply_root_svg_background(mmdc_svg, "")).to eq(mmdc_svg)
     end
 
     it "returns the original string on error" do
-      svg = dark_svg.dup
+      svg = mmdc_svg.dup
       allow(svg).to receive(:sub).and_raise(StandardError, "boom")
-      expect(described_class.ensure_transparent_background(svg)).to eq(svg)
+      expect(described_class.apply_root_svg_background(svg, "black")).to eq(svg)
     end
   end
 end

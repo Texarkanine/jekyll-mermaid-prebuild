@@ -7,17 +7,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
 
   let(:cache_dir) { File.join(@temp_dir, "cache") }
   let(:config) do
-    instance_double(
-      JekyllMermaidPrebuild::Configuration,
-      cache_dir: cache_dir,
-      output_dir: "assets/svg",
-      enabled?: true,
-      emoji_width_compensation: {},
-      edge_label_padding: 0,
-      text_centering: true,
-      overflow_protection: true,
-      prefers_color_scheme: :light
-    )
+    instance_double(JekyllMermaidPrebuild::Configuration, **configuration_processor_attrs(cache_dir))
   end
   let(:generator) { instance_double(JekyllMermaidPrebuild::Generator) }
   let(:site_data) { {} }
@@ -137,10 +127,10 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       it "calls EmojiCompensator when flowchart has emoji and compensation enabled" do
         config_with_comp = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: { "flowchart" => true },
-          edge_label_padding: 0, text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(
+            cache_dir,
+            emoji_width_compensation: { "flowchart" => true }
+          )
         )
         proc_with_comp = described_class.new(config_with_comp, generator)
         content = <<~MARKDOWN
@@ -181,10 +171,10 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       it "does not compensate sequence diagrams when only flowchart is enabled" do
         config_flowchart_only = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: { "flowchart" => true },
-          edge_label_padding: 0, text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(
+            cache_dir,
+            emoji_width_compensation: { "flowchart" => true }
+          )
         )
         proc_flowchart_only = described_class.new(config_flowchart_only, generator)
         content = <<~MARKDOWN
@@ -207,10 +197,10 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       it "uses different cache key for compensated vs uncompensated same diagram" do
         config_with_comp = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: { "flowchart" => true },
-          edge_label_padding: 0, text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(
+            cache_dir,
+            emoji_width_compensation: { "flowchart" => true }
+          )
         )
         keys = []
         allow(generator).to receive(:generate) do |_source, key, **_kwargs|
@@ -247,17 +237,11 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg4 = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 4,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir, edge_label_padding: 4)
         )
         cfg8 = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 8,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir, edge_label_padding: 8)
         )
         described_class.new(cfg4, stub_generator).process_content(content, site)
         described_class.new(cfg8, stub_generator).process_content(content, site)
@@ -268,10 +252,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir)
         )
         2.times { described_class.new(cfg, stub_generator).process_content(content, site) }
         expect(captured_keys.uniq.size).to eq(1)
@@ -281,17 +262,11 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg_on = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir)
         )
         cfg_off = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: false, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir, text_centering: false)
         )
         described_class.new(cfg_on, stub_generator).process_content(content, site)
         described_class.new(cfg_off, stub_generator).process_content(content, site)
@@ -302,17 +277,11 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg_on = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir)
         )
         cfg_off = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: false,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir, overflow_protection: false)
         )
         described_class.new(cfg_on, stub_generator).process_content(content, site)
         described_class.new(cfg_off, stub_generator).process_content(content, site)
@@ -323,20 +292,44 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg_light = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :light
+          **configuration_processor_attrs(cache_dir)
         )
         cfg_dark = instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, edge_label_padding: 0,
-          text_centering: true, overflow_protection: true,
-          prefers_color_scheme: :dark
+          **configuration_processor_attrs(cache_dir, prefers_color_scheme: :dark)
         )
         described_class.new(cfg_light, stub_generator).process_content(content, site)
         described_class.new(cfg_dark, stub_generator).process_content(content, site)
+        expect(captured_keys.uniq.size).to eq(2)
+      end
+
+      it "uses different cache keys when chart_background_light changes" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
+        cfg_a = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_processor_attrs(cache_dir, chart_background_light: "white")
+        )
+        cfg_b = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_processor_attrs(cache_dir, chart_background_light: "#fff0aa")
+        )
+        described_class.new(cfg_a, stub_generator).process_content(content, site)
+        described_class.new(cfg_b, stub_generator).process_content(content, site)
+        expect(captured_keys.uniq.size).to eq(2)
+      end
+
+      it "uses different cache keys when chart_background_dark changes" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
+        cfg_a = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_processor_attrs(cache_dir, chart_background_dark: "black")
+        )
+        cfg_b = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_processor_attrs(cache_dir, chart_background_dark: "navy")
+        )
+        described_class.new(cfg_a, stub_generator).process_content(content, site)
+        described_class.new(cfg_b, stub_generator).process_content(content, site)
         expect(captured_keys.uniq.size).to eq(2)
       end
     end
@@ -345,14 +338,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       let(:config_auto) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          cache_dir: cache_dir,
-          output_dir: "assets/svg",
-          enabled?: true,
-          emoji_width_compensation: {},
-          edge_label_padding: 0,
-          text_centering: true,
-          overflow_protection: true,
-          prefers_color_scheme: :auto
+          **configuration_processor_attrs(cache_dir, prefers_color_scheme: :auto)
         )
       end
       let(:processor_auto) { described_class.new(config_auto, generator) }

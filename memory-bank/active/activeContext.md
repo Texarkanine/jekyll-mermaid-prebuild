@@ -2,15 +2,17 @@
 
 ## Current Task: Issue #11 rework — chart backgrounds + nested `prefers_color_scheme` config
 
-**Phase:** PREFLIGHT — PASS (with advisory)
+**Phase:** BUILD — COMPLETE
 
 ## What Was Done
 
-- Preflight validated plan against all source modules and specs.
-- Convention compliance, dependency impact, conflict detection, completeness: all PASS.
-- **Operator decision (preflight):** Flat string `prefers_color_scheme` form is **dropped** — feature hasn't shipped, no backward compat needed. Plan amended: `parse_prefers_color_scheme` is a clean rewrite (Hash-only), existing flat-string specs are replaced, devblog config migration is required.
-- Advisory findings documented in `.preflight-status` (spec instance_double volume, assertion changes, unused `_diagram_type`).
+- Implemented nested-hash-only `prefers_color_scheme` with `mode`, optional `background_color` / `background-color` (`light` / `dark` slots), hyphen aliases at top level (`prefers-color-scheme`) and nested keys.
+- Added `chart_background_light` / `chart_background_dark` readers with sanitization (length cap, rejected characters), defaults `white` / `black`.
+- Replaced `SvgPostProcessor#ensure_transparent_background` with `#apply_root_svg_background(svg, css_background)`; generator always applies the correct variant background; processor digest includes `bgL` / `bgD`.
+- Specs: `configuration_spec`, `svg_post_processor_spec`, `generator_spec`, `processor_spec`; shared `spec/support/configuration_helpers.rb` for Configuration doubles.
+- README updated; devblog `_config.yaml` migrated to `prefers_color_scheme: { mode: auto }`.
+- Verification: `bundle exec rspec` (158 examples), `bundle exec rubocop`, `bundle exec jekyll build` in devblog.
 
 ## Next Step
 
-- Run **`/niko-build`** (TDD) when ready.
+- Run **`/niko-qa`** on the rework.

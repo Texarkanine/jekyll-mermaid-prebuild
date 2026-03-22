@@ -79,7 +79,8 @@ module JekyllMermaidPrebuild
       FileUtils.mkdir_p(@config.cache_dir)
       return nil unless MmdcWrapper.render(mermaid_source, cache_path, theme: theme)
 
-      post_process_svg(cache_path, diagram_type, dark: theme == :dark)
+      bg = theme == :dark ? @config.chart_background_dark : @config.chart_background_light
+      post_process_svg(cache_path, diagram_type, root_background: bg)
       { stem => cache_path }
     end
 
@@ -95,25 +96,25 @@ module JekyllMermaidPrebuild
       unless File.exist?(light_path)
         return nil unless MmdcWrapper.render(mermaid_source, light_path, theme: :default)
 
-        post_process_svg(light_path, diagram_type)
+        post_process_svg(light_path, diagram_type, root_background: @config.chart_background_light)
       end
 
       unless File.exist?(dark_path)
         return nil unless MmdcWrapper.render(mermaid_source, dark_path, theme: :dark)
 
-        post_process_svg(dark_path, diagram_type, dark: true)
+        post_process_svg(dark_path, diagram_type, root_background: @config.chart_background_dark)
       end
 
       { light_stem => light_path, dark_stem => dark_path }
     end
 
-    def post_process_svg(cache_path, _diagram_type, dark: false)
+    def post_process_svg(cache_path, _diagram_type, root_background:)
       raw = File.read(cache_path)
       svg = raw
 
       svg = SvgPostProcessor.ensure_text_centering(svg) if @config.text_centering
       svg = SvgPostProcessor.ensure_foreignobject_overflow(svg) if @config.overflow_protection
-      svg = SvgPostProcessor.ensure_transparent_background(svg) if dark
+      svg = SvgPostProcessor.apply_root_svg_background(svg, root_background)
 
       pad = @config.edge_label_padding
       svg = SvgPostProcessor.apply(svg, padding: pad) if pad.is_a?(Numeric) && pad.positive?

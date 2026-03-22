@@ -139,5 +139,5 @@ No new technology — validation not required.
 - [x] Implementation plan complete
 - [x] Technology validation complete
 - [x] Preflight (PASS w/ advisory — see `.preflight-status`)
-- [ ] Build
+- [x] Build
 - [ ] QA

@@ -14,9 +14,9 @@ module JekyllMermaidPrebuild
   # 3. Edge label padding: Widens edge-label `<foreignObject>` widths in any diagram type to
   #    prevent clipping when the viewing browser renders text wider than headless Chromium measured.
   #    Opt-in via `postprocessing.edge_label_padding` config.
-  # 4. Transparent background: mmdc always emits `background-color: white` on the root `<svg>`
-  #    regardless of theme. For dark-themed SVGs this creates a visible white rectangle. Applied
-  #    only to dark variants; replaces `white` with `transparent`.
+  # 4. Root SVG background: mmdc always emits `background-color: white` on the root `<svg>` regardless
+  #    of theme. The plugin replaces that token with configurable CSS color values for light and
+  #    dark variants (defaults white / black) so charts match page background in both modes.
   module SvgPostProcessor
     module_function
 
@@ -78,18 +78,20 @@ module JekyllMermaidPrebuild
       svg_string
     end
 
-    # Replace `background-color: white` on the root <svg> style attribute with transparent.
-    # mmdc always emits `background-color: white` regardless of theme; for dark-theme SVGs
-    # this creates a jarring white rectangle on dark pages. Idempotent, safe on non-dark SVGs.
+    # Replace `background-color: white` on the root <svg> style attribute with a caller-supplied
+    # CSS color (already sanitized by Configuration). Idempotent when mmdc output no longer contains
+    # the white token or the value already matches.
     #
     # @param svg_string [String] full SVG document from mmdc
-    # @return [String] SVG with transparent background, or original on no-op / error
-    def ensure_transparent_background(svg_string)
+    # @param css_background [String] literal after `background-color:` (e.g. "black", "#fff0aa")
+    # @return [String] SVG with updated root background, or original on no-op / error
+    def apply_root_svg_background(svg_string, css_background)
       return svg_string unless svg_string.is_a?(String)
+      return svg_string unless css_background.is_a?(String) && !css_background.empty?
 
       svg_string.sub(
         /(<svg\b[^>]*\bstyle="[^"]*?)background-color:\s*white;?/,
-        '\1background-color: transparent;'
+        "\\1background-color: #{css_background};"
       )
     rescue StandardError
       svg_string

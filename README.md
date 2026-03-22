@@ -94,7 +94,12 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
-  prefers_color_scheme: light  # light (default) | dark | auto - see below
+  prefers_color_scheme:
+    mode: light          # light (default) | dark | auto — see [Color scheme](#color-scheme-mermaid-theme)
+    # Optional: override mmdc’s root SVG background (defaults: light=white, dark=black)
+    # background_color:
+    #   light: white
+    #   dark: black
   postprocessing:
     text_centering: true         # default: true
     overflow_protection: true    # default: true
@@ -109,7 +114,7 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
-| `prefers_color_scheme` | `light` | Mermaid theme / visitor color preference. See [Color scheme](#color-scheme-mermaid-theme). |
+| `prefers_color_scheme` | see below | **Hash** with `mode` (`light` / `dark` / `auto`) and optional `background_color` (or `background-color`) for chart backgrounds. See [Color scheme](#color-scheme-mermaid-theme). |
 
 #### `postprocessing` group
 
@@ -124,15 +129,30 @@ All cross-browser rendering fixes live under the `postprocessing:` key. Each can
 
 ### Color scheme (Mermaid theme)
 
-`prefers_color_scheme` controls how diagrams are rendered and, for `auto`, how HTML picks the right asset for the visitor’s system preference (`prefers-color-scheme`).
+`prefers_color_scheme` must be a **YAML mapping** (hash). Use `mode` for the Mermaid theme / HTML behavior. You may also set per-variant **root SVG background** colors (mmdc always emits `background-color: white` on the root `<svg>`; the plugin rewrites that for each output file).
 
-| Value | Behavior |
-|-------|----------|
-| `light` | One SVG per diagram using Mermaid’s default (light) theme - same as earlier plugin versions. |
+**Top-level key:** `prefers_color_scheme` or `prefers-color-scheme` (hyphenated alias).
+
+```yaml
+mermaid_prebuild:
+  prefers_color_scheme:
+    mode: auto
+    background_color:      # or: background-color
+      light: white         # default if omitted
+      dark: black          # default if omitted
+```
+
+| `mode` | Behavior |
+|--------|----------|
+| `light` | One SVG per diagram using Mermaid’s default (light) theme. |
 | `dark` | One SVG per diagram using mmdc’s dark theme (`mmdc -t dark`). |
-| `auto` | Two SVGs per diagram: `{digest}.svg` (light) and `{digest}-dark.svg` (dark). The embedded HTML uses two links (light and dark) with a small inline stylesheet so only the variant matching the user’s color scheme is shown. **Build cost:** each diagram runs `mmdc` twice until both files are cached. |
+| `auto` | Two SVGs per diagram: `{digest}.svg` (light) and `{digest}-dark.svg` (dark). The embedded HTML uses two links with a small inline stylesheet so only the variant matching the visitor’s `prefers-color-scheme` is shown. **Build cost:** each diagram runs `mmdc` twice until both files are cached. |
 
-Invalid or empty values fall back to `light` with a warning in the build log. The cache digest includes this setting so theme changes never reuse the wrong SVG.
+**Chart backgrounds:** Values are injected verbatim into the root `<svg style="...">` as the CSS token after `background-color:` (for example `white`, `black`, `#fff0aa`, `rgb(0,0,0)`, `transparent`). They are validated conservatively: values containing quotes, angle brackets, backticks, semicolons, backslashes, or control characters are rejected and the default for that slot is used, with a warning. Keep values short (max 256 characters). **Do not** put raw double quotes or HTML in these strings.
+
+If `prefers_color_scheme` is not a hash (for example a bare string), the plugin uses `mode: light` and default backgrounds and logs a warning. Unknown `mode` values fall back to `light` with a warning. Omitting `mode` is treated as `light`.
+
+The cache digest includes `mode` and both background strings so theme and color changes never reuse the wrong SVG.
 
 ### Cross-browser text rendering fixes
 
@@ -193,7 +213,7 @@ Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
-- Changing `edge_label_padding`, `text_centering`, `overflow_protection`, or `prefers_color_scheme` invalidates cache keys
+- Changing `edge_label_padding`, `text_centering`, `overflow_protection`, `prefers_color_scheme` mode, or chart background colors invalidates cache keys
 
 To clear the cache:
 
