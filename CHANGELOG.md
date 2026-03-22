@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.1...v0.3.2) (2026-03-22)
+
+
+### Bug Fixes
+
+* block diagram node label centering and clipping w/ latest Mermaid ([#16](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/16)) ([ae250c1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/ae250c14fd04d3f1826a70b8af339ced67bb988a))
+
 ## [Unreleased]
 
 ### Features
