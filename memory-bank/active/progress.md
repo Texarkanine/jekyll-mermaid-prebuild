@@ -102,3 +102,11 @@
   - Reject chart background values matching control chars, quotes, backticks, `<`, `>`, `;`, `\`; max length 256.
 * **Verification**
   - 158 RSpec examples, 0 failures; RuboCop clean; devblog `jekyll build` OK (path gem).
+
+## 2026-03-22 — QA (rework chart backgrounds) — PASS
+
+* **Work completed**
+  - Semantic review against `tasks.md` plan: completeness, regression, docs; no blocking findings.
+  - README: explicit **Transparency** subsection (`transparent`, `rgba(0, 0, 0, 0)`).
+* **Verification**
+  - `bundle exec rspec` (158 examples, 0 failures); `bundle exec rubocop` (clean).

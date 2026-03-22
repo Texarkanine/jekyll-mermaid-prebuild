@@ -140,4 +140,4 @@ No new technology — validation not required.
 - [x] Technology validation complete
 - [x] Preflight (PASS w/ advisory — see `.preflight-status`)
 - [x] Build
-- [ ] QA
+- [x] QA (PASS — see `.qa-validation-status`; README transparency note added in QA pass)

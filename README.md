@@ -150,6 +150,8 @@ mermaid_prebuild:
 
 **Chart backgrounds:** Values are injected verbatim into the root `<svg style="...">` as the CSS token after `background-color:` (for example `white`, `black`, `#fff0aa`, `rgb(0,0,0)`, `transparent`). They are validated conservatively: values containing quotes, angle brackets, backticks, semicolons, backslashes, or control characters are rejected and the default for that slot is used, with a warning. Keep values short (max 256 characters). **Do not** put raw double quotes or HTML in these strings.
 
+**Transparency:** The standard CSS keyword **`transparent`** is supported and is the usual choice when you want that variant’s chart to show the page behind it (for example `dark: transparent` on a dark-themed site). Fully transparent RGBA such as `rgba(0, 0, 0, 0)` is also valid if you prefer explicit alpha.
+
 If `prefers_color_scheme` is not a hash (for example a bare string), the plugin uses `mode: light` and default backgrounds and logs a warning. Unknown `mode` values fall back to `light` with a warning. Omitting `mode` is treated as `light`.
 
 The cache digest includes `mode` and both background strings so theme and color changes never reuse the wrong SVG.
