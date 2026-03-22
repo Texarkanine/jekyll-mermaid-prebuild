@@ -5,8 +5,19 @@ module JekyllMermaidPrebuild
   class Configuration
     DEFAULT_OUTPUT_DIR = "assets/svg"
     CACHE_DIR = ".jekyll-cache/jekyll-mermaid-prebuild"
+    DEFAULT_CHART_BG_LIGHT = "white"
+    DEFAULT_CHART_BG_DARK = "black"
+    # Parsed mode when PCS is omitted, invalid, or empty (not the YAML string "light").
+    DEFAULT_PREFERS_COLOR_SCHEME_MODE = :light
+    MAX_CHART_BACKGROUND_LENGTH = 256
+    INVALID_CHART_BACKGROUND = /[\x00-\x1f"'<>;`\\]/
 
-    attr_reader :output_dir, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation
+    # YAML keys under mermaid_prebuild — hyphenated to align with CSS (@media (prefers-color-scheme), background-color).
+    PREFERS_COLOR_SCHEME_YAML_KEY = "prefers-color-scheme"
+    BACKGROUND_COLOR_YAML_KEY = "background-color"
+
+    attr_reader :output_dir, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation,
+                :prefers_color_scheme, :chart_background_light, :chart_background_dark
 
     # Initialize configuration from Jekyll site
     #
@@ -15,6 +26,8 @@ module JekyllMermaidPrebuild
       config = site.config["mermaid_prebuild"] || {}
       @output_dir = parse_output_dir(config["output_dir"])
       @enabled = config.fetch("enabled", true)
+      pcs_raw = config[PREFERS_COLOR_SCHEME_YAML_KEY]
+      parse_prefers_color_scheme(pcs_raw)
 
       pp = config["postprocessing"] || {}
       @text_centering = pp.fetch("text_centering", true)
@@ -38,6 +51,116 @@ module JekyllMermaidPrebuild
     end
 
     private
+
+    # Parse the prefers-color-scheme block (see PREFERS_COLOR_SCHEME_YAML_KEY) from a Hash only
+    # (mode + optional background-color map). Non-Hash values fall back to :light and default
+    # backgrounds with a warning.
+    #
+    # @param value [Object] raw site config value
+    # @return [void]
+    def parse_prefers_color_scheme(value)
+      unless value.is_a?(Hash)
+        @prefers_color_scheme = DEFAULT_PREFERS_COLOR_SCHEME_MODE
+        @chart_background_light = finalize_background(DEFAULT_CHART_BG_LIGHT)
+        @chart_background_dark = finalize_background(DEFAULT_CHART_BG_DARK)
+        unless value.nil?
+          Jekyll.logger.warn(
+            "MermaidPrebuild:",
+            "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} (expected a Hash); " \
+            "using light mode and default backgrounds"
+          )
+        end
+        return
+      end
+
+      mode_raw = config_hash_fetch(value, "mode")
+      @prefers_color_scheme = normalize_prefers_mode(mode_raw)
+
+      bg_container = config_hash_fetch(value, BACKGROUND_COLOR_YAML_KEY)
+      if bg_container.is_a?(Hash)
+        light_raw = config_hash_fetch(bg_container, "light")
+        dark_raw = config_hash_fetch(bg_container, "dark")
+        @chart_background_light = coerce_chart_background(light_raw, DEFAULT_CHART_BG_LIGHT, "light")
+        @chart_background_dark = coerce_chart_background(dark_raw, DEFAULT_CHART_BG_DARK, "dark")
+      else
+        @chart_background_light = finalize_background(DEFAULT_CHART_BG_LIGHT)
+        @chart_background_dark = finalize_background(DEFAULT_CHART_BG_DARK)
+      end
+    end
+
+    # @param raw [Object]
+    # @return [Symbol] :light, :dark, or :auto
+    def normalize_prefers_mode(raw)
+      return DEFAULT_PREFERS_COLOR_SCHEME_MODE if raw.nil?
+
+      s = raw.to_s.strip.downcase
+      return DEFAULT_PREFERS_COLOR_SCHEME_MODE if s.empty?
+
+      case s
+      when "light" then :light
+      when "dark" then :dark
+      when "auto" then :auto
+      else
+        Jekyll.logger.warn(
+          "MermaidPrebuild:",
+          "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} mode #{raw.inspect}; using light"
+        )
+        DEFAULT_PREFERS_COLOR_SCHEME_MODE
+      end
+    end
+
+    # Read a config key from a Hash (string key as in YAML, or matching Symbol).
+    #
+    # @param hash [Hash]
+    # @param key [String] exact key (e.g. "mode", "background-color", "light")
+    # @return [Object, nil]
+    def config_hash_fetch(hash, key)
+      return nil unless hash.is_a?(Hash)
+
+      return hash[key] if hash.key?(key)
+      return hash[key.to_sym] if hash.key?(key.to_sym)
+
+      nil
+    end
+
+    # @param value [Object] raw color string or nil (use default)
+    # @param default [String] fallback literal
+    # @param label [String] "light" or "dark" for logging
+    # @return [String] frozen sanitized CSS fragment
+    def coerce_chart_background(value, default, label)
+      return finalize_background(default) if value.nil?
+
+      str = value.to_s.strip
+      if str.empty?
+        Jekyll.logger.warn "MermaidPrebuild:",
+                           "Invalid chart background (#{label}): empty string; using #{default.inspect}"
+        return finalize_background(default)
+      end
+
+      if str.length > MAX_CHART_BACKGROUND_LENGTH
+        Jekyll.logger.warn "MermaidPrebuild:",
+                           "Invalid chart background (#{label}): value too long; using #{default.inspect}"
+        return finalize_background(default)
+      end
+
+      if chart_background_invalid?(str)
+        Jekyll.logger.warn "MermaidPrebuild:",
+                           "Invalid chart background (#{label}): disallowed characters; using #{default.inspect}"
+        return finalize_background(default)
+      end
+
+      str.freeze
+    end
+
+    def chart_background_invalid?(value)
+      INVALID_CHART_BACKGROUND.match?(value)
+    end
+
+    # @param value [String]
+    # @return [String] frozen copy
+    def finalize_background(value)
+      value.to_s.freeze
+    end
 
     # Returns a frozen Hash of diagram type (string) => boolean. Non-hash values are rejected → {}.
     #

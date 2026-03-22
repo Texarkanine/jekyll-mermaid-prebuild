@@ -237,4 +237,168 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
   end
+
+  describe "#prefers_color_scheme" do
+    context "when not configured" do
+      it "defaults to :light" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:light)
+      end
+    end
+
+    context "with nested hash (mode only)" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "auto" } } }
+      end
+
+      it "parses mode" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:auto)
+      end
+
+      it "uses default chart backgrounds" do
+        c = described_class.new(site)
+        expect(c.chart_background_light).to eq("white")
+        expect(c.chart_background_dark).to eq("black")
+      end
+    end
+
+    context "with nested background-color (string and symbol keys for slots)" do
+      let(:site_config) do
+        {
+          "mermaid_prebuild" => {
+            "prefers-color-scheme" => {
+              "mode" => "dark",
+              "background-color" => { "light" => "#fff0aa", "dark" => "black" }
+            }
+          }
+        }
+      end
+
+      it "parses mode and backgrounds" do
+        c = described_class.new(site)
+        expect(c.prefers_color_scheme).to eq(:dark)
+        expect(c.chart_background_light).to eq("#fff0aa")
+        expect(c.chart_background_dark).to eq("black")
+      end
+    end
+
+    context "with background-color using symbol keys for mode and slots" do
+      let(:site_config) do
+        {
+          "mermaid_prebuild" => {
+            "prefers-color-scheme" => {
+              mode: "auto",
+              "background-color" => { light: "rgb(1, 2, 3)", dark: "hsl(0 0% 0%)" }
+            }
+          }
+        }
+      end
+
+      it "parses symbol and string keys in nested hash" do
+        c = described_class.new(site)
+        expect(c.prefers_color_scheme).to eq(:auto)
+        expect(c.chart_background_light).to eq("rgb(1, 2, 3)")
+        expect(c.chart_background_dark).to eq("hsl(0 0% 0%)")
+      end
+    end
+
+    context "with non-Hash prefers-color-scheme" do
+      let(:site_config) { { "mermaid_prebuild" => { "prefers-color-scheme" => "auto" } } }
+
+      it "falls back to :light" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:light)
+      end
+
+      it "logs a warning" do
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /expected a Hash/)
+
+        described_class.new(site)
+      end
+    end
+
+    context "with invalid mode in hash" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "banana" } } }
+      end
+
+      it "falls back to :light" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:light)
+      end
+
+      it "logs a warning" do
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /Invalid prefers-color-scheme mode/)
+
+        described_class.new(site)
+      end
+    end
+
+    context "with empty mode string" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "   " } } }
+      end
+
+      it "treats as :light" do
+        expect(described_class.new(site).prefers_color_scheme).to eq(:light)
+      end
+    end
+  end
+
+  describe "chart background sanitization" do
+    context "with breakout characters in color" do
+      let(:site_config) do
+        {
+          "mermaid_prebuild" => {
+            "prefers-color-scheme" => {
+              "mode" => "light",
+              "background-color" => { "light" => 'white";', "dark" => "black" }
+            }
+          }
+        }
+      end
+
+      it "rejects and falls back to defaults" do
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /disallowed characters/).at_least(:once)
+        c = described_class.new(site)
+        expect(c.chart_background_light).to eq("white")
+      end
+    end
+
+    context "with empty string color" do
+      let(:site_config) do
+        {
+          "mermaid_prebuild" => {
+            "prefers-color-scheme" => {
+              "mode" => "light",
+              "background-color" => { "light" => "", "dark" => "black" }
+            }
+          }
+        }
+      end
+
+      it "falls back to default light background" do
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /empty string/)
+        c = described_class.new(site)
+        expect(c.chart_background_light).to eq("white")
+      end
+    end
+
+    context "with overly long color string" do
+      let(:long) { "a" * 300 }
+      let(:site_config) do
+        {
+          "mermaid_prebuild" => {
+            "prefers-color-scheme" => {
+              "mode" => "light",
+              "background-color" => { "light" => long, "dark" => "black" }
+            }
+          }
+        }
+      end
+
+      it "falls back to default" do
+        expect(Jekyll.logger).to receive(:warn).with("MermaidPrebuild:", /too long/)
+        c = described_class.new(site)
+        expect(c.chart_background_light).to eq("white")
+      end
+    end
+  end
 end

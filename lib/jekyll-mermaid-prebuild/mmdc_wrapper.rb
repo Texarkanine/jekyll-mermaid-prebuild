@@ -95,8 +95,17 @@ module JekyllMermaidPrebuild
     #
     # @param mermaid_source [String] mermaid diagram definition
     # @param output_path [String] path to write SVG file
+    ALLOWED_RENDER_THEMES = %i[default dark].freeze
+
+    # @param theme [Symbol] :default (mermaid default theme) or :dark (mmdc -t dark)
     # @return [Boolean] true if successful
-    def render(mermaid_source, output_path)
+    # @raise [ArgumentError] if theme is not supported
+    def render(mermaid_source, output_path, theme: :default)
+      unless ALLOWED_RENDER_THEMES.include?(theme)
+        raise ArgumentError,
+              "unsupported mmdc theme #{theme.inspect} (allowed: #{ALLOWED_RENDER_THEMES.map(&:inspect).join(", ")})"
+      end
+
       input_file = Tempfile.new(["mermaid", ".mmd"])
 
       begin
@@ -104,6 +113,7 @@ module JekyllMermaidPrebuild
         input_file.close
 
         cmd = ["mmdc", "-i", input_file.path, "-o", output_path, "-e", "svg"]
+        cmd += ["-t", "dark"] if theme == :dark
         _stdout, _stderr, status = Open3.capture3(*cmd)
 
         status.success?

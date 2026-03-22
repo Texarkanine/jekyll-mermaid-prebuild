@@ -94,6 +94,12 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
+  prefers-color-scheme:
+    mode: light          # light (default) | dark | auto — see [Color scheme](#color-scheme-mermaid-theme)
+    # Optional: override mmdc’s root SVG background (defaults: light=white, dark=black)
+    # background-color:
+    #   light: white
+    #   dark: black
   postprocessing:
     text_centering: true         # default: true
     overflow_protection: true    # default: true
@@ -108,6 +114,7 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
+| `prefers-color-scheme` | see below | **Hash** with `mode` (`light` / `dark` / `auto`) and optional `background-color` for chart backgrounds. See [Color scheme](#color-scheme-mermaid-theme). |
 
 #### `postprocessing` group
 
@@ -119,6 +126,31 @@ All cross-browser rendering fixes live under the `postprocessing:` key. Each can
 | `overflow_protection` | `true` | Inject `overflow: visible` on `<foreignObject>` elements to prevent clipping. Set `false` to disable. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
 | `edge_label_padding` | `0` | Extra SVG user units added to edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). Applies to all diagram types. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
 | `emoji_width_compensation` | `{}` | Map of diagram types to booleans; see [Emoji width compensation](#emoji-width-compensation) below. |
+
+### Color scheme (Mermaid theme)
+
+Under `mermaid_prebuild`, the **`prefers-color-scheme`** key (hyphenated, like the CSS media feature) must be a **YAML mapping**. Use `mode` for the Mermaid theme / HTML behavior. Optionally nest **`background-color`** (same spelling as in CSS) with `light` / `dark` slots for each chart variant’s root SVG fill (mmdc always emits `background-color: white` on the root `<svg>`; the plugin rewrites that per file).
+
+```yaml
+mermaid_prebuild:
+  prefers-color-scheme:
+    mode: auto
+    background-color:
+      light: white         # default if omitted
+      dark: black          # default if omitted
+```
+
+| `mode` | Behavior |
+|--------|----------|
+| `light` | One SVG per diagram using Mermaid’s default (light) theme. |
+| `dark` | One SVG per diagram using mmdc’s dark theme (`mmdc -t dark`). |
+| `auto` | Two SVGs per diagram: `{digest}.svg` (light) and `{digest}-dark.svg` (dark). The embedded HTML uses two links with a small inline stylesheet so only the variant matching the visitor’s `prefers-color-scheme` is shown. **Build cost:** each diagram runs `mmdc` twice until both files are cached. |
+
+**Chart backgrounds:** Values are injected verbatim into the root `<svg style="...">` as the CSS token after `background-color:` (for example `white`, `black`, `#fff0aa`, `rgb(0,0,0)`, `transparent`). They are validated conservatively: values containing quotes, angle brackets, backticks, semicolons, backslashes, or control characters are rejected and the default for that slot is used, with a warning. Keep values short (max 256 characters). **Do not** put raw double quotes or HTML in these strings.
+
+**Transparency:** The standard CSS keyword **`transparent`** is supported and is the usual choice when you want that variant’s chart to show the page behind it (for example `dark: transparent` on a dark-themed site). Fully transparent RGBA such as `rgba(0, 0, 0, 0)` is also valid if you prefer explicit alpha.
+
+If `prefers-color-scheme` is not a hash (for example a bare string), the plugin uses `mode: light` and default backgrounds and logs a warning. Unknown `mode` values fall back to `light` with a warning. Omitting `mode` is treated as `light`.
 
 ### Cross-browser text rendering fixes
 
@@ -179,7 +211,7 @@ Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
-- Changing `edge_label_padding`, `text_centering`, or `overflow_protection` invalidates cache keys
+- Changing `edge_label_padding`, `text_centering`, `overflow_protection`, `prefers-color-scheme` mode, or chart background colors invalidates cache keys
 
 To clear the cache:
 
