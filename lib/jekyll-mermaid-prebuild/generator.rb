@@ -60,12 +60,15 @@ module JekyllMermaidPrebuild
 
     private
 
-    def post_process_svg(cache_path, diagram_type)
+    def post_process_svg(cache_path, _diagram_type)
       raw = File.read(cache_path)
-      svg = SvgPostProcessor.ensure_text_centering(raw)
+      svg = raw
 
-      pad = @config.block_edge_label_padding
-      svg = SvgPostProcessor.apply(svg, padding: pad) if diagram_type == "block" && pad.is_a?(Numeric) && pad.positive?
+      svg = SvgPostProcessor.ensure_text_centering(svg) if @config.text_centering
+      svg = SvgPostProcessor.ensure_foreignobject_overflow(svg) if @config.overflow_protection
+
+      pad = @config.edge_label_padding
+      svg = SvgPostProcessor.apply(svg, padding: pad) if pad.is_a?(Numeric) && pad.positive?
 
       File.write(cache_path, svg) if svg != raw
     end

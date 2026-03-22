@@ -13,7 +13,9 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       output_dir: "assets/svg",
       enabled?: true,
       emoji_width_compensation: {},
-      block_edge_label_padding: 0
+      edge_label_padding: 0,
+      text_centering: true,
+      overflow_protection: true
     )
   end
   let(:generator) { instance_double(JekyllMermaidPrebuild::Generator) }
@@ -133,7 +135,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          block_edge_label_padding: 0
+          edge_label_padding: 0, text_centering: true, overflow_protection: true
         )
         proc_with_comp = described_class.new(config_with_comp, generator)
         content = <<~MARKDOWN
@@ -176,7 +178,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          block_edge_label_padding: 0
+          edge_label_padding: 0, text_centering: true, overflow_protection: true
         )
         proc_flowchart_only = described_class.new(config_flowchart_only, generator)
         content = <<~MARKDOWN
@@ -201,7 +203,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
           emoji_width_compensation: { "flowchart" => true },
-          block_edge_label_padding: 0
+          edge_label_padding: 0, text_centering: true, overflow_protection: true
         )
         keys = []
         allow(generator).to receive(:generate) do |_source, key, **_kwargs|
@@ -215,7 +217,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       end
     end
 
-    context "block edge label padding cache digest" do
+    context "postprocessing config cache digest" do
       let(:stub_generator) do
         instance_double(
           JekyllMermaidPrebuild::Generator,
@@ -234,32 +236,73 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         end
       end
 
-      it "uses different cache keys for the same block source when padding differs" do
-        content = "```mermaid\nblock\n  a --> b\n```\n"
+      it "uses different cache keys for the same source when padding differs" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg4 = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, block_edge_label_padding: 4
+          emoji_width_compensation: {}, edge_label_padding: 4,
+          text_centering: true, overflow_protection: true
         )
         cfg8 = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, block_edge_label_padding: 8
+          emoji_width_compensation: {}, edge_label_padding: 8,
+          text_centering: true, overflow_protection: true
         )
         described_class.new(cfg4, stub_generator).process_content(content, site)
         described_class.new(cfg8, stub_generator).process_content(content, site)
         expect(captured_keys.uniq.size).to eq(2)
       end
 
-      it "does not vary digest with padding for non-block diagrams" do
+      it "does not vary digest when padding is zero and booleans match" do
         content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
         cfg = instance_double(
           JekyllMermaidPrebuild::Configuration,
           cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
-          emoji_width_compensation: {}, block_edge_label_padding: 12
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: true, overflow_protection: true
         )
         2.times { described_class.new(cfg, stub_generator).process_content(content, site) }
         expect(captured_keys.uniq.size).to eq(1)
+      end
+
+      it "uses different cache keys when text_centering changes" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
+        cfg_on = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: true, overflow_protection: true
+        )
+        cfg_off = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: false, overflow_protection: true
+        )
+        described_class.new(cfg_on, stub_generator).process_content(content, site)
+        described_class.new(cfg_off, stub_generator).process_content(content, site)
+        expect(captured_keys.uniq.size).to eq(2)
+      end
+
+      it "uses different cache keys when overflow_protection changes" do
+        content = "```mermaid\nflowchart LR\n  A --> B\n```\n"
+        cfg_on = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: true, overflow_protection: true
+        )
+        cfg_off = instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          cache_dir: cache_dir, output_dir: "assets/svg", enabled?: true,
+          emoji_width_compensation: {}, edge_label_padding: 0,
+          text_centering: true, overflow_protection: false
+        )
+        described_class.new(cfg_on, stub_generator).process_content(content, site)
+        described_class.new(cfg_off, stub_generator).process_content(content, site)
+        expect(captured_keys.uniq.size).to eq(2)
       end
     end
 

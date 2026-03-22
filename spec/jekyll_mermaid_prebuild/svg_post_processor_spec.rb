@@ -31,14 +31,14 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
       expect(out).to include('width="16.5"')
     end
 
-    it "does not modify flowchart-v2 SVGs" do
+    it "widens edge labels in non-block diagram types too" do
       svg = compact_svg(<<~SVG)
         <svg xmlns="http://www.w3.org/2000/svg" aria-roledescription="flowchart-v2">
         <g class="edgeLabel"><g class="label">
         <foreignObject width="100" height="24"></foreignObject></g></g></svg>
       SVG
       out = described_class.apply(svg, padding: 8)
-      expect(out).to eq(svg)
+      expect(out).to include('width="108"')
     end
 
     it "returns input unchanged when padding is zero" do
@@ -110,6 +110,46 @@ RSpec.describe JekyllMermaidPrebuild::SvgPostProcessor do
       SVG
       allow(svg).to receive(:gsub).and_raise(StandardError, "forced")
       expect(described_class.apply(svg, padding: 2)).to eq(svg)
+    end
+  end
+
+  describe ".ensure_foreignobject_overflow" do
+    let(:svg_with_style) do
+      '<svg id="my-svg"><style>#my-svg{font-family:sans-serif;}</style>' \
+        '<foreignObject width="100" height="24">' \
+        '<div style="display: table-cell;">text</div></foreignObject></svg>'
+    end
+
+    it "injects an overflow:visible rule into the style block" do
+      out = described_class.ensure_foreignobject_overflow(svg_with_style)
+      expect(out).to include("overflow:visible")
+    end
+
+    it "keeps the rule inside the existing <style> element" do
+      out = described_class.ensure_foreignobject_overflow(svg_with_style)
+      style_content = out[%r{<style>(.*?)</style>}m, 1]
+      expect(style_content).to include("overflow:visible")
+    end
+
+    it "is idempotent — does not duplicate the rule on repeated calls" do
+      once = described_class.ensure_foreignobject_overflow(svg_with_style)
+      twice = described_class.ensure_foreignobject_overflow(once)
+      expect(twice).to eq(once)
+    end
+
+    it "returns the original string when there is no <style> tag" do
+      no_style = '<svg><foreignObject width="10" height="10"></foreignObject></svg>'
+      expect(described_class.ensure_foreignobject_overflow(no_style)).to eq(no_style)
+    end
+
+    it "returns non-string input unchanged" do
+      expect(described_class.ensure_foreignobject_overflow(nil)).to be_nil
+    end
+
+    it "returns the original string on error" do
+      svg = svg_with_style.dup
+      allow(svg).to receive(:include?).and_raise(StandardError, "boom")
+      expect(described_class.ensure_foreignobject_overflow(svg)).to eq(svg)
     end
   end
 

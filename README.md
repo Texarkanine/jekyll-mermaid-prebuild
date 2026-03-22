@@ -94,9 +94,12 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
-  block_edge_label_padding: 0   # optional; see Block diagrams below
-  emoji_width_compensation:  # optional, see below
-    flowchart: true
+  postprocessing:
+    text_centering: true         # default: true
+    overflow_protection: true    # default: true
+    edge_label_padding: 0        # default: 0 (off); try 4-8 if needed
+    emoji_width_compensation:    # optional, see below
+      flowchart: true
 ```
 
 ### Options
@@ -105,22 +108,31 @@ mermaid_prebuild:
 |--------|---------|-------------|
 | `enabled` | `true` | Enable/disable the plugin |
 | `output_dir` | `assets/svg` | Directory for generated SVG files |
-| `block_edge_label_padding` | `0` | Extra SVG user units added to **block** diagram edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
+
+#### `postprocessing` group
+
+All cross-browser rendering fixes live under the `postprocessing:` key. Each can be toggled independently.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `text_centering` | `true` | Inject CSS to center `<foreignObject>` label text. Set `false` to disable. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
+| `overflow_protection` | `true` | Inject `overflow: visible` on `<foreignObject>` elements to prevent clipping. Set `false` to disable. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
+| `edge_label_padding` | `0` | Extra SVG user units added to edge-label `<foreignObject>` widths after mmdc (off when `0`, `false`, or omitted). Applies to all diagram types. See [Cross-browser text rendering fixes](#cross-browser-text-rendering-fixes). |
 | `emoji_width_compensation` | `{}` | Map of diagram types to booleans; see [Emoji width compensation](#emoji-width-compensation) below. |
 
 ### Cross-browser text rendering fixes
 
-When mmdc renders a diagram, headless Chromium measures text with `getBoundingClientRect()` and sets each `<foreignObject>` to exactly that width. If the viewing browser (different OS, different fonts) renders the same text at a different width, labels can clip or shift. The plugin applies two automatic fixes to every generated SVG:
+When mmdc renders a diagram, headless Chromium measures text with `getBoundingClientRect()` and sets each `<foreignObject>` to exactly that width. If the viewing browser (different OS, different fonts) renders the same text at a different width, labels can clip or shift. The plugin can apply some fixes to every generated SVG (all configurable under `postprocessing:`):
 
-1. **Text centering** (always on, no config needed): Mermaid's CSS sets `text-align: center` on SVG `<g>` elements, but that has no effect on HTML inside `<foreignObject>`. The plugin injects a CSS rule (`foreignObject > div { display: block !important; text-align: center }`) so that label text centers within its container regardless of font metric differences. This is idempotent — if upstream Mermaid fixes this, the rule becomes redundant but harmless.
+1. **Text centering** (`text_centering: true`, default on): Mermaid's CSS sets `text-align: center` on SVG `<g>` elements, but that has no effect on HTML inside `<foreignObject>`. The plugin injects a CSS rule (`foreignObject > div { display: block !important; text-align: center }`) so that label text centers within its container regardless of font metric differences. This is idempotent - if upstream Mermaid fixes this, the rule becomes redundant but harmless.
 
-2. **Block edge label padding** (opt-in via `block_edge_label_padding`): Block diagram edge labels have zero padding between the `<foreignObject>` boundary and the text. If the viewing browser renders text wider than headless Chromium measured, the last character(s) clip. This option widens only **edge** label `<foreignObject>` elements (not node labels) in SVGs whose root has `aria-roledescription="block"`. Flowcharts and other diagram types are unchanged.
+2. **Overflow protection** (`overflow_protection: true`, default on): SVG `<foreignObject>` elements default to `overflow: hidden`, which silently clips any text that renders wider than the container. Since different build environments can produce foreignObject widths that differ by 7–22% (ish) for identical Mermaid source, the plugin injects `foreignObject { overflow: visible }` so that labels are never truncated regardless of the magnitude of measurement mismatch. This covers both node and edge labels across all diagram types. This *could* result in labels extending beyond the bounds of their container if there was no natural padding; most cases have a few pixels of padding to spare and so this will just seamlessly fix things.
 
-   - **When to enable:** If block diagram edge text clips in generated SVGs on your build host.
+3. **Edge label padding** (opt-in via `edge_label_padding`): A fixed-pixel widening of **edge** label `<foreignObject>` elements across all diagram types. Edge labels have their own background rectangles, so `overflow: visible` alone can cause text to spill outside the background. Padding widens the container so the background matches the visible text.
+
+   - **When to enable:** If your CI builds produce narrower edge labels than the viewing browser expects. Complements `overflow_protection` for edge labels specifically.
    - **Starting value:** Try `4`-`8` (SVG user units); increase only if needed.
-   - **Caching:** The cache key includes this padding for block diagrams only, so changing the value invalidates cached block SVGs without affecting flowcharts.
-
-> **CI tip:** If your CI pipeline sets `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true` and `PUPPETEER_EXECUTABLE_PATH` to the runner's system Chrome, remove those overrides. Puppeteer's bundled Chromium produces measurements closer to common viewing browsers than the GitHub Actions runner's system Chrome, which can measure text 10-16% narrower.
+   - **Caching:** The cache key includes this padding, so changing the value invalidates all cached SVGs.
 
 ### Emoji width compensation
 
@@ -154,19 +166,20 @@ If you have a label that falls outside the supported patterns (e.g. Mermaid mark
 
 ```yaml
 mermaid_prebuild:
-  emoji_width_compensation:
-    flowchart: true
+  postprocessing:
+    emoji_width_compensation:
+      flowchart: true
 ```
 
 ## Caching
 
-Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content (and, when emoji compensation is enabled for that diagram type, the compensated source; when `block_edge_label_padding` is positive, block diagrams also mix in that value), so:
+Generated SVGs are cached in `.jekyll-cache/jekyll-mermaid-prebuild/`. The cache key is based on the diagram content and all output-affecting postprocessing config, so:
 
 - Unchanged diagrams are served from cache (fast rebuilds)
 - Modified diagrams are automatically regenerated
 - Different diagrams with different content get different cache keys
 - Enabling or disabling emoji width compensation for a diagram type invalidates cache for that content (keys include compensated source when applicable)
-- Changing `block_edge_label_padding` invalidates cache keys for **block** diagrams only
+- Changing `edge_label_padding`, `text_centering`, or `overflow_protection` invalidates cache keys
 
 To clear the cache:
 

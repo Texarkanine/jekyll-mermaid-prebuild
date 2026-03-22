@@ -49,11 +49,13 @@ module JekyllMermaidPrebuild
     # @param source [String] mermaid passed to mmdc (after optional emoji compensation)
     # @param diagram_type [String, nil]
     # @return [String] input to MD5 for cache key
-    def digest_string_for_cache(source, diagram_type)
-      pad = @config.block_edge_label_padding
-      return "#{source}\0block_edge_pad=#{pad}" if diagram_type == "block" && pad.is_a?(Numeric) && pad.positive?
-
-      source
+    def digest_string_for_cache(source, _diagram_type)
+      parts = [source]
+      parts << "tc=#{@config.text_centering}" unless @config.text_centering
+      parts << "op=#{@config.overflow_protection}" unless @config.overflow_protection
+      pad = @config.edge_label_padding
+      parts << "edge_pad=#{pad}" if pad.is_a?(Numeric) && pad.positive?
+      parts.join("\0")
     end
 
     # Convert a single mermaid block to SVG
