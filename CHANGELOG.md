@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.2...v0.4.0) (2026-03-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Additional pre-processing options to compensate for headless chromium environmental differences. ([#18](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/18))
+
+### Features
+
+* Additional pre-processing options to compensate for headless chromium environmental differences. ([#18](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/18)) ([10b4250](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/10b4250fe558c47325cfec178c5b2d8845c68f11))
+
 ## [0.3.2](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.3.1...v0.3.2) (2026-03-22)
 
 
