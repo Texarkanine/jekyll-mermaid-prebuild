@@ -44,3 +44,8 @@
 - One trivial fix: stale context name "block edge label padding" → "edge label padding" in processor_spec
 - All checks passed: KISS, DRY, YAGNI, completeness, regression, integrity, documentation
 - User confirmed local smoke test — diagrams not ruined
+
+### Reflect — COMPLETE
+- All requirements delivered as specified; scope expanded mid-task (R1 only → R1-R4) and handled cleanly
+- Key insight: overflow:visible and padding serve complementary roles for different label types (node vs edge)
+- Million-dollar question: current design is close to "ideal from scratch"; the breaking rename was the cost of incremental discovery
