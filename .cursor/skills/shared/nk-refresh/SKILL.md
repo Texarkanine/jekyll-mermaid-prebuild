@@ -1,5 +1,5 @@
 ---
-name: refresh
+name: nk-refresh
 description: General-purpose guidance for taking a step back and getting un-stuck from a problem that you've tried to solve multiple times unsuccessfully.
 ---
 
@@ -49,7 +49,7 @@ Read:
 
 **CRITICAL**: Plan and track your diagnostics in a unique Task List File, distinct from any parent task's Task List. 
 
-- Locate or create: `memory-bank/troubleshooting/troubleshooting-<timestamp>.md`
+- Locate or create: `memory-bank/active/troubleshooting/troubleshooting-<YYYYMMDD-HHmmss>.md`
 - This task list is for THIS diagnostic session only
 - Always identify the correct Task List File before making updates
 

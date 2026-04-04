@@ -24,6 +24,8 @@ Each task complexity level has its own guidelines for creating an archive - diff
 
 All important information from ephemeral files (such as reflections, creative docs, QA/testing status) should be ***inlined*** in the archive document, not linked, as ephemeral files are deleted after archiving. The archive document should stand on its own as a complete account of the work.
 
+**Exception:** Troubleshooting logs (`memory-bank/active/troubleshooting/`) are **deleted without inlining** - they are verbose diagnostic scratch notes. Distilled learning belongs in the reflection instead.
+
 If an archive section has no meaningful content, include it but add a small note as to why this work didn't produce any meaningful content for the section.
 
 ## Format

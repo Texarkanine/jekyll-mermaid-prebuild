@@ -36,7 +36,7 @@ Read:
 4. **Conflict Detection**
    - Search for existing implementations, utilities, or patterns that overlap with or contradict the plan's approach
    - Identify duplication-in-waiting - cases where the plan proposes building something the codebase already provides
-   - Flag any proposed changes that would break existing contracts or interfaces
+   - Flag any proposed changes that would break public contracts or published interfaces — internal restructuring that preserves the public API surface is not a conflict
 
 5. **Completeness Precheck**
    - Verify the plan addresses all stated requirements with concrete implementation steps mapped to each one - not aspirationally, but with specific files, functions, and approaches identified

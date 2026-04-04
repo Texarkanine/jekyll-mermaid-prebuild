@@ -32,6 +32,8 @@ Create the file in Markdown format, according to this template:
 
 Short, high-level summary of the work that needs to be done in order to complete the work laid out in the `memory-bank/active/projectbrief.md` file.
 
+**Complexity:** Level [N]
+
 ## [Date] - [Phase] - [Status]
 
 * Work completed

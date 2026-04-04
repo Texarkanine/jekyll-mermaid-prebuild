@@ -4,57 +4,22 @@ alwaysApply: false
 
 # Level 4 Workflow: Complex System
 
-Level 4 tasks are too large to plan and execute in one pass. They are composed of multiple L1/L2/L3 sub-runs, each corresponding to a milestone. Complexity analysis manages the milestone list and routes each sub-run to the appropriate level workflow. There are no dedicated Level 4 plan or build phases - those happen inside each sub-run at its own level.
+Level 4 tasks are too large to plan and execute in one pass. They are decomposed into multiple milestones, each executed as an independent L1/L2/L3 sub-run. There are no dedicated Level 4 build, QA, or reflect phases — those happen inside each sub-run at its own level.
 
-## Workflow Overview
+## Workflow Phases
 
 ```mermaid
 graph TD
-
-    Start(("Complexity Analysis"))
-    CheckIfMilestones{"memory-bank/active/milestones.md<br>exists?"}
-
-    subgraph Init["First L4 Run"]
-        NikoPlan["😺 plan<br>(generate milestones)"]
-        NikoPreflight{"😺 preflight"}
-        ManualReview["🧑‍💻 review plan"]
-    end
-
-    subgraph ReEntry["L4 Milestone Management"]
-        CheckMilestoneCompletion{"All milestones complete?"}
-        Capstone[/"🧑‍💻 /niko-archive (capstone)"/]
-        Capstone -->Done("Done")
-        PrevDone{"activeContext shows<br>REFLECT COMPLETE?"}
-        CheckOff["Check off completed<br>milestone in milestones.md"]
-        Resume["Load context<br>prepare to re-enter workflow"]
-    end
-
-    subgraph SubWorkflow["L1-L3 Milestone Execution"]
-        NextSub(("😺 Complexity Analysis<br>Classify next unchecked<br>milestone as L1/L2/L3"))
-        SubRun("😺 Run L1/L2/L3 workflow")
-    end
-
-    Start --> CheckIfMilestones
-
-    CheckIfMilestones -->|"No"| NikoPlan
-    NikoPlan --> NikoPreflight
+    Start(("Complexity Analysis")) --> NikoPlan["🐱 plan<br>(generate milestones)"]
+    NikoPlan --> NikoPreflight{"🐱 preflight"}
     NikoPreflight -->|"FAIL"| NikoPlan
-
-    NikoPreflight -.->|"PASS"| ManualReview
-    ManualReview -.->|"🧑‍💻 /niko"| Start
-
-    CheckIfMilestones -->|"Yes"| CheckMilestoneCompletion
-    CheckMilestoneCompletion -.->|"Yes"| Capstone
-
-    CheckMilestoneCompletion -->|"No"| PrevDone
-    PrevDone --"Yes"--> CheckOff
-    CheckOff --> NextSub
-
-    PrevDone --"No"--> Resume
-    Resume --> SubRun
-
-    NextSub --> SubRun
-    SubRun -.->|"Sub-run reflect complete<br>🧑‍💻 /niko"| Start
+    NikoPreflight -.->|"PASS"| ManualReview["🧑‍💻 review plan"]
+    ManualReview -.->|"🧑‍💻 /niko"| Niko
+    subgraph SubWorkflow["L1-L3 Workflow"]
+        Niko(("Milestone Execution"))
+        Niko -.->|"Next Milestone Complete<br>🧑‍💻 /niko"| Niko
+    end
+    Niko -.->|"All Milestones Complete"| NikoArchive[/"🧑‍💻 /niko-archive"/]
 ```
 
 > Legend:
@@ -63,13 +28,11 @@ graph TD
 > - Solid edge = Transition does not require operator input
 > - Dashed edge = Transition requires operator input
 
-The following require operator input; if you have arrived at one of these transitions, STOP and wait:
-
-- Sub-run reflect complete → next `/niko` invocation (operator decides when to continue)
-- All milestones checked → capstone archive (operator invokes `/niko-archive`)
-- Initial L4 milestone generation → first workflow execution (operator invokes `/niko`)
+After the initial plan is reviewed, `/niko` manages the milestone lifecycle: checking off completed sub-runs, cleaning inter-run state, classifying the next milestone, and routing to the capstone archive when all milestones are done.
 
 ## Phase Mappings
+
+Sub-run phases for milestones within an L4's scope are managed by the sub-run's own level workflow, not this file.
 
 To execute a phase for a level 4 task:
 

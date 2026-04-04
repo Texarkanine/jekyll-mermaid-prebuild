@@ -102,6 +102,10 @@ complexity_level: [n]
 
 ## Step 7: Log Progress
 
+Check whether `memory-bank/active/milestones.md` exists to determine the appropriate next step:
+- **milestones.md exists** (L4 sub-run): the next step is `Run /niko to continue to the next milestone.`
+- **milestones.md does not exist** (standalone task): the next step is `Run /niko-archive to create the archive document and finalize the current project.`
+
 Print a summary of the reflection according to the following format:
 
 ~~~markdown
@@ -118,7 +122,7 @@ Print a summary of the reflection according to the following format:
 
 ## Next Steps
 
-Run `/niko-archive` to create the archive document and finalize the current project.
+[next step determined above]
 ~~~
 
 ## Step 8: Phase Transition

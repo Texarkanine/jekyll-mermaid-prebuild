@@ -28,6 +28,7 @@ These files are scoped to the current task, and will be updated as the task prog
 * **Preflight Status:** `memory-bank/active/.preflight-status` - Task-specific preflight validation status file (created by `/niko-preflight`, gates `/niko-build` for L3+ tasks)
 * **QA Validation Status:** `memory-bank/active/.qa-validation-status` - Task-specific QA validation status file (created by `/niko-qa`, gates `/niko-reflect` for L2+ tasks)
 * **L4 Milestone List:** `memory-bank/active/milestones.md` - L4-only. Ordered checklist of milestones for the current L4 project, each of which will be handled by separate L1/L2/L3 sub-runs. Deleted by the capstone archive phase when all milestones are done.
+* **Troubleshooting Docs:** `memory-bank/active/troubleshooting/troubleshooting-<YYYYMMDD-HHmmss>.md` - Diagnostic scratch notes from `/nk-refresh`. Deleted (not inlined) during archive; distilled learning belongs in the reflection.
 
 **Verification Mandate:** Before any `create_file` or `edit_file` operation on core files, verify the path is correct for the file type:
 - **Persistent files** must reside directly under `memory-bank/` (e.g., `memory-bank/systemPatterns.md`).

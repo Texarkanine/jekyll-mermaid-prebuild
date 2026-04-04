@@ -20,7 +20,7 @@ Also read any existing creative phase documents in `memory-bank/active/creative/
 ## Step 2: Verify Prerequisites
 
 - Confirm `memory-bank/active/tasks.md` exists (stub created by `/niko`)
-- Confirm `memory-bank/active/activeContext.md` exists and indicates Level 3
+- Confirm `memory-bank/active/progress.md` exists and indicates Level 3
 - Confirm `memory-bank/active/projectbrief.md` exists with the user story and requirements
 
 🚨 If any prerequisites are missing, STOP and inform the operator (see "Output to Operator" below).

@@ -6,7 +6,7 @@ globs: memory-bank/active/milestones.md
 
 `memory-bank/active/milestones.md` is the L4 project's plan and state tracker. It serves two purposes simultaneously:
 
-1. **In-flight signal**: its presence tells complexity analysis that an L4 project is active; skip the decision tree and enter re-entry routing.
+1. **In-flight signal**: its presence tells `/niko` that an L4 project is active, triggering milestone transition routing instead of normal state handling.
 2. **State tracker**: the checklist records which milestones are complete and which remain.
 
 ## File Format
@@ -44,9 +44,9 @@ If a milestone fails any of these criteria during preflight, it should be split,
 | Event | Who | Action |
 |-------|-----|--------|
 | L4 Plan phase | `.cursor/rules/shared/niko/level4/level4-plan.mdc` | Creates `memory-bank/active/milestones.md` |
-| `/niko` re-entry - sub-run reflect complete | `.cursor/rules/shared/niko/core/complexity-analysis.mdc` Step 1 | Checks off the completed milestone (`- [ ]` → `- [x]`) |
-| `/niko` re-entry - unchecked remain | `.cursor/rules/shared/niko/core/complexity-analysis.mdc` Step 1 | Classifies first unchecked as L1/L2/L3, initiates sub-run |
-| `/niko` re-entry - all `- [x]` | `.cursor/rules/shared/niko/core/complexity-analysis.mdc` Step 1 | Routes to capstone archive |
+| `/niko` re-entry - sub-run complete | `/niko` Step 2a (Advance L4 Milestone) | Checks off the completed milestone (`- [ ]` → `- [x]`) |
+| `/niko` re-entry - unchecked remain | `/niko` Step 2a → Step 7 (Classify) | Classifies first unchecked as L1/L2/L3, initiates sub-run |
+| `/niko` re-entry - all `- [x]` | `/niko` Step 2a | Routes to capstone archive |
 | Capstone archive | `.cursor/rules/shared/niko/level4/level4-archive.mdc` | Deletes `memory-bank/active/milestones.md` |
 
-🚨 **Do not create or modify `memory-bank/active/milestones.md` outside of these lifecycle events.** Its presence is used as a binary signal by complexity analysis - creating it manually will cause complexity analysis to enter re-entry routing on the next `/niko` invocation.
+🚨 **Do not create or modify `memory-bank/active/milestones.md` outside of these lifecycle events.** Its presence is used as a binary signal by `/niko` — creating it manually will cause `/niko` to enter L4 milestone transition routing on the next invocation.

@@ -34,7 +34,17 @@ To execute a phase for a level 1 task:
 When QA has passed and you are done:
 
 1. Commit all changes - memory bank *and* other resources - to source control using a conventional commit in the following format: `chore: completed [task-id]`.
-2. Print the following to the operator:
+2. Check whether `memory-bank/active/milestones.md` exists:
+
+**milestones.md exists** (L4 sub-run): Print the following, then STOP and wait for operator input.
+
+~~~markdown
+✅ **Level 1 sub-run complete.**
+
+Run `/niko` to continue to the next milestone.
+~~~
+
+**milestones.md does not exist** (standalone task): Print the following, then STOP and wait for operator input.
 
 ~~~markdown
 ✅ **Level 1 task complete.**

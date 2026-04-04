@@ -18,7 +18,7 @@ Read:
 ## Step 2: Verify Prerequisites
 
 - Confirm `memory-bank/active/tasks.md` exists (stub created by `/niko` - it will contain the task name but not yet a full plan; that's this document's job)
-- Confirm `memory-bank/active/activeContext.md` exists and indicates that the current task is indeed a Level 2 (Simple Enhancement) task
+- Confirm `memory-bank/active/progress.md` exists and indicates that the current task is indeed a Level 2 task
 - Confirm `memory-bank/active/projectbrief.md` exists with the user story and requirements
 
 🚨 If any of the prerequisites are missing, STOP and inform the user (see "Output to Operator" below).
