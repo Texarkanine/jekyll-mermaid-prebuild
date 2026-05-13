@@ -71,4 +71,4 @@ No new technology - validation not required. REXML is Ruby stdlib.
 - [x] Technology validation complete
 - [x] Preflight
 - [x] Build
-- [ ] QA
+- [x] QA
