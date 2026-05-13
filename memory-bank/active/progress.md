@@ -25,3 +25,14 @@ Fix 7 test smell findings (vacuous-assertion, naming-lies, presentation-coupled)
 * Work completed
     - All 7 preflight checks passed
     - Amended plan: regex-based assertions instead of REXML for HTML structural checks
+
+## 2026-05-13 - BUILD - COMPLETE
+
+* Work completed
+    - Fixed 4 vacuous-assertion findings (hooks_spec, processor_spec, digest_calculator_spec)
+    - Fixed 1 naming-lies finding (digest_calculator_spec)
+    - Fixed 2 presentation-coupled findings (generator_spec)
+    - All 158 tests pass, zero RuboCop offenses
+* Decisions made
+    - Used regex structural matching for HTML assertions (tolerant of whitespace/order changes)
+    - Used exact MD5 digest values to strengthen weak oracles

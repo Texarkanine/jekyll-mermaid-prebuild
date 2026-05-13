@@ -9,9 +9,8 @@ RSpec.describe JekyllMermaidPrebuild::DigestCalculator do
         content = "graph TD\nA-->B"
         digest = described_class.content_digest(content)
 
-        expect(digest).to be_a(String)
-        expect(digest.length).to eq(8)
-        expect(digest).to match(/^[0-9a-f]{8}$/)
+        expected = Digest::MD5.hexdigest(content)[0, 8]
+        expect(digest).to eq(expected)
       end
     end
 
@@ -35,11 +34,10 @@ RSpec.describe JekyllMermaidPrebuild::DigestCalculator do
     end
 
     context "with empty string" do
-      it "returns a valid digest" do
+      it "returns the MD5 digest of empty content" do
         digest = described_class.content_digest("")
 
-        expect(digest).to be_a(String)
-        expect(digest.length).to eq(8)
+        expect(digest).to eq("d41d8cd9")
       end
     end
 

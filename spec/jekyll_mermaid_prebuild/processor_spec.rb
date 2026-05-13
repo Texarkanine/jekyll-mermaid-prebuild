@@ -70,7 +70,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       it "tracks SVGs for copying" do
         _result, _count, svgs = processor.process_content(content_with_mermaid, site)
 
-        expect(svgs).not_to be_empty
+        expect(svgs.keys).to all(match(/\A[a-f0-9]{8}\z/))
+        expect(svgs.values).to all(start_with(cache_dir).and(end_with(".svg")))
       end
     end
 
