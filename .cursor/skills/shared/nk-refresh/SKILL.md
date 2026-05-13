@@ -38,14 +38,14 @@ This command performs systematic re-diagnosis when an AI agent gets stuck on a c
 
 Based on the persistent user query about a problem that likely failed to resolve previously, follow these steps:
 
-### Step 1. Load Memory Bank Files
+### Step 1: Load Memory Bank Files
 
 Read:
 - `memory-bank/active/projectbrief.md`
 - `memory-bank/systemPatterns.md`
 - `memory-bank/techContext.md`
 
-### Step 2. Progress Tracking
+### Step 2: Progress Tracking
 
 **CRITICAL**: Plan and track your diagnostics in a unique Task List File, distinct from any parent task's Task List. 
 
@@ -53,7 +53,7 @@ Read:
 - This task list is for THIS diagnostic session only
 - Always identify the correct Task List File before making updates
 
-### Step 3. Step Back & Re-Scope
+### Step 3: Step Back & Re-Scope
 
 **Forget the specifics of the last failed attempt.** Broaden your focus.
 
@@ -62,7 +62,7 @@ Read:
 - Do NOT assume you know the cause yet
 - Think about the system holistically
 
-### Step 4. Map the Relevant System Structure
+### Step 4: Map the Relevant System Structure
 
 Use tools to **map out the high-level structure and key interaction points** of the identified component(s):
 
@@ -75,7 +75,7 @@ Use tools to **map out the high-level structure and key interaction points** of 
 
 **Document findings** in the troubleshooting task list.
 
-### Step 5. Hypothesize Potential Root Causes (Broadly)
+### Step 5: Hypothesize Potential Root Causes (Broadly)
 
 Based on the system map and the problem description, generate a *broad* list of potential areas where the root cause might lie:
 
@@ -92,31 +92,31 @@ Examples:
 
 **Do NOT pick one yet.** List them all.
 
-### Step 6. Systematic Investigation & Evidence Gathering
+### Step 6: Systematic Investigation & Evidence Gathering
 
 **Prioritize and investigate** the most likely hypotheses using targeted tool usage:
 
-#### Step 6a. Validate Configurations
+#### Step 6a: Validate Configurations
 
 - Use `read_file` to check *all* relevant configuration files
 - Look for typos, wrong paths, incorrect values
 - Verify environment-specific configurations
 
-#### Step 6b. Trace Execution Flow
+#### Step 6b: Trace Execution Flow
 
 - Use `grep` or `codebase_search` to trace the execution path related to the failing functionality
 - Add temporary, descriptive logging via `search_replace` if necessary and safe
   - Request approval if the change is risky
 - Pinpoint where the failure actually occurs
 
-#### Step 6c. Check Dependencies & External Interactions
+#### Step 6c: Check Dependencies & External Interactions
 
 - Verify versions and statuses of dependencies
 - If external systems are involved, use safe commands to assess their state
   - Use `run_terminal_cmd` for diagnostics like status checks
   - Set `require_user_approval=true` if needed
 
-#### Step 6d. Examine Logs
+#### Step 6d: Examine Logs
 
 - If logs are accessible and relevant, retrieve them
 - Analyze recent entries related to the failure
@@ -124,7 +124,7 @@ Examples:
 
 **Document all findings** in the troubleshooting task list with evidence.
 
-### Step 7. Identify the Confirmed Root Cause
+### Step 7: Identify the Confirmed Root Cause
 
 Based *only* on the evidence gathered through tool-based investigation, pinpoint the **specific, confirmed root cause**.
 
@@ -133,7 +133,7 @@ Based *only* on the evidence gathered through tool-based investigation, pinpoint
 - Suggest the next most logical diagnostic step
 - Request user input if truly blocked
 
-### Step 8. Propose a Targeted Solution
+### Step 8: Propose a Targeted Solution
 
 Once the root cause is *confirmed*, propose a precise fix that directly addresses it.
 
@@ -142,7 +142,7 @@ Once the root cause is *confirmed*, propose a precise fix that directly addresse
 - Why this fix targets the identified root cause
 - How the fix will resolve the issue
 
-### Step 9. Plan Comprehensive Verification
+### Step 9: Plan Comprehensive Verification
 
 Outline how you will verify that the proposed fix:
 - Resolves the original issue
@@ -153,7 +153,7 @@ Verification must cover:
 - Negative cases
 - Edge cases applicable to the fixed component
 
-### Step 10. Execute & Verify
+### Step 10: Execute & Verify
 
 Implement the fix using appropriate tools:
 - `search_replace` for code changes
@@ -166,7 +166,7 @@ Implement the fix using appropriate tools:
 
 Document results in the troubleshooting task list.
 
-### Step 11. Report Outcome
+### Step 11: Report Outcome
 
 > 🚨 **Reporting the outcome is NOT the end!** After printing, continue immediately to the next step - do not stop.
 
@@ -178,7 +178,7 @@ Succinctly report:
 
 Update `memory-bank/active/tasks.md` and `memory-bank/active/progress.md` with the resolution.
 
-## Step 12: Phase Transition
+### Step 12: Phase Transition
 
 After successfully diagnosing and fixing the issue:
 

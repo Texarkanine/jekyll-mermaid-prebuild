@@ -1,0 +1,77 @@
+# Archive Phase - Level 4: Capstone Archive
+
+This document guides the capstone archive for a completed Level 4 task. It consolidates the entire project: the milestone list and how it evolved, each sub-run's key outcomes (inlined from their reflection documents), and the final state of the system. No separate capstone reflect is needed - sub-run reflections already captured the retrospective work; this phase combines and distills them.
+
+## Step 1: Load Memory Bank Files
+
+Read:
+- `memory-bank/active/milestones.md`
+- `memory-bank/active/projectbrief.md`
+- `memory-bank/active/activeContext.md`
+- `memory-bank/active/progress.md`
+- `memory-bank/active/reflection/` (all files - the sub-run reflections)
+
+## Step 2: Verify Prerequisites
+
+- Confirm **all milestones are checked** (`- [x]`) in `memory-bank/active/milestones.md`
+
+🚨 If any milestones remain unchecked: STOP - the project is not complete. Inform the operator which milestones remain, then wait for their instructions.
+
+## Step 3: Determine Archive Category
+
+L4 tasks almost always belong in `systems/` - they represent major, multi-run system changes. Use a different category only if the full scope of the project clearly fits a narrower one (e.g., all milestones were bug fixes → `bug-fixes/`).
+
+## Step 4: Create Archive Document
+
+Create `memory-bank/archive/<category>/YYYYMMDD-<task-id>.md`.
+
+The archive format is defined in `.cursor/rules/shared/niko/memory-bank/archives.mdc`. For Level 4, full treatment with these additional sections:
+
+- **Milestone List**: Include the complete original milestone list. Note any milestones that were added, removed, re-scoped, or reordered during execution, and why.
+- **Sub-Run Summaries**: For each completed milestone, inline the key outcomes from its reflection document - what was built, key decisions made, significant friction encountered. Do not link; inline the substance.
+- **System State**: Describe the final state of the system after all sub-runs: what exists now that didn't before, what changed, what the integration looks like end-to-end.
+- **Cross-Run Insights**: Patterns that emerged across multiple sub-runs - recurring friction, design decisions that compounded across milestones, process observations specific to the multi-run structure. Pay special attention to any "Million-Dollar Question" results that emerged across the sub-runs.
+
+If a section has no meaningful content, include the header with a brief note explaining why.
+
+## Step 5: Clear Ephemeral Files
+
+1. Delete the "ephemeral" memory-bank files.
+2. **PRESERVE** the "persistent" memory-bank files - do NOT touch them.
+
+## Step 6: Commit
+
+Commit all changes (archive document + deleted ephemeral files  & all code changes) with:
+
+```
+chore: archive <task-id> and clear memory bank
+```
+
+## Step 7: Log Progress
+
+Print a summary of the archive according to the following format:
+
+~~~markdown
+# Capstone Archive Result
+
+## Summary
+
+Archived as `memory-bank/archive/<category>/YYYYMMDD-<task-id>.md`
+
+## Milestones Completed
+
+- [milestone 1 - one-line outcome]
+- [milestone 2 - one-line outcome]
+
+## Cleaned Up
+
+[List of ephemeral files deleted, including milestones.md]
+
+## Next Steps
+
+Memory bank is clean and ready for the next task.
+
+Type `/niko` to begin.
+~~~
+
+Then wait for operator input.

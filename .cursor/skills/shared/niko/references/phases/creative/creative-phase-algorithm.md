@@ -1,0 +1,103 @@
+# Creative Phase: Algorithm Design
+
+This document guides exploration of an open question about logic and computation - how to solve a specific problem, what data structures to use, how to handle complex transformations, or performance-sensitive processing. It is loaded by the `niko-creative` skill.
+
+## Inputs
+
+The `niko-creative` skill provides:
+- The open question (problem statement, why it's ambiguous, constraints)
+- Memory bank context (if available)
+
+## Step 1: Define the Problem
+
+State precisely what needs to be computed or solved. Include:
+- **Input/Output**: Data types, ranges, volumes
+- **Requirements**: Performance targets, accuracy needs, resource constraints
+- **Invariants**: What must always hold true regardless of approach
+
+Do not proceed until the problem is concrete enough that two engineers would agree on what "correct" means.
+
+## Step 2: Enumerate Options
+
+Identify 2-4 viable algorithmic approaches. For each:
+- Name the algorithm or technique
+- One sentence describing the approach
+- Note if an existing library or standard implementation covers it
+
+Prefer well-known algorithms over novel ones. Prefer library implementations over custom ones.
+
+## Step 3: Analyze Tradeoffs
+
+Compare options against these criteria, in priority order:
+
+1. **Correctness**: Does it solve the stated problem for all valid inputs?
+2. **Simplicity**: Is this the simplest approach that meets requirements? (KISS)
+3. **Reuse**: Can we use an existing, tested implementation? (DRY)
+4. **Maintainability**: Can the team understand and modify it?
+5. **Time complexity**: Big-O for expected and worst case
+6. **Space complexity**: Memory usage at expected scale
+
+Use a comparison table when three or more options are evaluated:
+
+| Criterion | Option A | Option B | Option C |
+|-----------|----------|----------|----------|
+| Correctness | ... | ... | ... |
+| Simplicity | ... | ... | ... |
+| Time | O(?) | O(?) | O(?) |
+| Space | O(?) | O(?) | O(?) |
+
+Note key insights - the non-obvious tradeoffs, edge cases where options diverge, or constraints that eliminate options.
+
+Guard against:
+- Premature optimization (e.g. solving for scale you don't have)
+- Reinventing the wheel (e.g. a library already does this)
+- Over-engineering for hypothetical future requirements (YAGNI)
+
+## Step 4: Decide
+
+Select the winning option. State:
+- Which option was selected
+- Why it won (tied to the specific requirements and constraints)
+- What was traded away (the key tradeoff(s) accepted, if any)
+- Implementation notes: edge cases to handle, performance considerations, integration points
+
+If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
+
+## Step 5: Output Document
+
+Write to `memory-bank/active/creative/creative-[question-name].md`:
+
+~~~markdown
+# Algorithm Decision: [Question Name]
+
+## Problem
+[What needs to be computed/solved, inputs/outputs, constraints]
+
+## Options Evaluated
+- **[Option A]**: [one-line summary]
+- **[Option B]**: [one-line summary]
+
+## Analysis
+[Comparison table if 3+ options, or prose comparison for 2 options]
+
+Key insights:
+- [Non-obvious tradeoff or finding]
+- [Edge case or constraint that shaped the decision]
+
+## Decision
+
+<!-- if a high-confidence result, use this format: -->
+
+**Selected**: [Option name]
+**Rationale**: [Why this won, tied to requirements]
+**Tradeoff**: [What was accepted/sacrificed]
+
+## Implementation Notes
+- [Edge case handling]
+- [Performance consideration]
+- [Integration point]
+
+<!-- if a low-confidence result, use this format: -->
+
+**Low-Confidence Result**: [Why no clear winner emerged]
+~~~

@@ -1,0 +1,98 @@
+# Creative Phase: Generic
+
+This document guides exploration of an open question that doesn't fit one of the specialized creative phase types. It covers the long tail: naming conventions, testing strategies, process decisions, tooling choices, configuration approaches, data modeling, API design, and anything else where the approach is genuinely ambiguous. It is loaded by the `niko-creative` skill.
+
+## Inputs
+
+The `niko-creative` skill provides:
+- The open question (problem statement, why it's ambiguous, constraints)
+- Memory bank context (if available)
+
+## Step 1: Frame the Decision
+
+State precisely what needs to be decided. Include:
+- **What**: The specific choice to be made (not the surrounding context - just the decision point)
+- **Why it matters**: What downstream work depends on this decision, or what goes wrong if the wrong choice is made
+- **Constraints**: List the invariants and constraints that the correct solution must preserve. What are the hard requirements, compatibility needs, team preferences, or organizational standards that bound the option space?
+
+Do not proceed until the decision is scoped tightly enough that "we decided X" would be a meaningful, actionable statement.
+
+## Step 2: Enumerate Options
+
+Identify 2-4 viable approaches. For each:
+- Name the approach
+- One sentence describing how it addresses the open question
+- Note if existing project patterns (from `memory-bank/systemPatterns.md`) or tech context (from `memory-bank/techContext.md`) favor or conflict with this approach
+
+## Step 3: Analyze Tradeoffs
+
+Compare options against criteria relevant to THIS specific decision. There is no fixed evaluation rubric for generic decisions - instead, derive the criteria from the constraints and "why it matters" in Step 1.
+
+Common criteria to consider (use only those that apply):
+- **Consistency**: Does it align with existing project patterns and conventions?
+- **Simplicity**: Is this the simplest approach that satisfies the constraints?
+- **Maintainability**: Will the team understand this in six months?
+- **Reversibility**: How costly is it to change this decision later?
+- **Scope of impact**: How many files, modules, or workflows does this affect?
+
+Use a comparison table when three or more options are evaluated:
+
+| Criterion | Option A | Option B | Option C |
+|-----------|----------|----------|----------|
+| ... | ... | ... | ... |
+
+Note key insights - the non-obvious tradeoffs or constraints that eliminate options.
+
+Guard against:
+- Bikeshedding (spending disproportionate effort on low-impact decisions)
+- Choosing novelty over convention without clear benefit
+- Optimizing for a criterion that doesn't actually matter for this decision
+
+## Step 4: Decide
+
+Select the winning option. State:
+- Which option was selected
+- Why it won (tied to the specific constraints and criteria from Steps 1 and 3)
+- What was traded away (the key tradeoff(s) accepted, if any)
+- Implementation notes: what changes, where, and any follow-on actions
+
+If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
+
+## Step 5: Output Document
+
+Write to `memory-bank/active/creative/creative-[question-name].md`:
+
+~~~markdown
+# Decision: [Question Name]
+
+## Context
+[What needs to be decided, why it matters, constraints]
+
+## Options Evaluated
+- **[Option A]**: [one-line summary]
+- **[Option B]**: [one-line summary]
+
+## Analysis
+[Comparison table if 3+ options, or prose comparison for 2 options]
+
+Key insights:
+- [Non-obvious tradeoff or finding]
+- [Constraint that shaped the decision]
+
+## Decision
+
+<!-- if a high-confidence result, use this format: -->
+
+**Selected**: [Option name]
+**Rationale**: [Why this won, tied to constraints and criteria]
+**Tradeoff**: [What was accepted/sacrificed]
+
+## Implementation Notes
+- [What changes]
+- [Where]
+- [Follow-on actions]
+
+<!-- if a low-confidence result, use this format: -->
+
+**Low-Confidence Result**: [Why no clear winner emerged]
+~~~

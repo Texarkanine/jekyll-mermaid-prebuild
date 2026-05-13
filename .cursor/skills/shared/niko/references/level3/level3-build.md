@@ -1,0 +1,125 @@
+# Build Phase - Level 3: Intermediate Feature
+
+This document executes the implementation plan produced by the Level 3 Plan phase. It follows the plan step-by-step with TDD, reviews creative phase decisions before building, works module-by-module, and runs integration tests across components after individual modules pass.
+
+## Step 1: Load Memory Bank Files
+
+Read:
+- `memory-bank/active/tasks.md`
+- `memory-bank/active/activeContext.md`
+- `memory-bank/active/projectbrief.md`
+- `memory-bank/systemPatterns.md`
+- `memory-bank/techContext.md`
+- `memory-bank/active/progress.md`
+- All files in `memory-bank/active/creative/` (creative phase decisions)
+
+## Step 2: Verify Prerequisites
+
+- Confirm `memory-bank/active/.preflight-status` exists and contains `PASS` or `PASS WITH ADVISORY`
+- Confirm `memory-bank/active/tasks.md` contains a complete implementation plan with component analysis, resolved open questions, test plan, and ordered implementation steps
+- Confirm all open questions in the plan are marked resolved (or explicitly deferred by the operator)
+- 🚨 If preflight has not passed: STOP - invoke the `niko-preflight` skill.
+- 🚨 If the implementation plan is missing or incomplete: STOP - invoke the `niko-plan` skill.
+- 🚨 If unresolved open questions remain: STOP - inform the operator.
+
+## Step 3: Review Creative Decisions
+
+Before writing any code, review every creative phase document in `memory-bank/active/creative/`. For each decision:
+- Understand what was decided and why
+- Note the implementation notes - these are direct inputs to how you build
+- Confirm the decision is still valid given the current state of the codebase (if not, flag to operator - don't silently deviate)
+
+This step exists because creative decisions may have been made during planning, potentially several sessions ago. Build must not drift from those decisions without explicit operator approval.
+
+## Step 4: Execute Implementation
+
+Work through the implementation plan in `memory-bank/active/tasks.md` **in order**, grouped by component/module as specified in the plan. For each step:
+
+1. **TDD cycle**: Write failing tests first → implement to pass → refactor
+2. If a step references a creative phase decision, verify the implementation conforms to that decision
+3. If a step fails in a way the plan did not anticipate:
+    - **Recoverable** (typo, minor API misunderstanding): fix and continue
+    - **Plan deficiency** (wrong approach, missing dependency, broken assumption): FAIL - the plan needs revision
+    - **Creative decision invalid** (the decided approach doesn't work in practice): FAIL - needs creative re-exploration
+4. After finishing the last step in a section's list, update `memory-bank/active/tasks.md` to check off the completed step(s).
+
+When finishing a component/module's steps, run that component's unit tests in full before moving to the next component.
+
+## Step 5: Integration Testing
+
+After all component-level implementation steps are complete:
+
+1. Run integration tests that span component boundaries (as specified in the test plan)
+2. Run the full project test suite to confirm no regressions
+3. Run any linters and/or formatters to confirm mechanical correctness
+4. Run any build or packaging processes to confirm no regressions
+
+If integration tests fail:
+- **Interface mismatch** (components don't communicate as planned): fix at the boundary, re-run
+- **Architectural issue** (the integration approach itself is flawed): FAIL - needs plan revision
+
+## Step 6: Update Memory Bank
+
+1. Update `memory-bank/active/tasks.md`: mark Build phase complete in the Status section
+2. Update `memory-bank/active/activeContext.md` with:
+    - Files created or modified
+    - Key implementation decisions made during build (not already in creative docs)
+    - Any deviations from the plan and why
+    - Integration test results
+
+## Step 7: Log Progress
+
+> 🚨 **Printing this notice is NOT the end of this phase.** After printing, continue immediately to the next step - do not stop.
+
+Log the results depending on the build outcome by printing the appropriate block:
+
+### PASS
+
+~~~markdown
+# Build Result
+
+✅ PASS - Level 3
+
+## Summary
+
+- **Implementation steps completed**: [X/X]
+- **Components built**: [list]
+- **Tests passing**: [count] (including [count] new, [count] integration)
+- **Files modified**: [list]
+- **Creative decisions applied**: [count]
+
+## Deviations from Plan
+
+[Any deviations and rationale, or "None - built to plan"]
+
+## Next Steps
+
+QA review will now run automatically.
+~~~
+
+### FAIL
+
+~~~markdown
+# Build Result
+
+❌ FAIL
+
+## Reason
+
+[What failed and why]
+
+## Step That Failed
+
+[Which implementation step, what was attempted, what went wrong]
+
+## Next Steps
+
+- **Plan deficiency**: Return to `/niko-plan` to revise the implementation approach.
+- **Creative decision invalid**: Return to `/niko-plan` - the relevant open question needs re-exploration.
+- **External blocker**: Operator input required - [describe what's needed].
+~~~
+
+## Step 8: Phase Transition
+
+- If operator input is required: stop and wait for them.
+- If operator input is not required: load the appropriate complexity level-specific Niko workflow file, then use its Phase Mappings to execute the next phase.

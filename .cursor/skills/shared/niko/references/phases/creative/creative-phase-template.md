@@ -1,0 +1,130 @@
+# Creative Phase: Authoring Template
+
+This document is a meta-template for ruleset authors creating new creative phase types. It is NOT loaded during task execution. If you're an agent working on a task, you should be in one of the specialized creative phases - not here.
+
+## When to Create a New Creative Phase Type
+
+Create a new type when a domain of open questions recurs often enough that:
+1. The same evaluation criteria apply repeatedly
+2. The same Step 1 framing pattern applies repeatedly
+3. The generic creative phase produces worse results because it lacks domain-specific guidance
+
+If the above aren't true, the generic creative phase covers it. Don't create a new type for a one-off.
+
+## Contract
+
+Every creative phase type must satisfy this contract. The `niko-creative` skill depends on it.
+
+### Required Inputs Section
+
+```markdown
+## Inputs
+
+The `niko-creative` skill provides:
+- The open question (problem statement, why it's ambiguous, constraints)
+- Memory bank context (if available)
+```
+
+### Required Steps
+
+The phase must include these steps, in order. Step names and evaluation criteria should be domain-appropriate, but the structure is fixed:
+
+1. **Step 1: Frame/Define** - Scope the decision precisely. The agent should not proceed until the problem is concrete enough to evaluate options against. This step varies most across phase types (algorithm: define inputs/outputs/invariants; architecture: rank quality attributes; uiux: understand users; generic: frame the decision point).
+
+2. **Step 2: Enumerate Options** - Identify 2-4 viable approaches. Each gets a name, a one-sentence description, and a note on existing implementations or project pattern alignment.
+
+3. **Step 3: Analyze Tradeoffs** - Compare options against domain-specific evaluation criteria. Use a comparison table for 3+ options. Note key insights. Include a "guard against" list of common mistakes for this domain.
+
+4. **Step 4: Decide** - Select the winner or declare low confidence. Must include: which option, why it won, what was traded away, implementation notes. Must end with:
+   ```markdown
+   If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
+   ```
+
+5. **Step 5: Output Document** - Write to `memory-bank/active/creative/creative-[question-name].md`. The format must include at minimum:
+   - A domain-appropriate header (e.g., "Algorithm Decision:", "Architecture Decision:", "Decision:")
+   - Options Evaluated (bulleted, one-line summaries)
+   - Analysis (table or prose)
+   - Key insights
+   - Decision section with both high-confidence and low-confidence formats:
+     ```markdown
+     <!-- if a high-confidence result, use this format: -->
+     **Selected**: [Option name]
+     **Rationale**: [Why this won]
+     **Tradeoff**: [What was accepted/sacrificed]
+     <!-- if a low-confidence result, use this format: -->
+     **Low-Confidence Result**: [Why no clear winner emerged]
+     ```
+   - Implementation Notes (for high-confidence results)
+
+   Additional sections specific to the domain (e.g., architecture adds "Requirements & Constraints" and "Components"; uiux adds "User & Context" and "Design System") go before Options Evaluated.
+
+### What NOT to Include
+
+- No "Output to Operator" section. The `niko-creative` skill handles operator output by reading the Decision section of the output document.
+- No complexity-level scaling. The creative skill routes by question type, not by level. The phase type should work the same regardless of whether the parent task is L2, L3, or L4.
+- No verification checklists. The structure itself is the verification - if all steps are completed, the output is complete.
+- No mermaid workflow diagrams of the steps. The steps are linear and numbered; a diagram adds nothing.
+
+## Registration
+
+After creating a new creative phase type, update the `niko-creative` skill's Step 3 (Route to Creative Phase Type) to include the new type with:
+- A name
+- A file path
+- A one-sentence description of when to use it (what kind of open questions it handles)
+
+## Example: Skeleton
+
+New creative phase types are authored as plain Markdown resource files under `rulesets/niko/skills/niko/references/phases/creative/<name>.md` — no YAML frontmatter. The `niko-creative` skill loads them by path.
+
+~~~markdown
+# Creative Phase: [Domain Name]
+
+This document guides exploration of an open question about [domain description]. It is loaded by the `niko-creative` skill.
+
+## Inputs
+
+The `niko-creative` skill provides:
+- The open question (problem statement, why it's ambiguous, constraints)
+- Memory bank context (if available)
+
+## Step 1: [Domain-Specific Framing Verb]
+
+[Domain-specific guidance for scoping the decision]
+
+## Step 2: Enumerate Options
+
+Identify 2-4 viable approaches. For each:
+- Name the approach
+- One sentence describing how it addresses the open question
+- Note if existing project patterns favor or conflict with this approach
+
+## Step 3: Analyze Tradeoffs
+
+Compare options against these criteria:
+
+1. [Domain-specific criterion 1]
+2. [Domain-specific criterion 2]
+...
+
+[Comparison table template]
+
+Guard against:
+- [Domain-specific anti-pattern 1]
+- [Domain-specific anti-pattern 2]
+
+## Step 4: Decide
+
+Select the winning option. State:
+- Which option was selected
+- Why it won
+- What was traded away
+- Implementation notes
+
+If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
+
+## Step 5: Output Document
+
+Write to `memory-bank/active/creative/creative-[question-name].md`:
+
+[Domain-specific output document template with required sections]
+~~~

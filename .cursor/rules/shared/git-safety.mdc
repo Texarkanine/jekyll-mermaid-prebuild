@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# Git Safety Rules
+
+**Using git during exploration and troubleshooting:** Read-only git commands (`git status`, `git log`, `git diff`, `git show`, `git reflog`, `git ls-tree`, `git stash list`, etc.) are free diagnostic tools - combine, pipe, and chain them with anything. State-mutating git commands (`git stash`, `git checkout`, `git restore`, `git reset`, `git rm`, `git clean`, `git commit`, `git merge`, `git rebase`, etc.) are deliberate **checkpoints**: invoke them one at a time, with an explicit intent and a known inverse, and never chained via `&&` or pipes with failable non-git commands. If a diagnostic question needs a state-mutating op (e.g., `git stash` to run tests against clean `HEAD`), make each half its own tool call - stash, verify with `git status` / `git stash list`, do the read-only work, then run the inverse - so a failure in the middle can never strand the repo in a partial state.

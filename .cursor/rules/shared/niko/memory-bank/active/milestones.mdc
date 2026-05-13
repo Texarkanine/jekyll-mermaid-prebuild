@@ -43,10 +43,10 @@ If a milestone fails any of these criteria during preflight, it should be split,
 
 | Event | Who | Action |
 |-------|-----|--------|
-| L4 Plan phase | `.cursor/rules/shared/niko/level4/level4-plan.mdc` | Creates `memory-bank/active/milestones.md` |
+| L4 Plan phase | `.cursor/skills/shared/niko/references/level4/level4-plan.md` | Creates `memory-bank/active/milestones.md` |
 | `/niko` re-entry - sub-run complete | `/niko` Step 2a (Advance L4 Milestone) | Checks off the completed milestone (`- [ ]` → `- [x]`) |
 | `/niko` re-entry - unchecked remain | `/niko` Step 2a → Step 7 (Classify) | Classifies first unchecked as L1/L2/L3, initiates sub-run |
 | `/niko` re-entry - all `- [x]` | `/niko` Step 2a | Routes to capstone archive |
-| Capstone archive | `.cursor/rules/shared/niko/level4/level4-archive.mdc` | Deletes `memory-bank/active/milestones.md` |
+| Capstone archive | `.cursor/skills/shared/niko/references/level4/level4-archive.md` | Deletes `memory-bank/active/milestones.md` |
 
 🚨 **Do not create or modify `memory-bank/active/milestones.md` outside of these lifecycle events.** Its presence is used as a binary signal by `/niko` — creating it manually will cause `/niko` to enter L4 milestone transition routing on the next invocation.

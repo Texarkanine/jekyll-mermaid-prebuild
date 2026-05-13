@@ -1,0 +1,170 @@
+# Plan Phase - Level 2: Simple Enhancement
+
+This document creates a concrete implementation plan for a Level 2 (Simple Enhancement) task. It produces a linear, actionable plan with test-first design, technology validation, and a clear checklist - enough structure to prevent drift without the overhead of creative phases or architectural analysis.
+
+## Step 1: Load Memory Bank Files
+
+Read:
+- `memory-bank/active/tasks.md`
+- `memory-bank/active/projectbrief.md`
+- `memory-bank/systemPatterns.md`
+- `memory-bank/active/activeContext.md`
+- `memory-bank/techContext.md`
+
+## Step 2: Verify Prerequisites
+
+- Confirm `memory-bank/active/tasks.md` exists (stub created by `/niko` - it will contain the task name but not yet a full plan; that's this document's job)
+- Confirm `memory-bank/active/progress.md` exists and indicates that the current task is indeed a Level 2 task
+- Confirm `memory-bank/active/projectbrief.md` exists with the user story and requirements
+
+🚨 If any of the prerequisites are missing, STOP and inform the user (see "Output to Operator" below).
+
+## Step 3: Test Planning (TDD)
+
+- **Behavior Identification**: Enumerate the specific, observable behaviors this enhancement must exhibit when complete. Each behavior is a testable assertion, not a vague description. Frame as `[input/action] → [expected outcome]`.
+- **Edge Cases**: Identify at minimum: invalid input, boundary values, empty/null states, and interaction with existing behavior that must not regress.
+- **Test Infrastructure Survey**: Locate the project's existing test framework, runner, conventions, and directory structure. New tests must conform to established patterns - do not introduce a parallel test infrastructure. If no test infrastructure can be located, flag this as a blocking question for the operator.
+- **Test File Mapping**: For each behavior identified, specify the exact test file (existing or new) and describe the test case. If a new test file is needed, its name and location must follow existing conventions.
+
+## Step 4: Review Codebase Structure
+
+- Identify the specific files, functions, and modules that will be touched by this enhancement
+- Cross-reference against `memory-bank/systemPatterns.md` to confirm the planned touchpoints align with established patterns
+- Identify any existing utilities, helpers, or abstractions that the implementation should leverage rather than duplicate
+
+## Step 5: Create Implementation Plan
+
+- Produce a **linear, ordered** list of implementation steps. Each step must name concrete files and functions - not abstractions.
+- Each step should map to roughly one TDD cycle: write failing test → implement to pass → refactor.
+- Steps must be sequenced so that each builds on the last; no step should require backtracking.
+- Document the specific changes per file: new functions, modified signatures, added exports, config changes.
+- Include documentation update steps for any project documentation (README files, doc comments, configuration docs, user-facing guides) that would be affected by the implementation. Documentation changes are implementation work, not an afterthought.
+
+## Step 6: Identify Challenges & Mitigations
+
+- For each non-trivial step, note what could go wrong and how to handle it
+- Flag any dependency on external state (APIs, environment, config) that must be present during build
+- If any challenge suggests the task is actually Level 3+ (multiple components with design decisions, cross-cutting concerns, ambiguous requirements): FAIL with recommendation to re-level
+
+## Step 7: Technology Validation 
+
+- Document any new dependencies, build tool changes, or configuration additions
+- If new technology is introduced: Create a minimal proof-of-concept that verifies the dependency installs, builds, and runs in the project's environment
+- If no new technology: skip this step and note "No new technology - validation not required"
+
+## Step 8: Generate Plan Report
+
+1. Write the complete plan to `memory-bank/active/tasks.md` using the output format below
+2. Update `memory-bank/active/activeContext.md` with planning outcome
+
+### tasks.md Plan Format
+
+~~~markdown
+# Task: [Task name]
+
+* Task ID: [task-id]
+* Complexity: Level 2
+* Type: [task type (simple enhancement, bug fix, etc.)]
+
+[Concrete description of the enhancement]
+
+
+## Test Plan (TDD)
+
+### Behaviors to Verify
+
+- [Behavior 1]: [input/action] → [expected outcome]
+- [Behavior 2]: [input/action] → [expected outcome]
+- [Edge case 1]: [input/action] → [expected outcome]
+
+### Test Infrastructure
+
+- Framework: [existing framework name]
+- Test location: [path to test directory]
+- Conventions: [describe naming/structure conventions observed]
+- New test files: [list, or "none"]
+
+## Implementation Plan
+
+1. [Step 1 - maps to TDD cycle]
+   - Files: [file paths]
+   - Changes: [specific changes]
+2. [Step 2]
+   - Files: [file paths]
+   - Changes: [specific changes]
+
+## Technology Validation
+
+[New dependencies and validation results, or "No new technology - validation not required"]
+
+## Dependencies
+
+- [Dependency 1]
+- [Dependency 2]
+
+## Challenges & Mitigations
+
+- [Challenge 1]: [Mitigation]
+- [Challenge 2]: [Mitigation]
+
+## Status
+
+- [x] Initialization complete
+- [x] Test planning complete (TDD)
+- [x] Implementation plan complete
+- [x] Technology validation complete
+- [ ] Preflight
+- [ ] Build
+- [ ] QA
+~~~
+
+## Step 9: Log Progress
+
+> 🚨 **Printing this notice is NOT the end of this phase.** After printing, continue immediately to the next step - do not stop.
+
+Record the results by printing the appropriate block:
+
+### PASS
+
+~~~markdown
+# Plan Result
+
+✅ PASS - Level 2: Simple Enhancement
+
+## Summary
+
+- **Behaviors to verify**: [count]
+- **Implementation steps**: [count]
+- **Files affected**: [list]
+- **New dependencies**: [list or "none"]
+
+## Challenges
+
+[Brief summary of identified challenges, or "None identified"]
+
+## Next Steps
+
+Preflight validation will now run automatically.
+~~~
+
+### FAIL
+
+~~~markdown
+# Plan Result
+
+❌ FAIL
+
+## Reason
+
+[Why planning could not complete]
+
+## Next Steps
+
+- **Prerequisites missing**: Run `/niko` to initialize properly.
+- **Re-level required**: Task complexity exceeds Level 2. Discuss with operator before re-planning at Level 3+.
+~~~
+
+## Step 10: Phase Transition
+
+- If operator input is required: stop and wait for them.
+- If operator input is not required: load the appropriate complexity level-specific Niko workflow file, then use its Phase Mappings to execute the next phase.

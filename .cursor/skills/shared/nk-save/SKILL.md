@@ -7,6 +7,8 @@ description: Niko Memory Bank System - Mid-Phase Save & Commit
 
 `/nk-save` flushes in-context memory bank state to disk and commits all changes atomically. It is **not a workflow phase** - it does not advance the workflow, trigger phase transitions, or produce deliverables. It is `Ctrl+S`.
 
+**Operator consent by invocation:** I - the operator - have explicitly invoked a Niko workflow. Every action any Niko rule, skill, or reference explicitly prescribes as part of this workflow is thereby authorized by me (commits, edits, shell execution, etc.). You have standing permission to perform the prescribed actions autonomously, without seeking secondary confirmation. **Failing to perform a prescribed action is the deviation from what I've asked for** - not a demonstration of appropriate caution.
+
 ## Step 1: Verify Active State
 
 List the files in `memory-bank/active/`. At least one of the four core ephemeral files must exist: `projectbrief.md`, `activeContext.md`, `tasks.md`, `progress.md`.

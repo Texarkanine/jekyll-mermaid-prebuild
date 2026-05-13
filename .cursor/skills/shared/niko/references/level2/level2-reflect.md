@@ -1,0 +1,122 @@
+# Reflect Phase - Level 2: Simple Enhancement
+
+This document guides reflection for a Level 2 task. Keep it focused - a few sentences per section, one page max. The goal is to capture the key lesson, not write a retrospective.
+
+## Step 1: Load Memory Bank Files
+
+Read:
+- `memory-bank/active/tasks.md`
+- `memory-bank/active/projectbrief.md`
+- `memory-bank/active/activeContext.md`
+- `memory-bank/active/progress.md`
+
+## Step 2: Verify Prerequisites
+
+- Check `memory-bank/active/.qa-validation-status` exists and contains `PASS`
+- If QA has not passed: 🛑 STOP - it does not make sense to reflect on work whose correctness has not been verified. Ask the operator for clarification, and wait for their instructions. You're done for now.
+
+## Step 3: Review the Task
+
+Walk through the task from start to finish, comparing what was planned against what actually happened:
+
+- **Requirements vs Outcome**: Did the final implementation satisfy every requirement in the original plan? Were any requirements dropped, descoped, or reinterpreted during build? Were any added that weren't in the plan?
+
+- **Plan Accuracy**: Was the implementation plan's sequence, file list, and scope correct? Did steps need reordering, splitting, or adding? Were the identified challenges the ones that actually materialized - or did surprises come from elsewhere?
+
+- **Build & QA Observations**: What went smoothly during build? Where did you struggle or iterate? Did QA catch substantive issues, or was the build clean? If QA failed and required rework - what caused the gap between plan and implementation?
+
+## Step 4: Extract Insights
+
+Search hard for genuine insights - but do not reach. A forced insight pollutes the archive; an honest "nothing notable" is better than a manufactured lesson. The bar is: would this observation change how you approach a future task? If yes, write it down. If you're stretching to find something, leave the section empty.
+
+When insights do surface, they can be raw observations ("the auth module's session middleware has implicit coupling to route guards - this bit us") or concrete recommendations ("next time, check session middleware first"). Both are valuable. Patterns may only become actionable after several reflections reveal the same friction point.
+
+Categorize insights as:
+- **Technical**: patterns discovered, gotchas in the codebase, library behaviors, architectural observations
+- **Process**: workflow adjustments, estimation accuracy, phase-skipping opportunities, tooling improvements
+
+## Step 5: Million-Dollar Question
+
+> Given the changes made, examine the existing system and describe the most elegant solution that would have emerged if the change had been a foundational assumption from the start.
+
+Sometimes, the most-elegant solution is what we built - it's okay for this step to not produce a sweeping redesign!
+
+## Step 6: Write Reflection Document
+
+Create `memory-bank/active/reflection/reflection-<task-id>.md`:
+
+~~~markdown
+---
+task_id: [task-id]
+date: YYYY-MM-DD
+complexity_level: 2
+---
+
+# Reflection: [Task Name]
+
+## Summary
+
+[1-2 sentence summary of what was built and whether it succeeded]
+
+## Requirements vs Outcome
+
+[Did we deliver what was asked? Any gaps or additions?]
+
+## Plan Accuracy
+
+[Was the plan right? What surprised us?]
+
+## Build & QA Observations
+
+[What went well, what was hard, what QA caught]
+
+## Insights
+
+### Technical
+- [Concrete technical insight, or "Nothing notable"]
+
+### Process
+- [Concrete process insight, or "Nothing notable"]
+
+### Million-Dollar Question
+
+[Result from Step 5, or "Nothing notable"]
+~~~
+
+## Step 7: Reconcile Persistent Files
+
+Load `.cursor/skills/shared/niko/references/core/reconcile-persistent.md` and follow its instructions.
+
+## Step 8: Update Memory Bank
+
+1. Update `memory-bank/active/activeContext.md` with reflection outcome
+2. Update `memory-bank/active/progress.md`: record completion of the Reflect phase
+3. 🚨 ***CRITICAL:*** Commit all changes - memory bank *and* other resources - to source control using a conventional commit in the following format: `chore: reflected on [task-id]`.
+
+## Step 9: Log Progress
+
+Check whether `memory-bank/active/milestones.md` exists to determine the appropriate next step:
+- **milestones.md exists** (L4 sub-run): the next step is `Run /niko to continue to the next milestone.`
+- **milestones.md does not exist** (standalone task): the next step is `Run /niko-archive to create the archive document and finalize the current project.`
+
+Print a summary of the reflection according to the following format:
+
+~~~markdown
+# Reflect Result
+
+## Summary
+
+[1-2 sentence summary]
+
+## Key Insights
+
+- [Most important insight, or "Nothing notable - clean execution"]
+
+## Next Steps
+
+[next step determined above]
+~~~
+
+## Step 10: Phase Transition
+
+Reflection is a terminal node. Stop and wait for operator input.
