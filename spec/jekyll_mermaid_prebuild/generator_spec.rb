@@ -330,8 +330,8 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       html = generator.build_figure_html("/assets/svg/abc.svg", dark_url: "/assets/svg/abc-dark.svg")
 
       expect(html).to match(/@media\s*\(prefers-color-scheme:\s*dark\)/)
-      expect(html).to match(%r{<a[^>]*class="mermaid-diagram__light"[^>]*href="/assets/svg/abc\.svg"})
-      expect(html).to match(%r{<a[^>]*class="mermaid-diagram__dark"[^>]*href="/assets/svg/abc-dark\.svg"})
+      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__light")(?=[^>]*href="/assets/svg/abc\.svg")[^>]*>})
+      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__dark")(?=[^>]*href="/assets/svg/abc-dark\.svg")[^>]*>})
       expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
       expect(html).to match(%r{<img[^>]*src="/assets/svg/abc-dark\.svg"})
     end

@@ -65,5 +65,5 @@ No new technology - validation not required.
 - [x] Implementation plan complete
 - [x] Technology validation complete
 - [x] Preflight
-- [ ] Build
+- [x] Build
 - [ ] QA
