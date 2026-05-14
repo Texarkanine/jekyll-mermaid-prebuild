@@ -50,3 +50,10 @@ Fix 7 test smell findings (vacuous-assertion, naming-lies, presentation-coupled)
     - Persistent files checked — no updates needed (test-only changes)
 * Insights
     - Clean execution, no notable lessons beyond the task itself
+
+## 2026-05-14 - REWORK INITIATED
+
+* Rework context (from PR #30 review feedback — @llamapreview[bot] and @coderabbitai[bot]):
+    - **`processor_spec.rb` L73**: Removing `not_to be_empty` and replacing with shape assertions (`all(match(...))`) introduced a vacuous-pass regression. In Ruby, `[].all? { ... }` returns `true`, so both shape checks pass silently when `svgs = {}`. Restore `expect(svgs).not_to be_empty` as a guard before the shape assertions.
+    - **`generator_spec.rb` L333-334**: The regex patterns `<a[^>]*class="..."[^>]*href="..."` encode attribute order. If production ever emits `href` before `class` the test fails on a cosmetically-identical output. Replace with lookahead-based regexes that verify both attributes exist on the same element without prescribing order: `/<a(?=[^>]*class="...")(?=[^>]*href="...")[^>]*>/`
+    - Note: Reviewers' suggested "split into separate checks" approach would weaken coverage; lookahead is the correct fix.
