@@ -71,13 +71,19 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
 
     context "with empty SVGs hash" do
       it "does nothing" do
-        expect { described_class.copy_svgs_to_site(site, config, {}) }.not_to raise_error
+        described_class.copy_svgs_to_site(site, config, {})
+
+        expect(Dir.exist?(File.join(dest_dir, "assets/svg"))).to be false
+        expect(Dir.children(@temp_dir)).not_to include("site")
       end
     end
 
     context "with nil SVGs" do
       it "does nothing" do
-        expect { described_class.copy_svgs_to_site(site, config, nil) }.not_to raise_error
+        described_class.copy_svgs_to_site(site, config, nil)
+
+        expect(Dir.exist?(File.join(dest_dir, "assets/svg"))).to be false
+        expect(Dir.children(@temp_dir)).not_to include("site")
       end
     end
   end

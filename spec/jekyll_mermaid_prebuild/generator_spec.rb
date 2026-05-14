@@ -318,22 +318,22 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
     it "generates figure with linked image" do
       html = generator.build_figure_html("/assets/svg/abc.svg")
 
-      expect(html).to include('<figure class="mermaid-diagram">')
-      expect(html).to include('<a href="/assets/svg/abc.svg">')
-      expect(html).to include('<img src="/assets/svg/abc.svg" alt="Mermaid Diagram">')
-      expect(html).to include("</a>")
-      expect(html).to include("</figure>")
+      expect(html).to match(/<figure[^>]*class="mermaid-diagram"/)
+      expect(html).to match(%r{<a[^>]*href="/assets/svg/abc\.svg"})
+      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
+      expect(html).to match(/<img[^>]*alt="Mermaid Diagram"/)
+      expect(html).to match(%r{</a>})
+      expect(html).to match(%r{</figure>})
     end
 
     it "emits two links and prefers-color-scheme CSS when dark_url is set" do
       html = generator.build_figure_html("/assets/svg/abc.svg", dark_url: "/assets/svg/abc-dark.svg")
 
-      expect(html).to include("@media (prefers-color-scheme: dark)")
-      expect(html).to include('class="mermaid-diagram__light"')
-      expect(html).to include('class="mermaid-diagram__dark"')
-      expect(html).to include('<a class="mermaid-diagram__light" href="/assets/svg/abc.svg">')
-      expect(html).to include('<a class="mermaid-diagram__dark" href="/assets/svg/abc-dark.svg"')
-      expect(html).to include('src="/assets/svg/abc-dark.svg"')
+      expect(html).to match(/@media\s*\(prefers-color-scheme:\s*dark\)/)
+      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__light")(?=[^>]*href="/assets/svg/abc\.svg")[^>]*>})
+      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__dark")(?=[^>]*href="/assets/svg/abc-dark\.svg")[^>]*>})
+      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
+      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc-dark\.svg"})
     end
   end
 end
