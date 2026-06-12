@@ -322,8 +322,8 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       expect(html).to match(%r{<a[^>]*href="/assets/svg/abc\.svg"})
       expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
       expect(html).to match(/<img[^>]*alt="Mermaid Diagram"/)
-      expect(html).to match(%r{</a>})
-      expect(html).to match(%r{</figure>})
+      expect(html).to include("</a>")
+      expect(html).to include("</figure>")
     end
 
     it "emits two links and prefers-color-scheme CSS when dark_url is set" do
