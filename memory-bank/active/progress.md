@@ -13,3 +13,14 @@ Migrate SimpleCov `add_filter` → `skip` in `spec/spec_helper.rb` to clear Simp
     - Level 1 workflow (build → QA; skip plan/creative/preflight/reflect/archive)
 * Insights
     - Dependency bump already in #40; this is leftover config hygiene only
+
+## 2026-07-15 - BUILD - COMPLETE
+
+* Work completed
+    - TDD: added `simplecov_config_spec.rb` asserting `skip` and no `add_filter`
+    - Migrated filters to `skip "spec/"` / `skip "vendor/"` in `spec/spec_helper.rb`
+    - Full RSpec suite (159 examples) and RuboCop clean after lint fixes in the new spec
+* Decisions made
+    - Prefer clearer `spec/` / `vendor/` path forms called out in #41 over keeping leading-slash strings
+* Insights
+    - Deprecation messages print at load time before examples run; source-contract test is the reliable assertion

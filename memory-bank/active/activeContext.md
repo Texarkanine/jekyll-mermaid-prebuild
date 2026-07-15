@@ -1,11 +1,12 @@
 # Active Context
 
 ## Current Task: issue-41-simplecov-skip
-**Phase:** COMPLEXITY-ANALYSIS - COMPLETE
+**Phase:** BUILD - COMPLETE
 
 ## What Was Done
-- Confirmed intent from [#41](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/41): migrate SimpleCov `add_filter` → `skip` in `spec/spec_helper.rb`
-- Determined complexity Level 1 (quick bug fix / deprecation hygiene, single file)
+- Added failing contract spec for SimpleCov `skip` vs deprecated `add_filter`
+- Migrated `spec/spec_helper.rb` to `skip "spec/"` and `skip "vendor/"`
+- Confirmed single test and full suite pass with no SimpleCov deprecation warnings
 
 ## Next Step
-- Load Level 1 workflow and execute Build phase
+- Execute Level 1 QA phase (`niko-qa`)
