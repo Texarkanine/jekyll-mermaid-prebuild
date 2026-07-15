@@ -1,12 +1,12 @@
 # Active Context
 
 ## Current Task: issue-41-simplecov-skip
-**Phase:** BUILD - COMPLETE
+**Phase:** QA - COMPLETE (wrap-up)
 
 ## What Was Done
-- Added failing contract spec for SimpleCov `skip` vs deprecated `add_filter`
-- Migrated `spec/spec_helper.rb` to `skip "spec/"` and `skip "vendor/"`
-- Confirmed single test and full suite pass with no SimpleCov deprecation warnings
+- Level 1 build + QA complete for #41
+- Persistent files reconciled (no updates needed)
+- Ready to open PR
 
 ## Next Step
-- Execute Level 1 QA phase (`niko-qa`)
+- Open GitHub PR; operator may later `rm -rf memory-bank/active` per L1 wrap-up

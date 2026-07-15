@@ -24,3 +24,13 @@ Migrate SimpleCov `add_filter` → `skip` in `spec/spec_helper.rb` to clear Simp
     - Prefer clearer `spec/` / `vendor/` path forms called out in #41 over keeping leading-slash strings
 * Insights
     - Deprecation messages print at load time before examples run; source-contract test is the reliable assertion
+
+## 2026-07-15 - QA - COMPLETE
+
+* Work completed
+    - Semantic review against project brief and system patterns
+    - Wrote `.qa-validation-status` PASS
+* Decisions made
+    - No code changes required in QA
+* Insights
+    - Persistent techContext still accurate (mentions SimpleCov + Cobertura, not filter API)

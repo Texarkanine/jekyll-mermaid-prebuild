@@ -9,3 +9,7 @@
 - [x] **Fix:** Replaced with `skip "spec/"` and `skip "vendor/"` (SimpleCov 1.0 API; clearer path forms per #41)
 - [x] **Files:** `spec/spec_helper.rb`, `spec/jekyll_mermaid_prebuild/simplecov_config_spec.rb`
 - [x] **Test:** Contract example asserts helper uses `skip` and not `add_filter`
+
+## QA
+
+- [x] Semantic review PASS — minimal migration, requirements complete, no debris
