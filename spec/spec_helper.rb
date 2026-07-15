@@ -7,8 +7,8 @@ require "simplecov-cobertura"
 SimpleCov.start do
   formatter SimpleCov::Formatter::CoberturaFormatter if ENV["CI"]
 
-  add_filter "/spec/"
-  add_filter "/vendor/"
+  skip "spec/"
+  skip "vendor/"
 end
 
 require "tmpdir"
