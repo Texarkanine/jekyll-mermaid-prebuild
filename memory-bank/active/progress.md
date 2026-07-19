@@ -167,3 +167,13 @@ Parent: Mutant + SLOBAC remediations on `feat/mutation-testing` (PR #44). Rework
     - Level 2 — two corrective remediations in separate components (`hooks.rb` + `mmdc_wrapper.rb`) with matching spec updates; no architecture.
 * Insights
     - Scope deliberately narrow: only dispositions judged "fix in this PR"; AI-review false alarms on public-API / edge-case fidelity stay dismissed.
+
+## 2026-07-19 - PLAN - COMPLETE
+
+* Work completed
+    - Full L2 plan in `tasks.md` (5 steps: hooks oracle → hooks fix → tempfile oracle → tempfile fix → gates).
+* Decisions made
+    - No creative phase; remediations prescribed by judged PR dispositions.
+    - Observe Tempfile unlink without stubbing `MmdcWrapper` SUT.
+* Insights
+    - Main already had `ensure`/`close!` on `test_render`; branch regression is the cleanup drop.

@@ -1,12 +1,11 @@
 # Active Context
 
 ## Current Task: mutation-testing-pr44-feedback
-**Phase:** COMPLEXITY-ANALYSIS - COMPLETE
+**Phase:** PLAN - COMPLETE
 
 ## What Was Done
-- Classified PR #44 feedback rework as Level 2 (two small corrective changes across Hooks + MmdcWrapper, plus matching specs).
-- In-scope: page error `relative_path` logging; `test_render` tempfile cleanup.
-- Out of scope: Hooks.register shim, pad_label duplicate-line revert, output_dir `//` revert, `each_line` style nit.
+- Level 2 plan written: 5 steps (hooks specs → hooks fix → mmdc specs → mmdc fix → gates).
+- Scope locked to two PR #44 dispositions; dismissed items excluded.
 
 ## Next Step
-- Load Level 2 workflow → Plan phase.
+- Preflight validation (autonomous L2 transition).
