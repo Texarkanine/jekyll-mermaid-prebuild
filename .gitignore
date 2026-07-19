@@ -60,3 +60,10 @@ build-iPhoneSimulator/
 
 # Planning/memory bank files
 planning/
+
+# Mutant local results
+.mutant/
+
+# Accidental cwd artifacts from SVG copy tests
+/*.svg
+/assets/

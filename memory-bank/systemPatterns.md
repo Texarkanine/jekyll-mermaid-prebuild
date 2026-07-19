@@ -28,4 +28,4 @@ The processor uses a line-by-line state machine with a fence stack to track nest
 
 ## Module Organization
 
-All modules live under the `JekyllMermaidPrebuild` namespace. Stateless utility modules (`DigestCalculator`, `MmdcWrapper`, `Hooks`) use `module_function` — they have no instance state and are called directly on the module. Stateful components (`Configuration`, `Generator`, `Processor`) are classes instantiated per-build.
+All modules live under the `JekyllMermaidPrebuild` namespace. Stateless utility modules (`DigestCalculator`, `MmdcWrapper`, `Hooks`, `EmojiCompensator`, `SvgPostProcessor`) expose APIs as `def self.` class methods — they have no instance state and are called directly on the module. Stateful components (`Configuration`, `Generator`, `Processor`) are classes instantiated per-build.

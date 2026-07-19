@@ -4,8 +4,6 @@ module JekyllMermaidPrebuild
   # Stateless module: compensates for headless Chromium emoji width undermeasurement
   # by appending &nbsp; padding to emoji-containing node labels before mmdc renders.
   module EmojiCompensator
-    module_function
-
     # Match a single Extended_Pictographic codepoint (emoji).
     EMOJI_RE = /\p{Extended_Pictographic}/
 
@@ -15,28 +13,22 @@ module JekyllMermaidPrebuild
     #
     # @param mermaid_source [String] raw Mermaid diagram source
     # @return [String, nil] diagram type keyword (e.g. "flowchart", "sequenceDiagram") or nil
-    def detect_diagram_type(mermaid_source)
-      return nil if !mermaid_source || mermaid_source.strip.empty?
+    def self.detect_diagram_type(mermaid_source)
+      return nil unless mermaid_source
 
       in_frontmatter = false
-      frontmatter_delim_count = 0
 
       mermaid_source.each_line do |line|
         stripped = line.strip
-        # Track YAML frontmatter
         if stripped == "---"
-          frontmatter_delim_count += 1
-          in_frontmatter = frontmatter_delim_count.odd?
+          in_frontmatter = !in_frontmatter
           next
         end
         next if in_frontmatter
         next if stripped.empty?
         next if stripped.start_with?("%%")
 
-        # First token of first non-skipped line
-        token = stripped.split(/\s+/, 2).first
-        return nil if token.nil? || token.empty?
-
+        token = stripped[/\A\S+/]
         return token == "graph" ? "flowchart" : token
       end
 
@@ -49,10 +41,10 @@ module JekyllMermaidPrebuild
     # @param mermaid_source [String] Mermaid diagram source
     # @param diagram_type [String] result of detect_diagram_type
     # @return [String] possibly modified source
-    def compensate(mermaid_source, diagram_type)
-      return mermaid_source if diagram_type != "flowchart"
+    def self.compensate(mermaid_source, diagram_type)
+      return compensate_flowchart_labels(mermaid_source) if diagram_type == "flowchart"
 
-      compensate_flowchart_labels(mermaid_source)
+      mermaid_source
     end
 
     BR_RE = %r{(<br\s*/?>)}i
@@ -62,7 +54,7 @@ module JekyllMermaidPrebuild
     #
     # @param text [String]
     # @return [Integer]
-    def count_emoji(text)
+    def self.count_emoji(text)
       text.scan(EMOJI_RE).length
     end
 
@@ -71,46 +63,48 @@ module JekyllMermaidPrebuild
     #
     # @param text [String]
     # @return [Integer]
-    def visual_length(text)
+    def self.visual_length(text)
       text.length + count_emoji(text)
     end
 
     # Pad the longest line in a label if it contains emoji.
     # Splits on <br/> variants, finds the visually longest line, and only
     # pads that line (shorter lines center naturally in the wider container).
-    # Returns content unchanged if the longest line has no emoji.
+    # When no padding is applied, returns the same String object (identity),
+    # not merely an equal copy.
     #
     # @param content [String] raw label text (may contain <br/> line breaks)
     # @return [String] possibly padded label text
-    def pad_label_content(content)
-      parts = content.split(BR_RE)
-      line_indices = (0...parts.length).step(2).to_a
-      return content if line_indices.empty?
+    def self.pad_label_content(content)
+      segments = content.split(BR_RE)
+      # Even indices are text lines; odd indices are the captured <br> delimiters.
+      line_pairs = segments.each_with_index.select { |_segment, index| index.even? }
+      return content if line_pairs.empty?
 
-      longest_part_idx = line_indices.max_by { |i| visual_length(parts[i]) }
-      longest_line = parts[longest_part_idx]
-      n = count_emoji(longest_line)
-      return content unless n.positive?
+      # max_by keeps the first of equal-length ties — pad that one index only.
+      longest_line, longest_idx = line_pairs.max_by { |segment, _index| visual_length(segment) }
+      emoji_count = count_emoji(longest_line)
+      return content unless emoji_count.positive?
 
-      parts[longest_part_idx] = "#{longest_line}#{NBSP * (n * 2)}"
-      parts.join
+      segments[longest_idx] = "#{longest_line}#{NBSP * (emoji_count * 2)}"
+      segments.join
     end
 
-    def compensate_flowchart_labels(source)
-      result = source.dup
+    def self.compensate_flowchart_labels(source)
+      result = source
 
       [
-        [/\["(.*?)"\]/m, '["', '"]'],
-        [/\['(.*?)'\]/m, "['", "']"],
-        [/\("(.*?)"\)/m, '("', '")'],
-        [/\{"(.*?)"\}/m, '{"', '"}']
+        [/\["(.+?)"\]/m, '["', '"]'],
+        [/\['(.+?)'\]/m, "['", "']"],
+        [/\("(.+?)"\)/m, '("', '")'],
+        [/\{"(.+?)"\}/m, '{"', '"}']
       ].each do |regex, open_str, close_str|
         result = result.gsub(regex) do
           "#{open_str}#{pad_label_content(Regexp.last_match(1))}#{close_str}"
         end
       end
 
-      result.gsub(%r{\[/"((?:[^"\\]|\\.)*)"/\]}m) do
+      result.gsub(%r{\[/"((?:[^"\\]|\\.)+?)"/\]}) do
         "[/\"#{pad_label_content(Regexp.last_match(1))}\"/]"
       end
     end

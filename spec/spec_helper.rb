@@ -1,14 +1,16 @@
 # frozen_string_literal: true
 
-require "simplecov"
-require "simplecov-cobertura"
+unless defined?(Mutant)
+  require "simplecov"
+  require "simplecov-cobertura"
 
-# Configure coverage formatter for CI environments (Codecov)
-SimpleCov.start do
-  formatter SimpleCov::Formatter::CoberturaFormatter if ENV["CI"]
+  # Configure coverage formatter for CI environments (Codecov)
+  SimpleCov.start do
+    formatter SimpleCov::Formatter::CoberturaFormatter if ENV["CI"]
 
-  skip "spec/"
-  skip "vendor/"
+    skip "spec/"
+    skip "vendor/"
+  end
 end
 
 require "tmpdir"

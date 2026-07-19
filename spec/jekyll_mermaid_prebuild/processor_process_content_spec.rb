@@ -63,7 +63,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         result, count, = processor.process_content(content_with_mermaid, site)
 
         expect(count).to eq(1)
-        expect(result).to include("<figure class=\"mermaid-diagram\">")
+        expect(mermaid_figures(result).size).to eq(1)
         expect(result).not_to include("```mermaid")
       end
 
@@ -73,6 +73,12 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         expect(svgs).not_to be_empty
         expect(svgs.keys).to all(match(/\A[a-f0-9]{8}\z/))
         expect(svgs.values).to all(start_with(cache_dir).and(end_with(".svg")))
+      end
+
+      it "returns SVG path hash from generate" do
+        _result, _count, svgs = processor.process_content(content_with_mermaid, site)
+
+        expect(svgs).to eq("abc12345" => File.join(cache_dir, "abc12345.svg"))
       end
     end
 
@@ -107,7 +113,28 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         result, count, _svgs = processor.process_content(content_with_multiple, site)
 
         expect(count).to eq(2)
-        expect(result.scan("<figure class=\"mermaid-diagram\">").length).to eq(2)
+        expect(mermaid_figures(result).size).to eq(2)
+      end
+
+      it "replaces every block when earlier replacements change string length" do
+        content = <<~MARKDOWN
+          ```mermaid
+          first-diagram
+          ```
+
+          filler paragraph between blocks
+
+          ```mermaid
+          second-diagram
+          ```
+        MARKDOWN
+
+        result, count, _svgs = processor.process_content(content, site)
+
+        expect(count).to eq(2)
+        expect(result).not_to include("first-diagram")
+        expect(result).not_to include("second-diagram")
+        expect(mermaid_figures(result).size).to eq(2)
       end
     end
 
@@ -125,8 +152,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
     end
 
     context "emoji width compensation integration" do
-      # P1: Flowchart with emoji + compensation enabled → EmojiCompensator called
-      it "calls EmojiCompensator when flowchart has emoji and compensation enabled" do
+      it "passes emoji-compensated source containing nbsp to generate when enabled" do
         config_with_comp = instance_double(
           JekyllMermaidPrebuild::Configuration,
           **configuration_processor_attrs(
@@ -147,11 +173,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         end
 
         proc_with_comp.process_content(content, site)
-
-        expect(generator).to have_received(:generate)
       end
 
-      # P2: Flowchart with emoji + compensation NOT enabled → EmojiCompensator NOT applied
       it "does not compensate when emoji_width_compensation is not enabled for flowchart" do
         content = <<~MARKDOWN
           ```mermaid
@@ -165,11 +188,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         end
 
         processor.process_content(content, site)
-
-        expect(generator).to have_received(:generate)
       end
 
-      # P3: Sequence diagram + compensation enabled for flowchart only → no compensation
       it "does not compensate sequence diagrams when only flowchart is enabled" do
         config_flowchart_only = instance_double(
           JekyllMermaidPrebuild::Configuration,
@@ -191,11 +211,8 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         end
 
         proc_flowchart_only.process_content(content, site)
-
-        expect(generator).to have_received(:generate)
       end
 
-      # P4: Cache key includes compensated source (different from uncompensated)
       it "uses different cache key for compensated vs uncompensated same diagram" do
         config_with_comp = instance_double(
           JekyllMermaidPrebuild::Configuration,
@@ -420,7 +437,7 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         expect(result).to include("```mermaid\ngraph TD")
 
         # The real diagram should be converted
-        expect(result).to include("<figure class=\"mermaid-diagram\">")
+        expect(mermaid_figures(result).size).to eq(1)
         expect(result).not_to include("flowchart LR")
       end
 
@@ -456,6 +473,80 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
         result, count, _svgs = processor.process_content(content, site)
 
         expect(count).to eq(0)
+        expect(result).to include("```mermaid")
+      end
+    end
+
+    context "when content is nil" do
+      it "returns early without processing" do
+        expect(processor.process_content(nil)).to eq([nil, 0, {}])
+      end
+    end
+
+    it "does not mutate the original content string" do
+      content = "```mermaid\nA-->B\n```\n"
+      original = content.dup
+
+      processor.process_content(content, site)
+
+      expect(content).to eq(original)
+    end
+
+    it "preserves characters immediately after the replaced block" do
+      content = "```mermaid\nA\n```\nTAIL"
+
+      result, count, = processor.process_content(content, site)
+
+      expect(count).to eq(1)
+      expect(result).to end_with("TAIL")
+    end
+
+    context "when generation fails for the first block only" do
+      let(:content_with_two_blocks) do
+        <<~MARKDOWN
+          ```mermaid
+          first
+          ```
+
+          ```mermaid
+          second
+          ```
+        MARKDOWN
+      end
+
+      it "continues converting later blocks" do
+        calls = 0
+        allow(generator).to receive(:generate) do |_source, key, **_kwargs|
+          calls += 1
+          next nil if calls == 1
+
+          path = File.join(cache_dir, "#{key}.svg")
+          File.write(path, "<svg/>")
+          { key => path }
+        end
+
+        result, count, svgs = processor.process_content(content_with_two_blocks, site)
+
+        # Blocks are converted last-to-first for stable string offsets: the first
+        # generate call (returns nil) is the later "second" block; the second call succeeds for "first".
+        expect(count).to eq(1)
+        expect(result).not_to include("```mermaid\nfirst\n```")
+        expect(result).to include("```mermaid\nsecond\n```")
+        expect(mermaid_figures(result).size).to eq(1)
+        expect(svgs).not_to be_empty
+      end
+    end
+
+    context "when convert_block returns empty paths" do
+      before do
+        allow(generator).to receive(:generate).and_return({})
+      end
+
+      it "skips conversion and leaves the block in place" do
+        result, count, svgs = processor.process_content(content_with_mermaid, site)
+
+        expect(count).to eq(0)
+        expect(svgs).to be_empty
         expect(result).to include("```mermaid")
       end
     end

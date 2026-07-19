@@ -1,0 +1,15 @@
+usage: opensource
+
+integration:
+  name: rspec
+
+includes:
+  - lib
+  - spec
+
+requires:
+  - ./spec/support/mutant_setup.rb
+
+matcher:
+  subjects:
+    - JekyllMermaidPrebuild*

@@ -44,6 +44,24 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         end
       end
 
+      it "creates the cache directory when missing" do
+        FileUtils.rm_rf(cache_dir)
+
+        generator.generate(mermaid_source, cache_key)
+
+        expect(Dir.exist?(cache_dir)).to be true
+      end
+
+      it "passes mermaid source to mmdc" do
+        generator.generate(mermaid_source, cache_key)
+
+        expect(JekyllMermaidPrebuild::MmdcWrapper).to have_received(:render).with(
+          mermaid_source,
+          File.join(cache_dir, "#{cache_key}.svg"),
+          theme: :default
+        )
+      end
+
       it "calls mmdc and returns cache path" do
         result = generator.generate(mermaid_source, cache_key)
 
@@ -69,6 +87,38 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         result = generator.generate(mermaid_source, cache_key)
 
         expect(result).to be_nil
+      end
+    end
+
+    context "when prefers_color_scheme is :light" do
+      let(:config) do
+        instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_generator_attrs(cache_dir, prefers_color_scheme: :light, chart_background_light: "#fff0aa")
+        )
+      end
+
+      before do
+        FileUtils.mkdir_p(cache_dir)
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path, **_opts|
+          File.write(output_path, '<svg style="background-color: white;"></svg>')
+          true
+        end
+      end
+
+      it "renders with the default theme" do
+        generator.generate(mermaid_source, cache_key)
+
+        expect(JekyllMermaidPrebuild::MmdcWrapper).to have_received(:render).with(
+          mermaid_source,
+          File.join(cache_dir, "#{cache_key}.svg"),
+          theme: :default
+        )
+      end
+
+      it "uses the configured light chart background" do
+        paths = generator.generate(mermaid_source, cache_key)
+        expect(File.read(paths[cache_key])).to include("background-color: #fff0aa;")
       end
     end
 
@@ -120,7 +170,11 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       let(:config) do
         instance_double(
           JekyllMermaidPrebuild::Configuration,
-          **configuration_generator_attrs(cache_dir, prefers_color_scheme: :auto)
+          **configuration_generator_attrs(
+            cache_dir,
+            prefers_color_scheme: :auto,
+            chart_background_light: "#fff0aa"
+          )
         )
       end
 
@@ -143,15 +197,63 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
         expect(paths.keys).to contain_exactly(cache_key, "#{cache_key}-dark")
       end
 
+      it "creates the cache directory when missing" do
+        FileUtils.rm_rf(cache_dir)
+
+        generator.generate(mermaid_source, cache_key)
+
+        expect(Dir.exist?(cache_dir)).to be true
+      end
+
       it "applies light and dark chart backgrounds (default white / black)" do
         paths = generator.generate(mermaid_source, cache_key)
 
         light_svg = File.read(paths[cache_key])
         dark_svg = File.read(paths["#{cache_key}-dark"])
 
-        expect(light_svg).to include("background-color: white;")
+        expect(light_svg).to include("background-color: #fff0aa;")
         expect(dark_svg).to include("background-color: black;")
         expect(dark_svg).not_to include("background-color: white")
+      end
+
+      it "renders the light variant with the default theme" do
+        generator.generate(mermaid_source, cache_key)
+
+        expect(JekyllMermaidPrebuild::MmdcWrapper).to have_received(:render).with(
+          mermaid_source,
+          File.join(cache_dir, "#{cache_key}.svg"),
+          theme: :default
+        )
+      end
+
+      it "renders the dark variant with the dark theme" do
+        generator.generate(mermaid_source, cache_key)
+
+        expect(JekyllMermaidPrebuild::MmdcWrapper).to have_received(:render).with(
+          mermaid_source,
+          File.join(cache_dir, "#{cache_key}-dark.svg"),
+          theme: :dark
+        )
+      end
+
+      it "passes mermaid source to both render calls" do
+        generator.generate("flowchart LR\nX-->Y", cache_key)
+
+        expect(JekyllMermaidPrebuild::MmdcWrapper).to have_received(:render).with(
+          "flowchart LR\nX-->Y",
+          anything,
+          theme: :default
+        )
+        expect(JekyllMermaidPrebuild::MmdcWrapper).to have_received(:render).with(
+          "flowchart LR\nX-->Y",
+          anything,
+          theme: :dark
+        )
+      end
+
+      it "post-processes the light variant" do
+        paths = generator.generate(mermaid_source, cache_key)
+        expect(File.read(paths[cache_key])).to include("text-align:center")
       end
 
       context "when light exists but dark does not" do
@@ -195,6 +297,17 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
           expect(generator.generate(mermaid_source, cache_key)).to be_nil
         end
       end
+
+      context "when light render fails" do
+        before do
+          allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render).and_return(false)
+        end
+
+        it "returns nil without attempting dark post-processing" do
+          expect(generator.generate(mermaid_source, cache_key)).to be_nil
+          expect(File.exist?(File.join(cache_dir, "#{cache_key}-dark.svg"))).to be false
+        end
+      end
     end
 
     context "when edge_label_padding is positive" do
@@ -219,16 +332,91 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       end
 
       it "widens edge label foreignObjects regardless of diagram type" do
-        paths = padded_generator.generate("flowchart LR\n  A --> B", "edgepad1", diagram_type: "flowchart")
+        paths = padded_generator.generate("flowchart LR\n  A --> B", "edgepad1")
         path = paths["edgepad1"]
+        expected_width = 40 + 5 # fixture foreignObject width + edge_label_padding
 
-        expect(File.read(path)).to include('width="45"')
+        expect(File.read(path)).to include(%(width="#{expected_width}"))
+      end
+    end
+
+    context "when edge_label_padding is non-numeric" do
+      let(:bad_padding_config) do
+        instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_generator_attrs(cache_dir, edge_label_padding: "5")
+        )
+      end
+      let(:bad_padding_generator) { described_class.new(bad_padding_config) }
+      let(:svg_with_edge_labels) do
+        '<svg xmlns="http://www.w3.org/2000/svg">' \
+          '<g class="edgeLabel"><g class="label"><foreignObject width="40" height="10"></foreignObject></g></g></svg>'
+      end
+
+      before do
+        FileUtils.mkdir_p(cache_dir)
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
+          File.write(output_path, svg_with_edge_labels)
+          true
+        end
+      end
+
+      it "does not widen edge labels" do
+        paths = bad_padding_generator.generate("graph TD\nA-->B", "nopadstr1")
+        expect(File.read(paths["nopadstr1"])).to include('width="40"')
+      end
+    end
+
+    context "when post-processing leaves content unchanged" do
+      let(:already_processed) do
+        '<svg style="background-color: white;"><style>' \
+          "foreignObject > div{display:block !important;text-align:center;}" \
+          "foreignObject{overflow:visible;}</style></svg>"
+      end
+
+      before do
+        FileUtils.mkdir_p(cache_dir)
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
+          File.write(output_path, already_processed)
+          true
+        end
+      end
+
+      it "does not rewrite the cache file after the initial mmdc write" do
+        cache_path = File.join(cache_dir, "noopcache1.svg")
+        allow(File).to receive(:write).and_call_original
+
+        generator.generate(mermaid_source, "noopcache1")
+
+        # One write from the mmdc stub; post_process must not write again.
+        expect(File).to have_received(:write).with(cache_path, already_processed).once
+      end
+    end
+
+    context "when edge_label_padding is zero" do
+      let(:svg_with_edge_labels) do
+        '<svg xmlns="http://www.w3.org/2000/svg">' \
+          '<g class="edgeLabel"><g class="label"><foreignObject width="40" height="10"></foreignObject></g></g></svg>'
+      end
+
+      before do
+        FileUtils.mkdir_p(cache_dir)
+        allow(JekyllMermaidPrebuild::MmdcWrapper).to receive(:render) do |_source, output_path|
+          File.write(output_path, svg_with_edge_labels)
+          true
+        end
+      end
+
+      it "does not widen edge labels" do
+        paths = generator.generate("graph TD\nA-->B", "zeropad1")
+        expect(File.read(paths["zeropad1"])).to include('width="40"')
       end
     end
 
     context "when SVG is freshly generated" do
       let(:svg_with_style) do
-        '<svg id="my-svg"><style>#my-svg{font-family:sans-serif;}</style>' \
+        '<svg id="my-svg" style="max-width: 500px; background-color: white;" viewBox="0 0 500 200">' \
+          "<style>#my-svg{font-family:sans-serif;}</style>" \
           '<foreignObject width="100" height="24"><div>text</div></foreignObject></svg>'
       end
 
@@ -248,6 +436,22 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       it "injects foreignObject overflow:visible CSS into the SVG" do
         paths = generator.generate(mermaid_source, cache_key)
         expect(File.read(paths[cache_key])).to include("overflow:visible")
+      end
+
+      it "always applies the configured light chart background" do
+        paths = generator.generate(mermaid_source, cache_key)
+        expect(File.read(paths[cache_key])).to include("background-color: white;")
+      end
+
+      it "writes the cache file when post-processing changes content" do
+        cache_path = File.join(cache_dir, "write1.svg")
+        allow(File).to receive(:write).and_call_original
+
+        generator.generate(mermaid_source, "write1")
+
+        # mmdc stub write + post_process rewrite
+        expect(File).to have_received(:write).with(cache_path, kind_of(String)).twice
+        expect(File.read(cache_path)).to include("text-align:center")
       end
     end
 
@@ -318,22 +522,36 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
     it "generates figure with linked image" do
       html = generator.build_figure_html("/assets/svg/abc.svg")
 
-      expect(html).to match(/<figure[^>]*class="mermaid-diagram"/)
-      expect(html).to match(%r{<a[^>]*href="/assets/svg/abc\.svg"})
-      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
-      expect(html).to match(/<img[^>]*alt="Mermaid Diagram"/)
-      expect(html).to include("</a>")
-      expect(html).to include("</figure>")
+      figures = mermaid_figures(html)
+      expect(figures.size).to eq(1)
+      anchors = figure_anchors(figures.first)
+      expect(anchors.size).to eq(1)
+      expect(anchors.first.attributes["href"]).to eq("/assets/svg/abc.svg")
+      img = anchor_img(anchors.first)
+      expect(img.attributes["src"]).to eq("/assets/svg/abc.svg")
+      expect(img.attributes["alt"]).to eq("Mermaid Diagram")
+    end
+
+    it "omits dual-theme markup when dark_url is omitted" do
+      html = generator.build_figure_html("/assets/svg/abc.svg")
+
+      expect(html).not_to include("mermaid-diagram__dark")
+      expect(html).not_to include("mermaid-diagram__light")
+      expect(html).not_to include("@media")
     end
 
     it "emits two links and prefers-color-scheme CSS when dark_url is set" do
       html = generator.build_figure_html("/assets/svg/abc.svg", dark_url: "/assets/svg/abc-dark.svg")
 
-      expect(html).to match(/@media\s*\(prefers-color-scheme:\s*dark\)/)
-      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__light")(?=[^>]*href="/assets/svg/abc\.svg")[^>]*>})
-      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__dark")(?=[^>]*href="/assets/svg/abc-dark\.svg")[^>]*>})
-      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
-      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc-dark\.svg"})
+      expect(prefers_color_scheme_dark_rule?(html)).to be(true)
+      figures = mermaid_figures(html)
+      expect(figures.size).to eq(1)
+      light = figure_anchors(figures.first, css_class: "mermaid-diagram__light").first
+      dark = figure_anchors(figures.first, css_class: "mermaid-diagram__dark").first
+      expect(light.attributes["href"]).to eq("/assets/svg/abc.svg")
+      expect(dark.attributes["href"]).to eq("/assets/svg/abc-dark.svg")
+      expect(anchor_img(light).attributes["src"]).to eq("/assets/svg/abc.svg")
+      expect(anchor_img(dark).attributes["src"]).to eq("/assets/svg/abc-dark.svg")
     end
   end
 end
