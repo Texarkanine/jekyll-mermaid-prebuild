@@ -14,27 +14,21 @@ module JekyllMermaidPrebuild
     # @param mermaid_source [String] raw Mermaid diagram source
     # @return [String, nil] diagram type keyword (e.g. "flowchart", "sequenceDiagram") or nil
     def self.detect_diagram_type(mermaid_source)
-      return nil if !mermaid_source || mermaid_source.strip.empty?
+      return nil unless mermaid_source
 
       in_frontmatter = false
-      frontmatter_delim_count = 0
 
       mermaid_source.each_line do |line|
         stripped = line.strip
-        # Track YAML frontmatter
         if stripped == "---"
-          frontmatter_delim_count += 1
-          in_frontmatter = frontmatter_delim_count.odd?
+          in_frontmatter = !in_frontmatter
           next
         end
         next if in_frontmatter
         next if stripped.empty?
         next if stripped.start_with?("%%")
 
-        # First token of first non-skipped line
-        token = stripped.split(/\s+/, 2).first
-        return nil if token.nil? || token.empty?
-
+        token = stripped[/\A\S+/]
         return token == "graph" ? "flowchart" : token
       end
 
@@ -48,9 +42,9 @@ module JekyllMermaidPrebuild
     # @param diagram_type [String] result of detect_diagram_type
     # @return [String] possibly modified source
     def self.compensate(mermaid_source, diagram_type)
-      return mermaid_source if diagram_type != "flowchart"
+      return compensate_flowchart_labels(mermaid_source) if diagram_type == "flowchart"
 
-      compensate_flowchart_labels(mermaid_source)
+      mermaid_source
     end
 
     BR_RE = %r{(<br\s*/?>)}i
@@ -81,34 +75,33 @@ module JekyllMermaidPrebuild
     # @param content [String] raw label text (may contain <br/> line breaks)
     # @return [String] possibly padded label text
     def self.pad_label_content(content)
-      parts = content.split(BR_RE)
-      line_indices = (0...parts.length).step(2).to_a
-      return content if line_indices.empty?
+      segments = content.split(BR_RE)
+      return content if segments.empty?
 
-      longest_part_idx = line_indices.max_by { |i| visual_length(parts[i]) }
-      longest_line = parts[longest_part_idx]
-      n = count_emoji(longest_line)
-      return content unless n.positive?
+      lines, = segments.partition.with_index { |_segment, index| index.even? }
+      longest_line = lines.max_by { |line| visual_length(line) }
+      emoji_count = count_emoji(longest_line)
+      return content unless emoji_count.positive?
 
-      parts[longest_part_idx] = "#{longest_line}#{NBSP * (n * 2)}"
-      parts.join
+      padded = "#{longest_line}#{NBSP * (emoji_count * 2)}"
+      segments.map { |segment| segment == longest_line ? padded : segment }.join
     end
 
     def self.compensate_flowchart_labels(source)
-      result = source.dup
+      result = source
 
       [
-        [/\["(.*?)"\]/m, '["', '"]'],
-        [/\['(.*?)'\]/m, "['", "']"],
-        [/\("(.*?)"\)/m, '("', '")'],
-        [/\{"(.*?)"\}/m, '{"', '"}']
+        [/\["(.+?)"\]/m, '["', '"]'],
+        [/\['(.+?)'\]/m, "['", "']"],
+        [/\("(.+?)"\)/m, '("', '")'],
+        [/\{"(.+?)"\}/m, '{"', '"}']
       ].each do |regex, open_str, close_str|
         result = result.gsub(regex) do
           "#{open_str}#{pad_label_content(Regexp.last_match(1))}#{close_str}"
         end
       end
 
-      result.gsub(%r{\[/"((?:[^"\\]|\\.)*)"/\]}m) do
+      result.gsub(%r{\[/"((?:[^"\\]|\\.)+?)"/\]}) do
         "[/\"#{pad_label_content(Regexp.last_match(1))}\"/]"
       end
     end

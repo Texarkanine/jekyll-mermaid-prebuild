@@ -22,7 +22,7 @@ module JekyllMermaidPrebuild
     # @param _site [Jekyll::Site] the Jekyll site (unused, kept for API compatibility)
     # @return [Array<String, Integer, Hash>] [processed_content, count, svgs_to_copy]
     def process_content(content, _site = nil)
-      return [content, 0, {}] unless content
+      return [nil, 0, {}] unless content
 
       converted_count = 0
       svgs_to_copy = {}
@@ -36,17 +36,19 @@ module JekyllMermaidPrebuild
         result = convert_block(block)
         next unless result
 
+        result => { svgs:, html: }
+        block => { start:, end: block_end }
         converted_count += 1
-        svgs_to_copy.merge!(result[:svgs])
-        processed[block[:start]...block[:end]] = result[:html]
+        svgs_to_copy.merge!(svgs)
+        processed[start...block_end] = html
       end
 
       [processed, converted_count, svgs_to_copy]
     end
+
     # @param source [String] mermaid passed to mmdc (after optional emoji compensation)
-    # @param diagram_type [String, nil]
     # @return [String] input to MD5 for cache key
-    def digest_string_for_cache(source, _diagram_type)
+    def digest_string_for_cache(source)
       parts = [source]
       parts << "pcs=#{@config.prefers_color_scheme}"
       parts << "bgL=#{@config.chart_background_light}"
@@ -65,14 +67,14 @@ module JekyllMermaidPrebuild
     def convert_block(block)
       mermaid_source = block[:content]
       diagram_type = EmojiCompensator.detect_diagram_type(mermaid_source)
-      source_for_render = if diagram_type && @config.emoji_width_compensation[diagram_type]
+      source_for_render = if @config.emoji_width_compensation[diagram_type]
                             EmojiCompensator.compensate(mermaid_source, diagram_type)
                           else
                             mermaid_source
                           end
-      digest_input = digest_string_for_cache(source_for_render, diagram_type)
+      digest_input = digest_string_for_cache(source_for_render)
       cache_key = DigestCalculator.content_digest(digest_input)
-      paths = @generator.generate(source_for_render, cache_key, diagram_type: diagram_type)
+      paths = @generator.generate(source_for_render, cache_key)
 
       return nil if paths.nil? || paths.empty?
 
@@ -92,13 +94,14 @@ module JekyllMermaidPrebuild
     # @param content [String] markdown content
     # @return [Array<Hash>] array of {start:, end:, content:} for each top-level mermaid block
     def find_top_level_mermaid_blocks(content)
-      state = { blocks: [], fence_stack: [], current_mermaid: nil, position: 0 }
+      blocks = []
+      state = { blocks: blocks, fence_stack: [], position: 0 }
 
-      content.lines.each do |line|
+      content.lines do |line|
         process_line(line, state)
       end
 
-      state[:blocks]
+      blocks
     end
 
     # Process a single line for fence detection
@@ -109,8 +112,9 @@ module JekyllMermaidPrebuild
       match = line.match(FENCE_OPENER)
       if match
         handle_fence_line(line, line_start, match, state)
-      elsif state[:current_mermaid]
-        state[:current_mermaid][:content_lines] << line
+      elsif (current_mermaid = state[:current_mermaid])
+        content_lines = current_mermaid[:content_lines]
+        content_lines << line
       end
     end
 
@@ -118,7 +122,7 @@ module JekyllMermaidPrebuild
     def handle_fence_line(line, line_start, match, state)
       fence_chars = match[1]
       language = match[2]
-      fence_type = fence_chars[0]
+      fence_type = fence_chars.include?("~") ? "~" : "`"
       fence_length = fence_chars.length
 
       if state[:current_mermaid]
@@ -133,11 +137,14 @@ module JekyllMermaidPrebuild
     # Handle fence line while inside a mermaid block
     def handle_line_in_mermaid(line, fence_chars, fence_type, fence_length, state)
       cm = state[:current_mermaid]
+      blocks = state[:blocks]
+      position = state[:position]
+      content_lines = cm[:content_lines]
       if fence_type == cm[:fence_type] && fence_length == cm[:fence_length] && line.strip == fence_chars
-        state[:blocks] << { start: cm[:start], end: state[:position], content: cm[:content_lines].join }
+        blocks << { start: cm[:start], end: position, content: content_lines.join }
         state[:current_mermaid] = nil
       else
-        cm[:content_lines] << line
+        content_lines << line
       end
     end
 
@@ -153,12 +160,13 @@ module JekyllMermaidPrebuild
 
     # Handle fence line while inside a non-mermaid fence
     def handle_line_in_nested_fence(line, fence_type, fence_length, state)
-      top_fence_length, top_fence_type = state[:fence_stack].last
+      fence_stack = state[:fence_stack]
+      top_fence_length, top_fence_type = fence_stack.last
 
-      if fence_type == top_fence_type && fence_length >= top_fence_length && line.strip.match?(/^[`~]+$/)
-        state[:fence_stack].pop
+      if fence_type == top_fence_type && fence_length >= top_fence_length && line.strip.match?(/\A[`~]+\z/)
+        fence_stack.pop
       else
-        state[:fence_stack].push([fence_length, fence_type])
+        fence_stack.push([fence_length, fence_type])
       end
     end
   end

@@ -49,6 +49,7 @@ module JekyllMermaidPrebuild
     def cache_dir
       CACHE_DIR
     end
+
     # Parse the prefers-color-scheme block (see PREFERS_COLOR_SCHEME_YAML_KEY) from a Hash only
     # (mode + optional background-color map). Non-Hash values fall back to :light and default
     # backgrounds with a warning.
@@ -56,40 +57,27 @@ module JekyllMermaidPrebuild
     # @param value [Object] raw site config value
     # @return [void]
     def parse_prefers_color_scheme(value)
-      unless value.is_a?(Hash)
-        @prefers_color_scheme = DEFAULT_PREFERS_COLOR_SCHEME_MODE
-        @chart_background_light = finalize_background(DEFAULT_CHART_BG_LIGHT)
-        @chart_background_dark = finalize_background(DEFAULT_CHART_BG_DARK)
-        unless value.nil?
-          Jekyll.logger.warn(
-            "MermaidPrebuild:",
-            "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} (expected a Hash); " \
-            "using light mode and default backgrounds"
-          )
-        end
-        return
+      if !value.nil? && !value.is_a?(Hash)
+        Jekyll.logger.warn(
+          "MermaidPrebuild:",
+          "Invalid #{PREFERS_COLOR_SCHEME_YAML_KEY} (expected a Hash); " \
+          "using light mode and default backgrounds"
+        )
       end
 
       mode_raw = config_hash_fetch(value, "mode")
       @prefers_color_scheme = normalize_prefers_mode(mode_raw)
 
       bg_container = config_hash_fetch(value, BACKGROUND_COLOR_YAML_KEY)
-      if bg_container.is_a?(Hash)
-        light_raw = config_hash_fetch(bg_container, "light")
-        dark_raw = config_hash_fetch(bg_container, "dark")
-        @chart_background_light = coerce_chart_background(light_raw, DEFAULT_CHART_BG_LIGHT, "light")
-        @chart_background_dark = coerce_chart_background(dark_raw, DEFAULT_CHART_BG_DARK, "dark")
-      else
-        @chart_background_light = finalize_background(DEFAULT_CHART_BG_LIGHT)
-        @chart_background_dark = finalize_background(DEFAULT_CHART_BG_DARK)
-      end
+      light_raw = config_hash_fetch(bg_container, "light")
+      dark_raw = config_hash_fetch(bg_container, "dark")
+      @chart_background_light = coerce_chart_background(light_raw, DEFAULT_CHART_BG_LIGHT, "light")
+      @chart_background_dark = coerce_chart_background(dark_raw, DEFAULT_CHART_BG_DARK, "dark")
     end
 
     # @param raw [Object]
     # @return [Symbol] :light, :dark, or :auto
     def normalize_prefers_mode(raw)
-      return DEFAULT_PREFERS_COLOR_SCHEME_MODE if raw.nil?
-
       s = raw.to_s.strip.downcase
       return DEFAULT_PREFERS_COLOR_SCHEME_MODE if s.empty?
 
@@ -114,10 +102,7 @@ module JekyllMermaidPrebuild
     def config_hash_fetch(hash, key)
       return nil unless hash.is_a?(Hash)
 
-      return hash[key] if hash.key?(key)
-      return hash[key.to_sym] if hash.key?(key.to_sym)
-
-      nil
+      hash.fetch(key) { hash.fetch(key.to_sym, nil) }
     end
 
     # @param value [Object] raw color string or nil (use default)
@@ -166,7 +151,7 @@ module JekyllMermaidPrebuild
     def parse_emoji_width_compensation(value)
       return {}.freeze unless value.is_a?(Hash)
 
-      result = value.transform_keys(&:to_s).transform_values { |v| [true, false].include?(v) ? v : false }
+      result = value.transform_keys(&:to_s).transform_values { |v| v == true }
       result.freeze
     end
 
@@ -176,18 +161,15 @@ module JekyllMermaidPrebuild
       dir = dir.strip
       return DEFAULT_OUTPUT_DIR if dir.empty?
 
-      dir.gsub(%r{^/+|/+$}, "")
+      dir.split("/").reject(&:empty?).join("/")
     end
 
     # @param value [Object] raw config (numeric or off)
     # @return [Numeric] non-negative padding in SVG user units; 0 means disabled
     def parse_edge_label_padding(value)
-      return 0 if value.nil? || value == false
+      return 0 unless value.is_a?(Numeric)
 
-      num = value.is_a?(Numeric) ? value : nil
-      return 0 unless num
-
-      num.negative? ? 0 : num
+      value.negative? ? 0 : value
     end
   end
 end

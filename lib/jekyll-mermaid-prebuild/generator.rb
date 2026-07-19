@@ -18,16 +18,15 @@ module JekyllMermaidPrebuild
     #
     # @param mermaid_source [String] mermaid diagram definition
     # @param cache_key [String] digest for caching
-    # @param diagram_type [String, nil] from EmojiCompensator.detect_diagram_type (e.g. "block")
     # @return [Hash{String => String}, nil] stem (cache filename without .svg) => absolute cache path, or nil on failure
-    def generate(mermaid_source, cache_key, diagram_type: nil)
+    def generate(mermaid_source, cache_key)
       case @config.prefers_color_scheme
       when :light
-        generate_one(mermaid_source, cache_key, diagram_type: diagram_type, theme: :default)
+        generate_one(mermaid_source, cache_key, theme: :default)
       when :dark
-        generate_one(mermaid_source, cache_key, diagram_type: diagram_type, theme: :dark)
+        generate_one(mermaid_source, cache_key, theme: :dark)
       when :auto
-        generate_auto(mermaid_source, cache_key, diagram_type: diagram_type)
+        generate_auto(mermaid_source, cache_key)
       end
     end
 
@@ -72,7 +71,7 @@ module JekyllMermaidPrebuild
     private
 
     # @return [Hash{String => String}, nil]
-    def generate_one(mermaid_source, stem, diagram_type:, theme:)
+    def generate_one(mermaid_source, stem, theme:)
       cache_path = File.join(@config.cache_dir, "#{stem}.svg")
       return { stem => cache_path } if File.exist?(cache_path)
 
@@ -80,12 +79,12 @@ module JekyllMermaidPrebuild
       return nil unless MmdcWrapper.render(mermaid_source, cache_path, theme: theme)
 
       bg = theme == :dark ? @config.chart_background_dark : @config.chart_background_light
-      post_process_svg(cache_path, diagram_type, root_background: bg)
+      post_process_svg(cache_path, root_background: bg)
       { stem => cache_path }
     end
 
     # @return [Hash{String => String}, nil]
-    def generate_auto(mermaid_source, cache_key, diagram_type:)
+    def generate_auto(mermaid_source, cache_key)
       light_stem = cache_key
       dark_stem = "#{cache_key}-dark"
       light_path = File.join(@config.cache_dir, "#{light_stem}.svg")
@@ -96,19 +95,19 @@ module JekyllMermaidPrebuild
       unless File.exist?(light_path)
         return nil unless MmdcWrapper.render(mermaid_source, light_path, theme: :default)
 
-        post_process_svg(light_path, diagram_type, root_background: @config.chart_background_light)
+        post_process_svg(light_path, root_background: @config.chart_background_light)
       end
 
       unless File.exist?(dark_path)
         return nil unless MmdcWrapper.render(mermaid_source, dark_path, theme: :dark)
 
-        post_process_svg(dark_path, diagram_type, root_background: @config.chart_background_dark)
+        post_process_svg(dark_path, root_background: @config.chart_background_dark)
       end
 
       { light_stem => light_path, dark_stem => dark_path }
     end
 
-    def post_process_svg(cache_path, _diagram_type, root_background:)
+    def post_process_svg(cache_path, root_background:)
       raw = File.read(cache_path)
       svg = raw
 
@@ -116,10 +115,9 @@ module JekyllMermaidPrebuild
       svg = SvgPostProcessor.ensure_foreignobject_overflow(svg) if @config.overflow_protection
       svg = SvgPostProcessor.apply_root_svg_background(svg, root_background)
 
-      pad = @config.edge_label_padding
-      svg = SvgPostProcessor.apply(svg, padding: pad) if pad.is_a?(Numeric) && pad.positive?
+      svg = SvgPostProcessor.apply(svg, padding: @config.edge_label_padding)
 
-      File.write(cache_path, svg) if svg != raw
+      File.write(cache_path, svg) unless svg.eql?(raw)
     end
   end
 end

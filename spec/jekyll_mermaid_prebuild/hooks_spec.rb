@@ -216,6 +216,11 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
         expect(site_data["mermaid_prebuild_generator"]).to be_a(JekyllMermaidPrebuild::Generator)
         expect(site_data["mermaid_prebuild_processor"]).to be_a(JekyllMermaidPrebuild::Processor)
         expect(site_data["mermaid_prebuild_svgs"]).to eq({})
+      end
+
+      it "logs initialization and output directory" do
+        described_class.initialize_system(site)
+
         expect(logger).to have_received(:info).with(
           "MermaidPrebuild:",
           a_string_matching(/Initialized \(mmdc 11\.0\.0\)/)
@@ -255,7 +260,7 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
         )
         expect(logger).to have_received(:warn).with(
           "MermaidPrebuild:",
-          a_string_matching(/npm install -g @mermaid-js\/mermaid-cli/)
+          a_string_matching(%r{npm install -g @mermaid-js/mermaid-cli})
         )
       end
     end
@@ -343,7 +348,7 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       expect(processor).not_to have_received(:process_content)
     end
 
-    it "processes documents and pages, merging svgs and logging totals" do
+    it "processes documents and pages, merging svgs" do
       expect(processor).to receive(:process_content)
         .with(document.content, site)
         .and_return(["<figure>doc</figure>", 1, { "aaa11111" => "/cache/a.svg" }])
@@ -356,9 +361,21 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       expect(document).to have_received(:content=).with("<figure>doc</figure>")
       expect(page).to have_received(:content=).with("<figure>page</figure>")
       expect(site_data["mermaid_prebuild_svgs"]).to include("aaa11111", "bbb22222")
+    end
+
+    it "logs per-file and total conversion counts" do
+      allow(processor).to receive(:process_content)
+        .with(document.content, site)
+        .and_return(["<figure>doc</figure>", 1, { "aaa11111" => "/cache/a.svg" }])
+      allow(processor).to receive(:process_content)
+        .with(page.content, site)
+        .and_return(["<figure>page</figure>", 1, { "bbb22222" => "/cache/b.svg" }])
+
+      described_class.process_site(site)
+
       expect(logger).to have_received(:info).with(
         "MermaidPrebuild:",
-        a_string_matching(/Converted 1 diagram\(s\) in _posts\/diagram\.md/)
+        a_string_matching(%r{Converted 1 diagram\(s\) in _posts/diagram\.md})
       )
       expect(logger).to have_received(:info).with(
         "MermaidPrebuild:",
@@ -394,7 +411,8 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       empty_doc = instance_double(Jekyll::Document, content: nil, relative_path: "empty.md")
       allow(site).to receive_messages(documents: [empty_doc, document], pages: [])
       expect(processor).to receive(:process_content).with(document.content, site)
-        .and_return(["<figure>doc</figure>", 1, { "aaa11111" => "/cache/a.svg" }])
+                                                    .and_return(["<figure>doc</figure>", 1,
+                                                                 { "aaa11111" => "/cache/a.svg" }])
 
       described_class.process_site(site)
 
@@ -405,7 +423,8 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       empty_page = instance_double(Jekyll::Page, content: nil, relative_path: "empty-page.md")
       allow(site).to receive_messages(documents: [], pages: [empty_page, page])
       expect(processor).to receive(:process_content).with(page.content, site)
-        .and_return(["<figure>page</figure>", 1, { "bbb22222" => "/cache/b.svg" }])
+                                                    .and_return(["<figure>page</figure>", 1,
+                                                                 { "bbb22222" => "/cache/b.svg" }])
 
       described_class.process_site(site)
 
@@ -459,7 +478,7 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
 
       expect(logger).to have_received(:error).with(
         "MermaidPrebuild:",
-        a_string_matching(/Error processing _posts\/diagram\.md:.*nil/)
+        a_string_matching(%r{Error processing _posts/diagram\.md:.*nil})
       )
     end
 
@@ -473,7 +492,7 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
 
       expect(logger).to have_received(:error).with(
         "MermaidPrebuild:",
-        a_string_matching(/Error processing _posts\/diagram\.md:.*nil/)
+        a_string_matching(%r{Error processing _posts/diagram\.md:.*nil})
       )
     end
 

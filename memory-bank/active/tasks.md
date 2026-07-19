@@ -163,7 +163,7 @@ PoC (executed in Plan): added deps + `config/mutant.yml` + `spec/support/mutant_
 - [x] Technology validation complete
 - [x] Pre-Mortem complete
 - [x] Preflight
-- [ ] Build
+- [x] Build
 - [ ] QA
 
 ## Preflight Findings

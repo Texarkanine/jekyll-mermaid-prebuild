@@ -35,10 +35,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency "jekyll", ">= 4.0", "< 5.0"
 
   # Development dependencies
-  spec.add_development_dependency "rake", "~> 13.3"
-  spec.add_development_dependency "rspec", "~> 3.13"
   spec.add_development_dependency "mutant", "~> 0.16"
   spec.add_development_dependency "mutant-rspec", "~> 0.16"
+  spec.add_development_dependency "rake", "~> 13.3"
+  spec.add_development_dependency "rspec", "~> 3.13"
   spec.add_development_dependency "rubocop", "~> 1.81"
   spec.add_development_dependency "rubocop-rake", "~> 0.7"
   spec.add_development_dependency "rubocop-rspec", "~> 3.8"

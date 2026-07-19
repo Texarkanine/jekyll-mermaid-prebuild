@@ -29,7 +29,7 @@ module JekyllMermaidPrebuild
     # @param padding [Numeric] user units to add to each matching foreignObject width (must be positive)
     # @return [String] possibly widened SVG, or the original string on no-op / error
     def self.apply(svg_string, padding:)
-      return svg_string unless padding.is_a?(Numeric) && padding.positive?
+      return svg_string unless padding.positive?
 
       apply_edge_label_padding(svg_string, padding)
     rescue StandardError
@@ -79,10 +79,10 @@ module JekyllMermaidPrebuild
     # @param css_background [String] literal after `background-color:` (e.g. "black", "#fff0aa")
     # @return [String] SVG with updated root background, or original on no-op / error
     def self.apply_root_svg_background(svg_string, css_background)
-      return svg_string if css_background.nil? || css_background.empty?
+      return svg_string unless css_background.is_a?(String) && !css_background.empty?
 
       svg_string.sub(
-        /(<svg\b[^>]*\bstyle="[^"]*?)background-color:\s*white;?/,
+        /(<svg\b[^>]+\bstyle="[^"]*?)background-color:\s*white;?/,
         "\\1background-color: #{css_background};"
       )
     rescue StandardError

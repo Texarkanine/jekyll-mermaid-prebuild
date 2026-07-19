@@ -40,7 +40,7 @@ module JekyllMermaidPrebuild
       return @version if instance_variable_defined?(:@version)
 
       output, status = Open3.capture2e(MMDC_COMMAND, "--version")
-      @version = status.success? ? output.strip : nil
+      @version = output.strip if status.success?
     rescue StandardError
       @version = nil
     end

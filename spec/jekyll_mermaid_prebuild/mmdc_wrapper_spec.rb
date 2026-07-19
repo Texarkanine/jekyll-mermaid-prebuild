@@ -96,10 +96,75 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
       expect(described_class.command_exists?(nil)).to be false
     end
 
-    it "requires a regular file, not only an executable directory entry" do
+    it "returns false for empty command when PATH contains an executable file entry" do
+      Dir.mktmpdir do |dir|
+        executable = File.join(dir, "bin")
+        File.write(executable, "#!/bin/sh\nexit 0")
+        File.chmod(0o755, executable)
+        ENV["PATH"] = executable
+
+        expect(described_class.command_exists?("")).to be false
+      end
+    end
+
+    it "returns false for empty command on Windows even when PATH contains .exe" do
+      allow(Gem).to receive(:win_platform?).and_return(true)
       Dir.mktmpdir do |dir|
         ENV["PATH"] = dir
+        path = File.join(dir, ".exe")
+        File.write(path, "")
+        File.chmod(0o755, path)
+
         expect(described_class.command_exists?("")).to be false
+      end
+    end
+
+    it "returns false when PATH is unset" do
+      ENV.delete("PATH")
+      expect(described_class.command_exists?("mmdc")).to be false
+    end
+
+    it "returns false when PATH entry is a directory, not a regular file" do
+      Dir.mktmpdir do |dir|
+        ENV["PATH"] = dir
+        FileUtils.mkdir(File.join(dir, "testcmd"))
+        expect(described_class.command_exists?("testcmd")).to be false
+      end
+    end
+
+    it "returns false when file exists but is not executable" do
+      Dir.mktmpdir do |dir|
+        ENV["PATH"] = dir
+        path = File.join(dir, "testcmd")
+        File.write(path, "#!/bin/sh\n")
+        File.chmod(0o644, path)
+
+        expect(described_class.command_exists?("testcmd")).to be false
+      end
+    end
+
+    it "finds a command in a later PATH directory" do
+      Dir.mktmpdir do |first|
+        Dir.mktmpdir do |second|
+          ENV["PATH"] = [first, second].join(File::PATH_SEPARATOR)
+          path = File.join(second, "latercmd")
+          File.write(path, "#!/bin/sh\nexit 0")
+          File.chmod(0o755, path)
+
+          expect(described_class.command_exists?("latercmd")).to be true
+        end
+      end
+    end
+
+    it "uses .exe suffix on Windows" do
+      allow(Gem).to receive(:win_platform?).and_return(true)
+      Dir.mktmpdir do |dir|
+        ENV["PATH"] = dir
+        path = File.join(dir, "wincmd.exe")
+        File.write(path, "")
+        File.chmod(0o755, path)
+
+        expect(described_class.command_exists?("wincmd")).to be true
       end
     end
   end
@@ -115,6 +180,14 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
       it "returns trimmed version string" do
         expect(described_class.version).to eq("11.12.0")
       end
+
+      it "strips leading and trailing whitespace from version output" do
+        allow(Open3).to receive(:capture2e)
+          .with("mmdc", "--version")
+          .and_return(["  11.12.0\n", instance_double(Process::Status, success?: true)])
+
+        expect(described_class.version).to eq("11.12.0")
+      end
     end
 
     context "when mmdc fails" do
@@ -127,6 +200,26 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
       it "returns nil" do
         expect(described_class.version).to be_nil
       end
+    end
+
+    context "when Open3 raises" do
+      before do
+        allow(Open3).to receive(:capture2e).with("mmdc", "--version").and_raise(StandardError, "boom")
+      end
+
+      it "returns nil" do
+        expect(described_class.version).to be_nil
+      end
+    end
+
+    it "caches the version result until reset" do
+      allow(Open3).to receive(:capture2e)
+        .with("mmdc", "--version")
+        .and_return(["11.12.0\n", instance_double(Process::Status, success?: true)])
+
+      expect(described_class.version).to eq("11.12.0")
+      expect(described_class.version).to eq("11.12.0")
+      expect(Open3).to have_received(:capture2e).once
     end
   end
 
@@ -161,6 +254,23 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
       end
     end
 
+    context "when mmdc fails with a non-Puppeteer error" do
+      it "returns :unknown_error" do
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          bad = instance_double(Process::Status, success?: false)
+          allow(Open3).to receive(:capture3).and_return(["", "unexpected render failure", bad])
+
+          expect(described_class.check_status).to eq(:unknown_error)
+        end
+      end
+    end
+
     context "when mmdc works correctly" do
       it "returns :ok" do
         Dir.mktmpdir do |dir|
@@ -174,6 +284,27 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
           allow(Open3).to receive(:capture3).and_return(["", "", ok])
 
           expect(described_class.check_status).to eq(:ok)
+        end
+      end
+
+      it "caches status until reset" do
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          ok = instance_double(Process::Status, success?: true)
+          allow(Open3).to receive(:capture3).and_return(["", "", ok])
+
+          expect(described_class.check_status).to eq(:ok)
+          expect(described_class.check_status).to eq(:ok)
+          expect(Open3).to have_received(:capture3).once
+          ENV["PATH"] = "/nonexistent"
+          expect(described_class.check_status).to eq(:ok)
+          described_class.reset_cache!
+          expect(described_class.check_status).to eq(:not_found)
         end
       end
     end
@@ -204,6 +335,16 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
 
       described_class.test_render
       expect(written).to eq("graph TD\nA-->B")
+    end
+
+    it "closes the output tempfile before invoking mmdc" do
+      output = Tempfile.new(["", ".svg"])
+      input = Tempfile.new(["", ".mmd"])
+      allow(Tempfile).to receive(:new).and_return(input, output)
+      expect(output).to receive(:close).and_call_original
+      allow(Open3).to receive(:capture3).and_return(["", "", status_ok])
+
+      expect(described_class.test_render).to eq(:ok)
     end
 
     it "returns :puppeteer_error when stderr mentions libgbm" do
@@ -251,7 +392,67 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
     it "raises ArgumentError for an unsupported theme" do
       expect do
         described_class.render("graph TD\nA-->B", "/tmp/out.svg", theme: :forest)
-      end.to raise_error(ArgumentError, /unsupported mmdc theme/)
+      end.to raise_error(ArgumentError, /unsupported mmdc theme :forest \(allowed: :default, :dark\)/)
+    end
+
+    it "closes the input tempfile before invoking mmdc" do
+      input = Tempfile.new(["mermaid", ".mmd"])
+      allow(Tempfile).to receive(:new).and_return(input)
+      expect(input).to receive(:close).and_call_original
+      allow(Open3).to receive(:capture3).and_return(["", "", status_ok])
+
+      described_class.render("graph TD\nA-->B", "/tmp/out.svg")
+    end
+
+    it "returns true when mmdc succeeds" do
+      allow(Open3).to receive(:capture3).and_return(["", "", status_ok])
+
+      expect(described_class.render("graph TD\nA-->B", "/tmp/out.svg")).to be true
+    end
+
+    it "writes mermaid source into the input tempfile" do
+      written = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        written = File.read(input_path)
+        ["", "", status_ok]
+      end
+
+      described_class.render("graph TD\nA-->B", "/tmp/out.svg")
+      expect(written).to eq("graph TD\nA-->B")
+    end
+
+    it "uses a mermaid-prefixed input tempfile" do
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        expect(File.basename(input_path)).to include("mermaid")
+        ["", "", status_ok]
+      end
+
+      described_class.render("graph TD\nA-->B", "/tmp/out.svg")
+    end
+
+    it "removes the input tempfile after render" do
+      input_path = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        ["", "", status_ok]
+      end
+
+      described_class.render("graph TD\nA-->B", "/tmp/out.svg")
+      expect(File.exist?(input_path)).to be false
+    end
+
+    it "removes the input tempfile when mmdc fails" do
+      input_path = nil
+      bad = instance_double(Process::Status, success?: false)
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        ["", "err", bad]
+      end
+
+      described_class.render("graph TD\nA-->B", "/tmp/nope.svg")
+      expect(File.exist?(input_path)).to be false
     end
   end
 

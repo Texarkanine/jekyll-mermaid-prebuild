@@ -38,3 +38,15 @@ Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-pre
     - Advisory: keep optional `rake mutant` out of scope.
 * Insights
     - Scaffold from PoC is already on the branch; Build continues at docs + kill hygiene + kill loop.
+
+## 2026-07-19 - BUILD - COMPLETE
+
+* Work completed
+    - Steps 1–8 of plan: Mutant scaffold, docs, `def self.` conversions, MmdcWrapper remodel, kill loop to 100%.
+    - Gates: `bundle exec rspec` → 407 examples, 0 failures, SimpleCov 100%; `bundle exec rubocop` clean; `bundle exec mutant run` → Coverage 100% (3756 kills, 0 alive).
+* Decisions made
+    - Bucket A: remove unused `diagram_type` through Generator; drop redundant `pad.is_a?(Numeric)` / `.positive?` guards before `SvgPostProcessor.apply`.
+    - Fold processor helper observations into `processor_spec` method describes (delete thin helpers spec).
+* Insights
+    - mutant-rspec describe-prefix starvation from thin helper describes caused large alive spikes — observations must sit under the subject method describe.
+    - RuboCop `IO.write` → `File.write` broke File.write spies that also cover mmdc stubs; spy with `have_received` counts instead of `not_to receive`.

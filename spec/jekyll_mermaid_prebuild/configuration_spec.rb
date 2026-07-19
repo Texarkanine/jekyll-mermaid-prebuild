@@ -8,101 +8,101 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
     instance_double(Jekyll::Site, config: site_config)
   end
 
-describe "#initialize" do
-  context "with no configuration" do
-    it "uses default output_dir" do
-      config = described_class.new(site)
+  describe "#initialize" do
+    context "with no configuration" do
+      it "uses default output_dir" do
+        config = described_class.new(site)
 
-      expect(config.output_dir).to eq("assets/svg")
+        expect(config.output_dir).to eq("assets/svg")
+      end
+
+      it "defaults enabled to true via fetch" do
+        config = described_class.new(site)
+
+        expect(config.enabled?).to be true
+      end
+
+      it "defaults postprocessing flags via fetch" do
+        config = described_class.new(site)
+
+        expect(config.text_centering).to be true
+        expect(config.overflow_protection).to be true
+        expect(config.edge_label_padding).to eq(0)
+        expect(config.emoji_width_compensation).to eq({})
+      end
+
+      it "defaults prefers-color-scheme mode and chart backgrounds" do
+        config = described_class.new(site)
+
+        expect(config.prefers_color_scheme).to eq(:light)
+        expect(config.chart_background_light).to eq("white")
+        expect(config.chart_background_dark).to eq("black")
+        expect(config.chart_background_light).to be_frozen
+        expect(config.chart_background_dark).to be_frozen
+      end
     end
 
-    it "defaults enabled to true via fetch" do
-      config = described_class.new(site)
+    context "with custom output_dir" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "output_dir" => "images/diagrams" } }
+      end
 
-      expect(config.enabled?).to be true
+      it "uses configured output_dir" do
+        config = described_class.new(site)
+
+        expect(config.output_dir).to eq("images/diagrams")
+      end
     end
 
-    it "defaults postprocessing flags via fetch" do
-      config = described_class.new(site)
+    context "with leading slash in output_dir" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "output_dir" => "/assets/svg/" } }
+      end
 
-      expect(config.text_centering).to be true
-      expect(config.overflow_protection).to be true
-      expect(config.edge_label_padding).to eq(0)
-      expect(config.emoji_width_compensation).to eq({})
+      it "strips leading and trailing slashes" do
+        config = described_class.new(site)
+
+        expect(config.output_dir).to eq("assets/svg")
+      end
     end
 
-    it "defaults prefers-color-scheme mode and chart backgrounds" do
-      config = described_class.new(site)
+    context "with empty output_dir" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "output_dir" => "" } }
+      end
 
-      expect(config.prefers_color_scheme).to eq(:light)
-      expect(config.chart_background_light).to eq("white")
-      expect(config.chart_background_dark).to eq("black")
-      expect(config.chart_background_light).to be_frozen
-      expect(config.chart_background_dark).to be_frozen
-    end
-  end
+      it "uses default output_dir" do
+        config = described_class.new(site)
 
-  context "with custom output_dir" do
-    let(:site_config) do
-      { "mermaid_prebuild" => { "output_dir" => "images/diagrams" } }
+        expect(config.output_dir).to eq("assets/svg")
+      end
     end
 
-    it "uses configured output_dir" do
-      config = described_class.new(site)
+    context "with enabled: false" do
+      let(:site_config) do
+        { "mermaid_prebuild" => { "enabled" => false } }
+      end
 
-      expect(config.output_dir).to eq("images/diagrams")
-    end
-  end
+      it "stores enabled false" do
+        config = described_class.new(site)
 
-  context "with leading slash in output_dir" do
-    let(:site_config) do
-      { "mermaid_prebuild" => { "output_dir" => "/assets/svg/" } }
-    end
-
-    it "strips leading and trailing slashes" do
-      config = described_class.new(site)
-
-      expect(config.output_dir).to eq("assets/svg")
-    end
-  end
-
-  context "with empty output_dir" do
-    let(:site_config) do
-      { "mermaid_prebuild" => { "output_dir" => "" } }
+        expect(config.enabled?).to be false
+      end
     end
 
-    it "uses default output_dir" do
-      config = described_class.new(site)
-
-      expect(config.output_dir).to eq("assets/svg")
-    end
-  end
-
-  context "with enabled: false" do
-    let(:site_config) do
-      { "mermaid_prebuild" => { "enabled" => false } }
-    end
-
-    it "stores enabled false" do
-      config = described_class.new(site)
-
-      expect(config.enabled?).to be false
-    end
-  end
-
-  context "with postprocessing overrides" do
-    let(:site_config) do
-      {
-        "mermaid_prebuild" => {
-          "postprocessing" => {
-            "text_centering" => false,
-            "overflow_protection" => false,
-            "edge_label_padding" => 4,
-            "emoji_width_compensation" => { "flowchart" => true }
+    context "with postprocessing overrides" do
+      let(:site_config) do
+        {
+          "mermaid_prebuild" => {
+            "postprocessing" => {
+              "text_centering" => false,
+              "overflow_protection" => false,
+              "edge_label_padding" => 4,
+              "emoji_width_compensation" => { "flowchart" => true }
+            }
           }
         }
-      }
-    end
+      end
 
       it "applies postprocessing fetch keys and parsers" do
         config = described_class.new(site)
@@ -578,6 +578,21 @@ describe "#initialize" do
     it "prefers string keys over symbol keys" do
       expect(config.config_hash_fetch({ "mode" => "light", mode: "dark" }, "mode")).to eq("light")
     end
+
+    it "accepts Hash subclasses via is_a?" do
+      value = Class.new(Hash).new
+      value[:mode] = "dark"
+
+      expect(config.config_hash_fetch(value, "mode")).to eq("dark")
+    end
+
+    it "returns nil when neither string nor symbol key is present" do
+      expect(config.config_hash_fetch({ "other" => "x" }, "mode")).to be_nil
+    end
+
+    it "returns nil for present string keys with nil values without falling back to symbol keys" do
+      expect(config.config_hash_fetch({ "mode" => nil, mode: "dark" }, "mode")).to be_nil
+    end
   end
 
   describe "#normalize_prefers_mode" do
@@ -605,6 +620,11 @@ describe "#initialize" do
       expect(config.normalize_prefers_mode(value)).to eq(:dark)
     end
 
+    it "does not warn for known light mode" do
+      config.normalize_prefers_mode("light")
+      expect(Jekyll.logger).not_to have_received(:warn)
+    end
+
     it "warns with raw.inspect and defaults for unknown modes" do
       expect(config.normalize_prefers_mode("banana")).to eq(:light)
       expect(Jekyll.logger).to have_received(:warn).with(
@@ -624,7 +644,8 @@ describe "#initialize" do
       expect(config.parse_edge_label_padding("x")).to eq(0)
     end
 
-    it "returns numeric padding values" do
+    it "returns numeric padding values including zero" do
+      expect(config.parse_edge_label_padding(0)).to eq(0)
       expect(config.parse_edge_label_padding(3)).to eq(3)
       expect(config.parse_edge_label_padding(2.5)).to eq(2.5)
     end
@@ -642,6 +663,21 @@ describe "#initialize" do
     it "stringifies keys, coerces values, and freezes" do
       result = config.parse_emoji_width_compensation({ flowchart: true, other: "x" })
       expect(result).to eq("flowchart" => true, "other" => false)
+      expect(result).to be_frozen
+    end
+
+    it "preserves explicit false values" do
+      result = config.parse_emoji_width_compensation({ "flowchart" => false })
+      expect(result).to eq("flowchart" => false)
+      expect(result).to be_frozen
+    end
+
+    it "accepts Hash subclasses via is_a?" do
+      value = Class.new(Hash).new
+      value[:flowchart] = true
+
+      result = config.parse_emoji_width_compensation(value)
+      expect(result).to eq("flowchart" => true)
       expect(result).to be_frozen
     end
   end
@@ -667,6 +703,10 @@ describe "#initialize" do
     it "strips multiple leading and trailing slashes" do
       expect(config.parse_output_dir("//a/b//")).to eq("a/b")
     end
+
+    it "preserves internal empty segments from repeated slashes" do
+      expect(config.parse_output_dir("a//b")).to eq("a/b")
+    end
   end
 
   describe "#parse_prefers_color_scheme" do
@@ -682,6 +722,7 @@ describe "#initialize" do
       expect(config.chart_background_light).to be_frozen
       expect(config.chart_background_dark).to be_frozen
       expect(config.chart_background_light).not_to equal(described_class::DEFAULT_CHART_BG_LIGHT)
+      expect(config.chart_background_dark).not_to equal(described_class::DEFAULT_CHART_BG_DARK)
       expect(Jekyll.logger).not_to have_received(:warn)
     end
 
@@ -690,6 +731,8 @@ describe "#initialize" do
       expect(config.prefers_color_scheme).to eq(:light)
       expect(config.chart_background_light).to be_frozen
       expect(config.chart_background_dark).to eq("black")
+      expect(config.chart_background_dark).to be_frozen
+      expect(config.chart_background_dark).not_to equal(described_class::DEFAULT_CHART_BG_DARK)
       expect(Jekyll.logger).to have_received(:warn).with("MermaidPrebuild:", /expected a Hash/)
     end
 
@@ -698,6 +741,13 @@ describe "#initialize" do
       value["mode"] = "dark"
       config.parse_prefers_color_scheme(value)
       expect(config.prefers_color_scheme).to eq(:dark)
+      expect(Jekyll.logger).not_to have_received(:warn)
+    end
+
+    it "does not warn for valid hash config" do
+      config.parse_prefers_color_scheme("mode" => "auto")
+      expect(config.prefers_color_scheme).to eq(:auto)
+      expect(Jekyll.logger).not_to have_received(:warn)
     end
 
     it "parses mode and background-color map with labels" do
@@ -716,6 +766,17 @@ describe "#initialize" do
       expect(config.chart_background_dark).to eq("black")
       expect(config.chart_background_light).to be_frozen
       expect(config.chart_background_dark).to be_frozen
+      expect(config.chart_background_light).not_to equal(described_class::DEFAULT_CHART_BG_LIGHT)
+      expect(config.chart_background_dark).not_to equal(described_class::DEFAULT_CHART_BG_DARK)
+    end
+
+    it "reads background-color from Hash subclasses via is_a?" do
+      bg = Class.new(Hash).new
+      bg["light"] = "#eee"
+      bg["dark"] = "#111"
+      config.parse_prefers_color_scheme("mode" => "auto", "background-color" => bg)
+      expect(config.chart_background_light).to eq("#eee")
+      expect(config.chart_background_dark).to eq("#111")
     end
 
     it "passes light/dark labels into coercion warnings" do
