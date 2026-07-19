@@ -153,6 +153,14 @@ RSpec.describe JekyllMermaidPrebuild::EmojiCompensator do
       expect(padded).to eq("🔧#{nbsp}#{nbsp}")
       expect(padded).not_to equal(input)
     end
+
+    it "pads only one of several identical longest emoji lines" do
+      # Container width is set by a single padded line; padding every identical
+      # twin is needless (KISS). max_by picks the first longest index.
+      expect(described_class.pad_label_content("🔧hello<br/>🔧hello")).to eq(
+        "🔧hello#{nbsp}#{nbsp}<br/>🔧hello"
+      )
+    end
   end
 
   describe ".compensate_flowchart_labels" do

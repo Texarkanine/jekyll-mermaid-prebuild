@@ -77,15 +77,17 @@ module JekyllMermaidPrebuild
     # @return [String] possibly padded label text
     def self.pad_label_content(content)
       segments = content.split(BR_RE)
-      return content if segments.empty?
+      # Even indices are text lines; odd indices are the captured <br> delimiters.
+      line_pairs = segments.each_with_index.select { |_segment, index| index.even? }
+      return content if line_pairs.empty?
 
-      lines, = segments.partition.with_index { |_segment, index| index.even? }
-      longest_line = lines.max_by { |line| visual_length(line) }
+      # max_by keeps the first of equal-length ties — pad that one index only.
+      longest_line, longest_idx = line_pairs.max_by { |segment, _index| visual_length(segment) }
       emoji_count = count_emoji(longest_line)
       return content unless emoji_count.positive?
 
-      padded = "#{longest_line}#{NBSP * (emoji_count * 2)}"
-      segments.map { |segment| segment == longest_line ? padded : segment }.join
+      segments[longest_idx] = "#{longest_line}#{NBSP * (emoji_count * 2)}"
+      segments.join
     end
 
     def self.compensate_flowchart_labels(source)
