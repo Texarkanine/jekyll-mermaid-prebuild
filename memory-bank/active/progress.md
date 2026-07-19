@@ -16,3 +16,14 @@ Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-pre
 * Insights
     - Five modules use `module_function` (digest_calculator, emoji_compensator, hooks, mmdc_wrapper, svg_post_processor) — likely Bucket A/`def self.` conversions during kill.
     - `mmdc_wrapper_spec` currently stubs `described_class` (SUT) — must be remodeled to stub collaborators for Mutant discipline.
+
+## 2026-07-19 - PLAN - COMPLETE
+
+* Work completed
+    - Full L3 plan in `tasks.md` (component analysis, TDD plan, 8 steps, challenges, pre-mortem).
+    - Technology PoC: Mutant harness installs; `bundle exec mutant test` 158 success / 0 failed.
+* Decisions made
+    - No creative phase — approach fixed by auto-thumbnails reference + brief.
+    - Convert `module_function` → `def self.` and remodel MmdcWrapper SUT stubs before deep kill inventory.
+* Insights
+    - PoC during plan matches the auto-thumbnails lesson: Build can start from a green `mutant test`.
