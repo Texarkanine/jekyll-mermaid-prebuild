@@ -177,3 +177,13 @@ Parent: Mutant + SLOBAC remediations on `feat/mutation-testing` (PR #44). Rework
     - Observe Tempfile unlink without stubbing `MmdcWrapper` SUT.
 * Insights
     - Main already had `ensure`/`close!` on `test_render`; branch regression is the cleanup drop.
+
+## 2026-07-19 - PREFLIGHT - PASS
+
+* Work completed
+    - Validated TDD encoding (specs before lib in steps 1–4), conventions, dependency impact, completeness vs rework brief.
+    - Wrote `.preflight-status` = PASS.
+* Decisions made
+    - Proceed to Build under L2 autonomous transition.
+* Insights
+    - No plan amendments required.

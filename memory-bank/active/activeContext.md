@@ -1,11 +1,10 @@
 # Active Context
 
 ## Current Task: mutation-testing-pr44-feedback
-**Phase:** PLAN - COMPLETE
+**Phase:** PREFLIGHT - COMPLETE
 
 ## What Was Done
-- Level 2 plan written: 5 steps (hooks specs → hooks fix → mmdc specs → mmdc fix → gates).
-- Scope locked to two PR #44 dispositions; dismissed items excluded.
+- Preflight PASS: TDD ordering, conventions, scope completeness OK.
 
 ## Next Step
-- Preflight validation (autonomous L2 transition).
+- Build (autonomous L2 transition).
