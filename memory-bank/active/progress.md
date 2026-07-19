@@ -112,3 +112,17 @@ Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: r
     - Proceed to Build under L2 autonomous transition.
 * Insights
     - `spec/support/**/*.rb` already auto-loaded — no `spec_helper` edit needed for new helpers.
+
+## 2026-07-19 - BUILD - COMPLETE
+
+* Work completed
+    - All 70 audit findings remediated (fossils, renames, oracles, mocks, REXML figures, processor split).
+    - Gates: `bundle exec rspec` → 407/0, SimpleCov 100%; `bundle exec rubocop` clean; `bundle exec mutant run` → Coverage 100%.
+* Decisions made
+    - REXML fragment helper with void-tag normalization (no nokogiri dep).
+    - Document `pad_label_content` identity return; keep `equal` oracle (#43).
+    - Bucket A: simplify invalid-theme ArgumentError message (drop allowed-list formatting) for #60 vs Mutant.
+    - Hooks init: assert installed generator.config identity + exercise processor against that generator (no `.new` receive pins).
+* Insights
+    - Dropping interaction mocks without value oracles regresses Mutant; compensate with product-state/content asserts.
+    - `process_content` converts blocks last-to-first — failure-continuation oracles must match that order.

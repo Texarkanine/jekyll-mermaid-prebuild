@@ -118,58 +118,58 @@ Full suite + Mutant gate only at Step 9.
 
 Track Build against the audit. Check off when remediated.
 
-- [ ] #1 `configuration_spec.rb:19` — naming-lies
-- [ ] #2 `configuration_spec.rb:25` — naming-lies
-- [ ] #3 `configuration_spec.rb:107` — naming-lies
-- [ ] #4 `configuration_spec.rb:707` — naming-lies
-- [ ] #5 `generator_spec.rb:334` — mystery-guest
-- [ ] #6 `generator_spec.rb:521` — presentation-coupled
-- [ ] #7 `generator_spec.rb:540` — presentation-coupled
-- [ ] #8 `processor_spec.rb` — monolithic-test-file
-- [ ] #9 `processor_spec.rb:62` — presentation-coupled
-- [ ] #10 `processor_spec.rb:78` — naming-lies
-- [ ] #11 `processor_spec.rb:78` — vacuous-assertion
-- [ ] #12 `processor_spec.rb:113` — presentation-coupled
-- [ ] #13 `processor_spec.rb:120` — presentation-coupled
-- [ ] #14 `processor_spec.rb:157` — deliverable-fossils
-- [ ] #15 `processor_spec.rb:157` — naming-lies
-- [ ] #16 `processor_spec.rb:157` — over-specified-mock
-- [ ] #17 `processor_spec.rb:183` — deliverable-fossils
-- [ ] #18 `processor_spec.rb:183` — over-specified-mock
-- [ ] #19 `processor_spec.rb:201` — deliverable-fossils
-- [ ] #20 `processor_spec.rb:201` — over-specified-mock
-- [ ] #21 `processor_spec.rb:227` — deliverable-fossils
-- [ ] #22 `processor_spec.rb:440` — presentation-coupled
-- [ ] #23 `processor_spec.rb:528` — vacuous-assertion
-- [ ] #24 `processor_spec.rb:730` — over-specified-mock
-- [ ] #25 `processor_spec.rb:739` — over-specified-mock
-- [ ] #26 `processor_spec.rb:840` — naming-lies
-- [ ] #27 `processor_spec.rb:848` — naming-lies
-- [ ] #28 `processor_spec.rb:884` — pseudo-tested
-- [ ] #29 `processor_spec.rb:884` — vacuous-assertion
-- [ ] #30 `processor_spec.rb:966` — naming-lies
-- [ ] #31 `processor_spec.rb:981` — naming-lies
-- [ ] #32 `processor_spec.rb:1018` — pseudo-tested
-- [ ] #33 `processor_spec.rb:1018` — vacuous-assertion
-- [ ] #34–#39, #42, #46–#56, #58 `emoji_compensator_spec.rb` — deliverable-fossils
-- [ ] #40 `emoji_compensator_spec.rb:60` — naming-lies
-- [ ] #41 `emoji_compensator_spec.rb:60` — vacuous-assertion
-- [ ] #43 `emoji_compensator_spec.rb:151` — implementation-coupled
-- [ ] #44 `emoji_compensator_spec.rb:156` — naming-lies
-- [ ] #45 `emoji_compensator_spec.rb:156` — vacuous-assertion
-- [ ] #57 `emoji_compensator_spec.rb:346` — vacuous-assertion
-- [ ] #59 `mmdc_wrapper_spec.rb:327` — mystery-guest
-- [ ] #60 `mmdc_wrapper_spec.rb:391` — presentation-coupled
-- [ ] #61 `hooks_spec.rb:44` — pseudo-tested
-- [ ] #62 `hooks_spec.rb:117` — pseudo-tested
-- [ ] #63 `hooks_spec.rb:202` — over-specified-mock
-- [ ] #64 `hooks_spec.rb:275` — loose-text-oracle
-- [ ] #65 `hooks_spec.rb:275` — naming-lies
-- [ ] #66 `hooks_spec.rb:548` — pseudo-tested
-- [ ] #67 `hooks_spec.rb:554` — naming-lies
-- [ ] #68 `hooks_spec.rb:554` — vacuous-assertion
-- [ ] #69 `hooks_spec.rb:590` — naming-lies
-- [ ] #70 `hooks_spec.rb:590` — vacuous-assertion
+- [x] #1 `configuration_spec.rb:19` — naming-lies
+- [x] #2 `configuration_spec.rb:25` — naming-lies
+- [x] #3 `configuration_spec.rb:107` — naming-lies
+- [x] #4 `configuration_spec.rb:707` — naming-lies
+- [x] #5 `generator_spec.rb:334` — mystery-guest
+- [x] #6 `generator_spec.rb:521` — presentation-coupled
+- [x] #7 `generator_spec.rb:540` — presentation-coupled
+- [x] #8 `processor_spec.rb` — monolithic-test-file
+- [x] #9 `processor_spec.rb:62` — presentation-coupled
+- [x] #10 `processor_spec.rb:78` — naming-lies
+- [x] #11 `processor_spec.rb:78` — vacuous-assertion
+- [x] #12 `processor_spec.rb:113` — presentation-coupled
+- [x] #13 `processor_spec.rb:120` — presentation-coupled
+- [x] #14 `processor_spec.rb:157` — deliverable-fossils
+- [x] #15 `processor_spec.rb:157` — naming-lies
+- [x] #16 `processor_spec.rb:157` — over-specified-mock
+- [x] #17 `processor_spec.rb:183` — deliverable-fossils
+- [x] #18 `processor_spec.rb:183` — over-specified-mock
+- [x] #19 `processor_spec.rb:201` — deliverable-fossils
+- [x] #20 `processor_spec.rb:201` — over-specified-mock
+- [x] #21 `processor_spec.rb:227` — deliverable-fossils
+- [x] #22 `processor_spec.rb:440` — presentation-coupled
+- [x] #23 `processor_spec.rb:528` — vacuous-assertion
+- [x] #24 `processor_spec.rb:730` — over-specified-mock
+- [x] #25 `processor_spec.rb:739` — over-specified-mock
+- [x] #26 `processor_spec.rb:840` — naming-lies
+- [x] #27 `processor_spec.rb:848` — naming-lies
+- [x] #28 `processor_spec.rb:884` — pseudo-tested
+- [x] #29 `processor_spec.rb:884` — vacuous-assertion
+- [x] #30 `processor_spec.rb:966` — naming-lies
+- [x] #31 `processor_spec.rb:981` — naming-lies
+- [x] #32 `processor_spec.rb:1018` — pseudo-tested
+- [x] #33 `processor_spec.rb:1018` — vacuous-assertion
+- [x] #34–#39, #42, #46–#56, #58 `emoji_compensator_spec.rb` — deliverable-fossils
+- [x] #40 `emoji_compensator_spec.rb:60` — naming-lies
+- [x] #41 `emoji_compensator_spec.rb:60` — vacuous-assertion
+- [x] #43 `emoji_compensator_spec.rb:151` — implementation-coupled
+- [x] #44 `emoji_compensator_spec.rb:156` — naming-lies
+- [x] #45 `emoji_compensator_spec.rb:156` — vacuous-assertion
+- [x] #57 `emoji_compensator_spec.rb:346` — vacuous-assertion
+- [x] #59 `mmdc_wrapper_spec.rb:327` — mystery-guest
+- [x] #60 `mmdc_wrapper_spec.rb:391` — presentation-coupled
+- [x] #61 `hooks_spec.rb:44` — pseudo-tested
+- [x] #62 `hooks_spec.rb:117` — pseudo-tested
+- [x] #63 `hooks_spec.rb:202` — over-specified-mock
+- [x] #64 `hooks_spec.rb:275` — loose-text-oracle
+- [x] #65 `hooks_spec.rb:275` — naming-lies
+- [x] #66 `hooks_spec.rb:548` — pseudo-tested
+- [x] #67 `hooks_spec.rb:554` — naming-lies
+- [x] #68 `hooks_spec.rb:554` — vacuous-assertion
+- [x] #69 `hooks_spec.rb:590` — naming-lies
+- [x] #70 `hooks_spec.rb:590` — vacuous-assertion
 
 ## Technology Validation
 
@@ -204,7 +204,7 @@ Track Build against the audit. Check off when remediated.
 - [x] Technology validation complete
 - [x] Pre-Mortem complete
 - [x] Preflight
-- [ ] Build
+- [x] Build
 - [ ] QA
 
 ## Preflight Amendments

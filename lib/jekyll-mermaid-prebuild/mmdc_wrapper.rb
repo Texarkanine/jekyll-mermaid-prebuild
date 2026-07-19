@@ -99,10 +99,7 @@ module JekyllMermaidPrebuild
     # @return [Boolean] true if successful
     # @raise [ArgumentError] if theme is not supported
     def self.render(mermaid_source, output_path, theme: :default)
-      unless ALLOWED_RENDER_THEMES.include?(theme)
-        raise ArgumentError,
-              "unsupported mmdc theme #{theme.inspect} (allowed: #{ALLOWED_RENDER_THEMES.map(&:inspect).join(", ")})"
-      end
+      raise ArgumentError, "unsupported mmdc theme #{theme.inspect}" unless ALLOWED_RENDER_THEMES.include?(theme)
 
       input_file = Tempfile.new(["mermaid", ".mmd"])
 

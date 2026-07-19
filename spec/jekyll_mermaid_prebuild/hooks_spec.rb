@@ -44,8 +44,11 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       it "copies all SVGs to destination" do
         described_class.copy_svgs_to_site(site, config, svgs)
 
-        expect(File.exist?(File.join(dest_dir, "assets/svg/abc12345.svg"))).to be true
-        expect(File.exist?(File.join(dest_dir, "assets/svg/def67890.svg"))).to be true
+        svgs.each do |key, cache_path|
+          dest_path = File.join(dest_dir, "assets/svg/#{key}.svg")
+          expect(File.exist?(dest_path)).to be true
+          expect(File.read(dest_path)).to eq(File.read(cache_path))
+        end
       end
 
       it "creates output directory if needed" do
@@ -117,8 +120,11 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       it "copies both SVGs including the -dark suffix filename" do
         described_class.copy_svgs_to_site(site, config, svgs)
 
-        expect(File.exist?(File.join(dest_dir, "assets/svg/abc12345.svg"))).to be true
-        expect(File.exist?(File.join(dest_dir, "assets/svg/abc12345-dark.svg"))).to be true
+        svgs.each do |key, cache_path|
+          dest_path = File.join(dest_dir, "assets/svg/#{key}.svg")
+          expect(File.exist?(dest_path)).to be true
+          expect(File.read(dest_path)).to eq(File.read(cache_path))
+        end
       end
     end
 
@@ -200,22 +206,26 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       end
 
       it "enables processing and installs generator/processor" do
-        expect(JekyllMermaidPrebuild::Generator).to receive(:new)
-          .with(an_instance_of(JekyllMermaidPrebuild::Configuration))
-          .and_call_original
-        expect(JekyllMermaidPrebuild::Processor).to receive(:new)
-          .with(
-            an_instance_of(JekyllMermaidPrebuild::Configuration),
-            an_instance_of(JekyllMermaidPrebuild::Generator)
-          )
-          .and_call_original
-
         described_class.initialize_system(site)
 
         expect(site_data["mermaid_prebuild_enabled"]).to be true
-        expect(site_data["mermaid_prebuild_generator"]).to be_a(JekyllMermaidPrebuild::Generator)
-        expect(site_data["mermaid_prebuild_processor"]).to be_a(JekyllMermaidPrebuild::Processor)
+        generator = site_data["mermaid_prebuild_generator"]
+        processor = site_data["mermaid_prebuild_processor"]
+        expect(generator).to be_a(JekyllMermaidPrebuild::Generator)
+        expect(generator.config).to equal(site_data["mermaid_prebuild_config"])
+        expect(processor).to be_a(JekyllMermaidPrebuild::Processor)
         expect(site_data["mermaid_prebuild_svgs"]).to eq({})
+
+        # Prove the installed processor is wired to the installed generator/config.
+        allow(generator).to receive_messages(
+          generate: { "deadbeef" => File.join(@temp_dir, "deadbeef.svg") },
+          build_svg_url: "/assets/svg/deadbeef.svg",
+          build_figure_html: "<figure class=\"mermaid-diagram\"/>"
+        )
+        _result, count, svgs = processor.process_content("```mermaid\nA\n```\n", site)
+        expect(count).to eq(1)
+        expect(svgs).to eq("deadbeef" => File.join(@temp_dir, "deadbeef.svg"))
+        expect(generator).to have_received(:generate)
       end
 
       it "logs initialization and output directory" do
@@ -278,7 +288,11 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
         expect(site_data["mermaid_prebuild_enabled"]).to be false
         expect(logger).to have_received(:error).with(
           "MermaidPrebuild:",
-          a_string_matching(/Puppeteer/)
+          a_string_matching(/Puppeteer cannot launch headless Chrome/)
+        )
+        expect(logger).to have_received(:error).with(
+          "MermaidPrebuild:",
+          a_string_matching(%r{pptr\.dev/troubleshooting})
         )
       end
     end
@@ -548,10 +562,12 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
     it "copies svgs via copy_svgs_to_site when enabled" do
       described_class.copy_generated_svgs(site)
 
-      expect(File.exist?(File.join(@temp_dir, "_site/assets/svg/abc12345.svg"))).to be true
+      dest_path = File.join(@temp_dir, "_site/assets/svg/abc12345.svg")
+      expect(File.exist?(dest_path)).to be true
+      expect(File.read(dest_path)).to eq("<svg/>")
     end
 
-    it "passes nil config/svgs through when those keys are absent but enabled" do
+    it "does not raise when config and svgs keys are absent" do
       site_data.delete("mermaid_prebuild_config")
       site_data.delete("mermaid_prebuild_svgs")
 
@@ -594,9 +610,10 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       site_data["mermaid_prebuild_svgs"] = {}
       allow(processor).to receive(:process_content)
 
+      expect(described_class).to receive(:process_site).and_call_original
+
       Jekyll::Hooks.trigger :site, :pre_render, site
 
-      # no documents/pages — process_site still entered enabled path without error
       expect(processor).not_to have_received(:process_content)
     end
 

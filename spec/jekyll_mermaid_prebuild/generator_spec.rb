@@ -334,8 +334,9 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
       it "widens edge label foreignObjects regardless of diagram type" do
         paths = padded_generator.generate("flowchart LR\n  A --> B", "edgepad1")
         path = paths["edgepad1"]
+        expected_width = 40 + 5 # fixture foreignObject width + edge_label_padding
 
-        expect(File.read(path)).to include('width="45"')
+        expect(File.read(path)).to include(%(width="#{expected_width}"))
       end
     end
 
@@ -521,12 +522,14 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
     it "generates figure with linked image" do
       html = generator.build_figure_html("/assets/svg/abc.svg")
 
-      expect(html).to match(/<figure[^>]*class="mermaid-diagram"/)
-      expect(html).to match(%r{<a[^>]*href="/assets/svg/abc\.svg"})
-      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
-      expect(html).to match(/<img[^>]*alt="Mermaid Diagram"/)
-      expect(html).to include("</a>")
-      expect(html).to include("</figure>")
+      figures = mermaid_figures(html)
+      expect(figures.size).to eq(1)
+      anchors = figure_anchors(figures.first)
+      expect(anchors.size).to eq(1)
+      expect(anchors.first.attributes["href"]).to eq("/assets/svg/abc.svg")
+      img = anchor_img(anchors.first)
+      expect(img.attributes["src"]).to eq("/assets/svg/abc.svg")
+      expect(img.attributes["alt"]).to eq("Mermaid Diagram")
     end
 
     it "omits dual-theme markup when dark_url is omitted" do
@@ -540,11 +543,15 @@ RSpec.describe JekyllMermaidPrebuild::Generator do
     it "emits two links and prefers-color-scheme CSS when dark_url is set" do
       html = generator.build_figure_html("/assets/svg/abc.svg", dark_url: "/assets/svg/abc-dark.svg")
 
-      expect(html).to match(/@media\s*\(prefers-color-scheme:\s*dark\)/)
-      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__light")(?=[^>]*href="/assets/svg/abc\.svg")[^>]*>})
-      expect(html).to match(%r{<a(?=[^>]*class="mermaid-diagram__dark")(?=[^>]*href="/assets/svg/abc-dark\.svg")[^>]*>})
-      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc\.svg"})
-      expect(html).to match(%r{<img[^>]*src="/assets/svg/abc-dark\.svg"})
+      expect(prefers_color_scheme_dark_rule?(html)).to be(true)
+      figures = mermaid_figures(html)
+      expect(figures.size).to eq(1)
+      light = figure_anchors(figures.first, css_class: "mermaid-diagram__light").first
+      dark = figure_anchors(figures.first, css_class: "mermaid-diagram__dark").first
+      expect(light.attributes["href"]).to eq("/assets/svg/abc.svg")
+      expect(dark.attributes["href"]).to eq("/assets/svg/abc-dark.svg")
+      expect(anchor_img(light).attributes["src"]).to eq("/assets/svg/abc.svg")
+      expect(anchor_img(dark).attributes["src"]).to eq("/assets/svg/abc-dark.svg")
     end
   end
 end

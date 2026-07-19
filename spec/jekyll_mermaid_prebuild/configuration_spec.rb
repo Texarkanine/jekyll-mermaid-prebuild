@@ -16,13 +16,13 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
         expect(config.output_dir).to eq("assets/svg")
       end
 
-      it "defaults enabled to true via fetch" do
+      it "defaults enabled to true" do
         config = described_class.new(site)
 
         expect(config.enabled?).to be true
       end
 
-      it "defaults postprocessing flags via fetch" do
+      it "defaults postprocessing flags when postprocessing is omitted" do
         config = described_class.new(site)
 
         expect(config.text_centering).to be true
@@ -104,7 +104,7 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
         }
       end
 
-      it "applies postprocessing fetch keys and parsers" do
+      it "applies configured postprocessing overrides" do
         config = described_class.new(site)
 
         expect(config.text_centering).to be false
@@ -704,7 +704,7 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       expect(config.parse_output_dir("//a/b//")).to eq("a/b")
     end
 
-    it "preserves internal empty segments from repeated slashes" do
+    it "collapses repeated internal slashes" do
       expect(config.parse_output_dir("a//b")).to eq("a/b")
     end
   end

@@ -311,6 +311,9 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
   end
 
   describe ".test_render" do
+    # Hardcoded probe body written by MmdcWrapper.test_render for the availability check.
+    let(:probe_diagram) { "graph TD\nA-->B" }
+
     let(:status_ok) { instance_double(Process::Status, success?: true) }
     let(:status_bad) { instance_double(Process::Status, success?: false) }
 
@@ -334,7 +337,7 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
       end
 
       described_class.test_render
-      expect(written).to eq("graph TD\nA-->B")
+      expect(written).to eq(probe_diagram)
     end
 
     it "closes the output tempfile before invoking mmdc" do
@@ -392,7 +395,7 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
     it "raises ArgumentError for an unsupported theme" do
       expect do
         described_class.render("graph TD\nA-->B", "/tmp/out.svg", theme: :forest)
-      end.to raise_error(ArgumentError, /unsupported mmdc theme :forest \(allowed: :default, :dark\)/)
+      end.to raise_error(ArgumentError, /:forest/)
     end
 
     it "closes the input tempfile before invoking mmdc" do

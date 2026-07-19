@@ -70,7 +70,8 @@ module JekyllMermaidPrebuild
     # Pad the longest line in a label if it contains emoji.
     # Splits on <br/> variants, finds the visually longest line, and only
     # pads that line (shorter lines center naturally in the wider container).
-    # Returns content unchanged if the longest line has no emoji.
+    # When no padding is applied, returns the same String object (identity),
+    # not merely an equal copy.
     #
     # @param content [String] raw label text (may contain <br/> line breaks)
     # @return [String] possibly padded label text
