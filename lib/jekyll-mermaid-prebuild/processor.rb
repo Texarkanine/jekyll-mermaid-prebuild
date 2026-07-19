@@ -43,9 +43,6 @@ module JekyllMermaidPrebuild
 
       [processed, converted_count, svgs_to_copy]
     end
-
-    private
-
     # @param source [String] mermaid passed to mmdc (after optional emoji compensation)
     # @param diagram_type [String, nil]
     # @return [String] input to MD5 for cache key

@@ -476,144 +476,261 @@ describe "#initialize" do
   end
 
   describe "#finalize_background" do
-    it "returns a frozen string for chart backgrounds" do
-      site_config = {
-        "mermaid_prebuild" => {
-          "prefers-color-scheme" => {
-            "mode" => "dark",
-            "background-color" => { "light" => "#abc", "dark" => "black" }
-          }
-        }
-      }
-      site = instance_double(Jekyll::Site, config: site_config)
-      config = described_class.new(site)
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
 
-      expect(config.chart_background_light).to eq("#abc")
-      expect(config.chart_background_light).to be_frozen
-      expect(config.chart_background_dark).to eq("black")
-      expect(config.chart_background_dark).to be_frozen
+    it "returns a frozen duplicate string from String()" do
+      result = config.finalize_background("papayawhip")
+      expect(result).to eq("papayawhip")
+      expect(result).to be_frozen
+      expect(result).not_to equal("papayawhip")
     end
 
-    it "stringifies via to_s rather than to_str before freeze" do
+    it "uses String() (to_s) rather than to_str" do
       value = Object.new
       def value.to_s = "from-to_s"
       def value.to_str = "from-to_str"
 
-      allow(Jekyll.logger).to receive(:warn)
-      # coerce path calls finalize_background on the sanitized string; exercise via a
-      # background that passes validation and must remain the to_s form when stringified.
-      site_config = {
-        "mermaid_prebuild" => {
-          "prefers-color-scheme" => {
-            "mode" => "light",
-            "background-color" => { "light" => "papayawhip" }
-          }
-        }
-      }
-      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
-      expect(config.chart_background_light).to eq("papayawhip")
-      expect(config.chart_background_light).to be_frozen
-      expect(config.chart_background_light).not_to equal("papayawhip") # new frozen string
+      expect(config.finalize_background(value)).to eq("from-to_s")
     end
   end
 
   describe "#coerce_chart_background" do
-    it "warns and falls back for empty string" do
-      allow(Jekyll.logger).to receive(:warn)
-      site_config = {
-        "mermaid_prebuild" => {
-          "prefers-color-scheme" => {
-            "mode" => "light",
-            "background-color" => { "light" => "   " }
-          }
-        }
-      }
-      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
-      expect(config.chart_background_light).to eq("white")
-      expect(config.chart_background_light).to be_frozen
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+    let(:default) { +"white" }
+
+    before { allow(Jekyll.logger).to receive(:warn) }
+
+    it "returns a frozen duplicate of the default when value is nil without warning" do
+      result = config.coerce_chart_background(nil, default, "light")
+      expect(result).to eq("white")
+      expect(result).to be_frozen
+      expect(result).not_to equal(default)
+      expect(Jekyll.logger).not_to have_received(:warn)
+    end
+
+    it "warns with exact label/default and falls back for empty string" do
+      result = config.coerce_chart_background("  ", default, "light")
+      expect(result).to eq("white")
+      expect(result).not_to equal(default)
+      expect(Jekyll.logger).to have_received(:warn).with(
+        "MermaidPrebuild:",
+        'Invalid chart background (light): empty string; using "white"'
+      )
+    end
+
+    it "warns with exact label/default and falls back for overly long values" do
+      result = config.coerce_chart_background("a" * 300, default, "dark")
+      expect(result).to eq("white")
+      expect(result).to be_frozen
+      expect(result).not_to equal(default)
+      expect(Jekyll.logger).to have_received(:warn).with(
+        "MermaidPrebuild:",
+        'Invalid chart background (dark): value too long; using "white"'
+      )
+    end
+
+    it "warns with exact label/default and falls back for disallowed characters" do
+      result = config.coerce_chart_background("red;alert(1)", default, "light")
+      expect(result).to eq("white")
+      expect(result).to be_frozen
+      expect(result).not_to equal(default)
+      expect(Jekyll.logger).to have_received(:warn).with(
+        "MermaidPrebuild:",
+        'Invalid chart background (light): disallowed characters; using "white"'
+      )
+    end
+
+    it "strips both leading and trailing whitespace before accepting a color" do
+      expect(config.coerce_chart_background("  #abc  ", default, "light")).to eq("#abc")
+      expect(config.coerce_chart_background("  #abc", default, "light")).to eq("#abc")
+      expect(config.coerce_chart_background("#abc  ", default, "light")).to eq("#abc")
+    end
+
+    it "stringifies via to_s before stripping" do
+      value = Object.new
+      def value.to_s = "  #def  "
+      def value.to_str = "  #bad  "
+      expect(config.coerce_chart_background(value, default, "light")).to eq("#def")
+    end
+
+    it "returns a frozen sanitized color" do
+      result = config.coerce_chart_background("#abc", default, "light")
+      expect(result).to eq("#abc")
+      expect(result).to be_frozen
     end
   end
 
   describe "#config_hash_fetch" do
-    it "reads string and symbol keys from nested background-color hashes" do
-      site_config = {
-        "mermaid_prebuild" => {
-          "prefers-color-scheme" => {
-            "mode" => "auto",
-            "background-color" => { light: "#eee", "dark" => "#111" }
-          }
-        }
-      }
-      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
-      expect(config.chart_background_light).to eq("#eee")
-      expect(config.chart_background_dark).to eq("#111")
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+
+    it "returns nil for non-hash input" do
+      expect(config.config_hash_fetch("x", "mode")).to be_nil
+    end
+
+    it "reads string keys" do
+      expect(config.config_hash_fetch({ "mode" => "dark" }, "mode")).to eq("dark")
+    end
+
+    it "reads symbol keys when string key is absent" do
+      expect(config.config_hash_fetch({ mode: "auto" }, "mode")).to eq("auto")
+    end
+
+    it "prefers string keys over symbol keys" do
+      expect(config.config_hash_fetch({ "mode" => "light", mode: "dark" }, "mode")).to eq("light")
     end
   end
 
   describe "#normalize_prefers_mode" do
-    it "downcases and symbolizes mode strings" do
-      site_config = {
-        "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => " DARK " } }
-      }
-      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
-      expect(config.prefers_color_scheme).to eq(:dark)
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+
+    before { allow(Jekyll.logger).to receive(:warn) }
+
+    it "returns the default for nil without warning" do
+      expect(config.normalize_prefers_mode(nil)).to eq(:light)
+      expect(Jekyll.logger).not_to have_received(:warn)
+    end
+
+    it "returns the default for blank strings without warning" do
+      expect(config.normalize_prefers_mode("  ")).to eq(:light)
+      expect(Jekyll.logger).not_to have_received(:warn)
+    end
+
+    it "symbolizes known modes case-insensitively after to_s strip" do
+      expect(config.normalize_prefers_mode(" DARK ")).to eq(:dark)
+      expect(config.normalize_prefers_mode("Auto")).to eq(:auto)
+      expect(config.normalize_prefers_mode("light")).to eq(:light)
+      value = Object.new
+      def value.to_s = " dark "
+      def value.to_str = " auto "
+      expect(config.normalize_prefers_mode(value)).to eq(:dark)
+    end
+
+    it "warns with raw.inspect and defaults for unknown modes" do
+      expect(config.normalize_prefers_mode("banana")).to eq(:light)
+      expect(Jekyll.logger).to have_received(:warn).with(
+        "MermaidPrebuild:",
+        'Invalid prefers-color-scheme mode "banana"; using light'
+      )
     end
   end
 
   describe "#parse_edge_label_padding" do
-    it "is exercised via initialize for numeric and invalid values" do
-      cfg = lambda do |v|
-        described_class.new(
-          instance_double(
-            Jekyll::Site,
-            config: { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => v } } }
-          )
-        ).edge_label_padding
-      end
-      expect(cfg.call(3)).to eq(3)
-      expect(cfg.call(2.5)).to eq(2.5)
-      expect(cfg.call(-1)).to eq(0)
-      expect(cfg.call(false)).to eq(0)
-      expect(cfg.call("x")).to eq(0)
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+
+    it "returns 0 for nil, false, negative, and non-numeric" do
+      expect(config.parse_edge_label_padding(nil)).to eq(0)
+      expect(config.parse_edge_label_padding(false)).to eq(0)
+      expect(config.parse_edge_label_padding(-1)).to eq(0)
+      expect(config.parse_edge_label_padding("x")).to eq(0)
+    end
+
+    it "returns numeric padding values" do
+      expect(config.parse_edge_label_padding(3)).to eq(3)
+      expect(config.parse_edge_label_padding(2.5)).to eq(2.5)
     end
   end
 
   describe "#parse_emoji_width_compensation" do
-    it "freezes the resulting hash" do
-      config = described_class.new(
-        instance_double(
-          Jekyll::Site,
-          config: {
-            "mermaid_prebuild" => {
-              "postprocessing" => { "emoji_width_compensation" => { flowchart: true } }
-            }
-          }
-        )
-      )
-      expect(config.emoji_width_compensation).to eq("flowchart" => true)
-      expect(config.emoji_width_compensation).to be_frozen
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+
+    it "returns a frozen empty hash for non-hash values" do
+      result = config.parse_emoji_width_compensation("nope")
+      expect(result).to eq({})
+      expect(result).to be_frozen
+    end
+
+    it "stringifies keys, coerces values, and freezes" do
+      result = config.parse_emoji_width_compensation({ flowchart: true, other: "x" })
+      expect(result).to eq("flowchart" => true, "other" => false)
+      expect(result).to be_frozen
     end
   end
 
   describe "#parse_output_dir" do
-    it "rejects non-string output_dir values" do
-      config = described_class.new(
-        instance_double(Jekyll::Site, config: { "mermaid_prebuild" => { "output_dir" => 123 } })
-      )
-      expect(config.output_dir).to eq("assets/svg")
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+
+    it "returns the default for non-strings and blanks" do
+      expect(config.parse_output_dir(123)).to eq("assets/svg")
+      expect(config.parse_output_dir("")).to eq("assets/svg")
+      expect(config.parse_output_dir("   ")).to eq("assets/svg")
+    end
+
+    it "accepts String subclasses via is_a?" do
+      subclass = Class.new(String)
+      expect(config.parse_output_dir(subclass.new("/x/"))).to eq("x")
+    end
+
+    it "strips both leading and trailing whitespace before slash cleanup" do
+      expect(config.parse_output_dir("  /a/b/  ")).to eq("a/b")
+    end
+
+    it "strips multiple leading and trailing slashes" do
+      expect(config.parse_output_dir("//a/b//")).to eq("a/b")
     end
   end
 
   describe "#parse_prefers_color_scheme" do
-    it "parses nested mode through initialize" do
-      config = described_class.new(
-        instance_double(
-          Jekyll::Site,
-          config: { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "auto" } } }
-        )
+    let(:config) { described_class.new(instance_double(Jekyll::Site, config: {})) }
+
+    before { allow(Jekyll.logger).to receive(:warn) }
+
+    it "sets frozen defaults for nil without warning" do
+      config.parse_prefers_color_scheme(nil)
+      expect(config.prefers_color_scheme).to eq(:light)
+      expect(config.chart_background_light).to eq("white")
+      expect(config.chart_background_dark).to eq("black")
+      expect(config.chart_background_light).to be_frozen
+      expect(config.chart_background_dark).to be_frozen
+      expect(config.chart_background_light).not_to equal(described_class::DEFAULT_CHART_BG_LIGHT)
+      expect(Jekyll.logger).not_to have_received(:warn)
+    end
+
+    it "warns and defaults for non-hash values" do
+      config.parse_prefers_color_scheme("dark")
+      expect(config.prefers_color_scheme).to eq(:light)
+      expect(config.chart_background_light).to be_frozen
+      expect(config.chart_background_dark).to eq("black")
+      expect(Jekyll.logger).to have_received(:warn).with("MermaidPrebuild:", /expected a Hash/)
+    end
+
+    it "accepts Hash subclasses via is_a?" do
+      value = Class.new(Hash).new
+      value["mode"] = "dark"
+      config.parse_prefers_color_scheme(value)
+      expect(config.prefers_color_scheme).to eq(:dark)
+    end
+
+    it "parses mode and background-color map with labels" do
+      config.parse_prefers_color_scheme(
+        "mode" => "auto",
+        "background-color" => { "light" => "#eee", "dark" => "#111" }
       )
       expect(config.prefers_color_scheme).to eq(:auto)
+      expect(config.chart_background_light).to eq("#eee")
+      expect(config.chart_background_dark).to eq("#111")
+    end
+
+    it "uses default frozen backgrounds when background-color is not a Hash" do
+      config.parse_prefers_color_scheme("mode" => "light", "background-color" => "white")
+      expect(config.chart_background_light).to eq("white")
+      expect(config.chart_background_dark).to eq("black")
+      expect(config.chart_background_light).to be_frozen
+      expect(config.chart_background_dark).to be_frozen
+    end
+
+    it "passes light/dark labels into coercion warnings" do
+      config.parse_prefers_color_scheme(
+        "mode" => "light",
+        "background-color" => { "light" => "bad;color", "dark" => "also;bad" }
+      )
+      expect(Jekyll.logger).to have_received(:warn).with(
+        "MermaidPrebuild:",
+        a_string_matching(/Invalid chart background \(light\):/)
+      )
+      expect(Jekyll.logger).to have_received(:warn).with(
+        "MermaidPrebuild:",
+        a_string_matching(/Invalid chart background \(dark\):/)
+      )
     end
   end
-
 end

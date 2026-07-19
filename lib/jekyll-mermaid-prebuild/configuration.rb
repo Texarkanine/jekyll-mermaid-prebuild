@@ -49,9 +49,6 @@ module JekyllMermaidPrebuild
     def cache_dir
       CACHE_DIR
     end
-
-    private
-
     # Parse the prefers-color-scheme block (see PREFERS_COLOR_SCHEME_YAML_KEY) from a Hash only
     # (mode + optional background-color map). Non-Hash values fall back to :light and default
     # backgrounds with a warning.
@@ -159,7 +156,7 @@ module JekyllMermaidPrebuild
     # @param value [String]
     # @return [String] frozen copy
     def finalize_background(value)
-      String(value).dup.freeze
+      value.to_s.dup.freeze
     end
 
     # Returns a frozen Hash of diagram type (string) => boolean. Non-hash values are rejected → {}.
