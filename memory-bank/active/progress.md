@@ -158,3 +158,12 @@ Parent: Mutant + SLOBAC remediations on `feat/mutation-testing` (PR #44). Rework
     - Explicitly out of scope (dismissed): `Hooks.register` compat shim; `pad_label_content` duplicate-line padding; `parse_output_dir` `//` collapse; `String#lines`→`each_line` style nit; CodeRabbit walkthrough comment.
 * Insights
     - Gem is `0.5.0`; load-time auto-registration remains the real activation path. LlamaPReview "breaking API" claim overstates `Hooks.register` as a public contract.
+
+## 2026-07-19 - COMPLEXITY-ANALYSIS - COMPLETE
+
+* Work completed
+    - Classified PR #44 feedback rework as Level 2; stubbed `tasks.md` and `activeContext.md`.
+* Decisions made
+    - Level 2 — two corrective remediations in separate components (`hooks.rb` + `mmdc_wrapper.rb`) with matching spec updates; no architecture.
+* Insights
+    - Scope deliberately narrow: only dispositions judged "fix in this PR"; AI-review false alarms on public-API / edge-case fidelity stay dismissed.
