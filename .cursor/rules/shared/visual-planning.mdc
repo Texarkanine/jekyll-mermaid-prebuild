@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: Guidelines for using Mermaid diagrams during planning. Apply when planning non-trivial work involving multiple components, interactions, data models, or process flows.
+description: Guidelines for using Mermaid diagrams to increase comprehension of complex processes. Apply when planning non-trivial work involving multiple components, interactions, data models, or process flows, or when describing a system with complex interactions where prose alone becomes unwieldy.
 ---
 # Visual Planning with Mermaid Diagrams
 

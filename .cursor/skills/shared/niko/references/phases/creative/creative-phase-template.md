@@ -40,7 +40,9 @@ The phase must include these steps, in order. Step names and evaluation criteria
    If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
    ```
 
-5. **Step 5: Output Document** - Write to `memory-bank/active/creative/creative-[question-name].md`. The format must include at minimum:
+5. **Optional domain closing step (between Decide and Output)** - Architecture **requires** Choice Pre-Mortem here (see below). Other types may insert an equivalent load-bearing beat; if unused, skip straight to Output.
+
+6. **Output Document** - Write to `memory-bank/active/creative/creative-[question-name].md`. The contract cares about order (Decide → optional closing beat → Output), not fixed step numbers across phase types. The format must include at minimum:
    - A domain-appropriate header (e.g., "Algorithm Decision:", "Architecture Decision:", "Decision:")
    - Options Evaluated (bulleted, one-line summaries)
    - Analysis (table or prose)
@@ -57,6 +59,14 @@ The phase must include these steps, in order. Step names and evaluation criteria
    - Implementation Notes (for high-confidence results)
 
    Additional sections specific to the domain (e.g., architecture adds "Requirements & Constraints" and "Components"; uiux adds "User & Context" and "Design System") go before Options Evaluated.
+
+### Choice Pre-Mortem
+
+Architecture creative **requires** a choice-level pre-mortem after Decide (before finalizing high confidence / before Output). Incantation: *If we shipped this decision and it turned out wrong, what would the likely reason be?* Record 1–3 likely reasons; mark each checked or unchecked; unchecked constraint/assumption → do not finalize high confidence until verified, or return low confidence. See `creative-phase-architecture.md`.
+
+Other creative phase types (generic, algorithm, uiux) **may** use the same beat when the decision is load-bearing. Do not treat it as mandatory for every naming or low-stakes creative. New phase types should document whether the beat is required or optional for that domain.
+
+This is distinct from plan-end Pre-Mortem (whole *plan* failure after Challenges) and from architecture's Risk criterion (blast radius / reversibility).
 
 ### What NOT to Include
 
@@ -122,7 +132,11 @@ Select the winning option. State:
 
 If no clear winner emerges, this is a **low-confidence result**, which is fine - you did the research!
 
-## Step 5: Output Document
+## Step 5: [Optional domain closing step — e.g. Choice Pre-Mortem]
+
+[Omit for types that do not need it; architecture requires Choice Pre-Mortem here]
+
+## Step 6: Output Document
 
 Write to `memory-bank/active/creative/creative-[question-name].md`:
 

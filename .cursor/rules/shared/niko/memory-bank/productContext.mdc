@@ -16,6 +16,15 @@ Scan the codebase for traditional documentation sources, such as README files, `
 
 Aim for proportional coverage across the system's capabilities. Do not let the most complex or most-recently-developed area dominate the document - each major functional area deserves similar depth. This file should read as a balanced overview, not a spotlight on one feature.
 
+### Avoid
+
+1. Implementation vocabulary: use cases and constraints are written in the user's language, not the codebase's. A use case that names components, files, or functions is describing the implementation, which belongs elsewhere.
+2. Feature-by-feature accretion: shipping a feature does not earn it a bullet here. New content must change the *product* picture - who it serves, what it's for, what bounds it - not restate the release history.
+
+## When to Update
+
+This file describes the product, not the work. After creation, the default is to leave it alone: completing a task is not a reason to write here. Update it only when work you just completed made something in it factually wrong or materially incomplete - a new user constituency, a retired use case, a changed constraint - and then make a surgical fix to the invalidated content, nothing more. When in doubt, don't.
+
 ## Format
 
 Create the file in Markdown format, according to this template:

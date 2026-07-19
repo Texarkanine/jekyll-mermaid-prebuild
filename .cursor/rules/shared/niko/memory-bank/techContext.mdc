@@ -32,6 +32,10 @@ Err on the side of brevity - if you're not sure if something needs to be mention
 2. Values that will drift without someone updating this file. Prefer indirection: say "version pinned in `.nvmrc`" instead of "version 20.18.0 in `.nvmrc`". Say "configured in `jest.config.js`" instead of listing the configuration. The goal is pointers that remain valid even as the pointed-to values change.
 3. Unverified claims. If you infer something (e.g., a tool is in use) but cannot confirm it from project files, do not include it.
 
+## When to Update
+
+After creation, the default is to leave this file alone: completing a task is not a reason to write here. Update it only when work you just completed made something in it factually wrong or materially incomplete - a build tool replaced, a test process changed, an environment step added - and then make a surgical fix to the invalidated content, nothing more. New content must pass the same bar as creation: durable pointers, not values that drift. When in doubt, don't.
+
 ## Format
 
 Create the file in Markdown format, according to this template:

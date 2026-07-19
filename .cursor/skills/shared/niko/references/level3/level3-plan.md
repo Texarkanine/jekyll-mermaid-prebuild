@@ -28,7 +28,7 @@ L3 tasks touch multiple components or modules. Map the scope:
 - **Cross-module dependencies**: Identify how the affected components interact. Which components call which? What data flows between them? Are there shared state or concurrency concerns?
 - **Boundary changes**: Will this feature change any component's public interface, API contract, or data schema? Flag these - they have higher blast radius and may need creative phase exploration.
 - **Cross-reference against `memory-bank/systemPatterns.md`** to confirm the planned touchpoints align with established patterns. If they don't, that's an open question.
-- **Invariants & Constraints:** List the invariants and constraints that the correct solution must preserve.
+- **Invariants & Constraints:** List the properties the correct solution must preserve or that must hold for the plan to be valid. Prefer positive framing ("must preserve X" / "must hold Y"). Include plan-level properties where they matter — safety, compatibility, and non-goals as preserved boundaries — not only technical stack constraints.
 
 ## Step 4: Identify Open Questions
 
@@ -85,13 +85,21 @@ Process open questions one at a time. After each creative phase completes, reass
 - Flag any cross-component integration risks
 - If any challenge suggests the task is actually Level 4 (requires milestone decomposition, multiple independent workstreams): FAIL with recommendation to re-level
 
-## Step 9: Technology Validation
+## Step 9: Pre-Mortem
+
+After Challenges & Mitigations are recorded, run Pre-Mortem on the whole plan:
+
+- Imagine this plan has already failed. What would the likely cause(s) be?
+- For each likely cause: say how the plan changes in response (scope cut, new step, new open question, stronger invariant, etc.), or note in one line that a Challenge already covers it and move on
+- Do **not** re-list the Challenges & Mitigations as a dump — Pre-Mortem is prospective hindsight on the plan as a whole (wrong premise, wrong layer, missing constraint), not another tech-risk register
+
+## Step 10: Technology Validation
 
 - Document any new dependencies, build tool changes, or configuration additions
 - If new technology is introduced: create a minimal proof-of-concept that verifies the dependency installs, builds, and runs in the project's environment
 - If no new technology: skip this step and note "No new technology - validation not required"
 
-## Step 10: Generate Plan Report
+## Step 11: Generate Plan Report
 
 1. Write the complete plan to `memory-bank/active/tasks.md` using the format below
 2. Update `memory-bank/active/activeContext.md` with planning outcome
@@ -175,6 +183,11 @@ Process open questions one at a time. After each creative phase completes, reass
 - [Challenge 1]: [Mitigation]
 - [Challenge 2]: [Mitigation]
 
+## Pre-Mortem
+
+- [Likely cause if this plan failed]: [How the plan changes, or "already covered by Challenge N"]
+- [Likely cause 2]: [Plan response]
+
 ## Status
 
 - [x] Component analysis complete
@@ -182,12 +195,13 @@ Process open questions one at a time. After each creative phase completes, reass
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
 - [x] Technology validation complete
+- [x] Pre-Mortem complete
 - [ ] Preflight
 - [ ] Build
 - [ ] QA
 ~~~
 
-## Step 11: Log Progress
+## Step 12: Log Progress
 
 > 🚨 **Printing this notice is NOT the end of this phase.** After printing, continue immediately to the next step - do not stop.
 
@@ -216,6 +230,10 @@ Log the results depending on the build outcome by printing the appropriate block
 
 [Brief summary of identified challenges, or "None identified"]
 
+## Pre-Mortem
+
+[Brief summary of likely plan-failure causes and plan responses, or "None beyond Challenges"]
+
 ## Next Steps
 
 Proceed to "Preflight" phase to validate the plan.
@@ -239,7 +257,7 @@ Proceed to "Preflight" phase to validate the plan.
 - **Open questions unresolved**: Awaiting operator input on [specific question].
 ~~~
 
-## Step 12: Phase Transition
+## Step 13: Phase Transition
 
 - If operator input is required: stop and wait for them.
 - If operator input is not required: load the appropriate complexity level-specific Niko workflow file, then use its Phase Mappings to execute the next phase.

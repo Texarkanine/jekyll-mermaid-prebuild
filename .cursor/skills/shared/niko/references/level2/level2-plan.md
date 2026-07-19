@@ -46,13 +46,21 @@ Read:
 - Flag any dependency on external state (APIs, environment, config) that must be present during build
 - If any challenge suggests the task is actually Level 3+ (multiple components with design decisions, cross-cutting concerns, ambiguous requirements): FAIL with recommendation to re-level
 
-## Step 7: Technology Validation 
+## Step 7: Pre-Mortem
+
+After Challenges & Mitigations are recorded, run Pre-Mortem on the whole plan:
+
+- Imagine this plan has already failed. What would the likely cause(s) be?
+- For each likely cause: say how the plan changes in response (scope cut, new step, new open question, etc.), or note in one line that a Challenge already covers it and move on
+- Do **not** re-list the Challenges & Mitigations as a dump — Pre-Mortem is prospective hindsight on the plan as a whole (wrong premise, wrong layer, missing constraint), not another tech-risk register
+
+## Step 8: Technology Validation 
 
 - Document any new dependencies, build tool changes, or configuration additions
 - If new technology is introduced: Create a minimal proof-of-concept that verifies the dependency installs, builds, and runs in the project's environment
 - If no new technology: skip this step and note "No new technology - validation not required"
 
-## Step 8: Generate Plan Report
+## Step 9: Generate Plan Report
 
 1. Write the complete plan to `memory-bank/active/tasks.md` using the output format below
 2. Update `memory-bank/active/activeContext.md` with planning outcome
@@ -107,18 +115,24 @@ Read:
 - [Challenge 1]: [Mitigation]
 - [Challenge 2]: [Mitigation]
 
+## Pre-Mortem
+
+- [Likely cause if this plan failed]: [How the plan changes, or "already covered by Challenge N"]
+- [Likely cause 2]: [Plan response]
+
 ## Status
 
 - [x] Initialization complete
 - [x] Test planning complete (TDD)
 - [x] Implementation plan complete
 - [x] Technology validation complete
+- [x] Pre-Mortem complete
 - [ ] Preflight
 - [ ] Build
 - [ ] QA
 ~~~
 
-## Step 9: Log Progress
+## Step 10: Log Progress
 
 > 🚨 **Printing this notice is NOT the end of this phase.** After printing, continue immediately to the next step - do not stop.
 
@@ -142,6 +156,10 @@ Record the results by printing the appropriate block:
 
 [Brief summary of identified challenges, or "None identified"]
 
+## Pre-Mortem
+
+[Brief summary of likely plan-failure causes and plan responses, or "None beyond Challenges"]
+
 ## Next Steps
 
 Preflight validation will now run automatically.
@@ -164,7 +182,7 @@ Preflight validation will now run automatically.
 - **Re-level required**: Task complexity exceeds Level 2. Discuss with operator before re-planning at Level 3+.
 ~~~
 
-## Step 10: Phase Transition
+## Step 11: Phase Transition
 
 - If operator input is required: stop and wait for them.
 - If operator input is not required: load the appropriate complexity level-specific Niko workflow file, then use its Phase Mappings to execute the next phase.
