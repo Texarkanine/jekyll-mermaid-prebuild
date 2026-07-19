@@ -473,7 +473,7 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       expect { described_class.process_site(site) }.not_to raise_error
       expect(logger).to have_received(:error).with(
         "MermaidPrebuild:",
-        "Error processing page: page-boom"
+        "Error processing about.md: page-boom"
       )
     end
 
@@ -520,7 +520,7 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
 
       expect(logger).to have_received(:error).with(
         "MermaidPrebuild:",
-        a_string_matching(/Error processing page:.*nil/)
+        a_string_matching(/Error processing about\.md:.*nil/)
       )
     end
   end

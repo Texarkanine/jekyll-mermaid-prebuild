@@ -364,6 +364,34 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
       allow(Open3).to receive(:capture3).and_return(["", "other failure", status_bad])
       expect(described_class.test_render).to eq(:unknown_error)
     end
+
+    it "removes input and output tempfiles after a successful probe" do
+      input_path = nil
+      output_path = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        output_path = args[args.index("-o") + 1]
+        ["", "", status_ok]
+      end
+
+      expect(described_class.test_render).to eq(:ok)
+      expect(File.exist?(input_path)).to be false
+      expect(File.exist?(output_path)).to be false
+    end
+
+    it "removes input and output tempfiles when the probe fails" do
+      input_path = nil
+      output_path = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        output_path = args[args.index("-o") + 1]
+        ["", "other failure", status_bad]
+      end
+
+      expect(described_class.test_render).to eq(:unknown_error)
+      expect(File.exist?(input_path)).to be false
+      expect(File.exist?(output_path)).to be false
+    end
   end
 
   describe ".render" do

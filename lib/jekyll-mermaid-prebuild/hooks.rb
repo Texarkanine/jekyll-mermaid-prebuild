@@ -108,7 +108,7 @@ module JekyllMermaidPrebuild
           total_count += count
         end
       rescue StandardError => e
-        Jekyll.logger.error "MermaidPrebuild:", "Error processing page: #{e.message}"
+        Jekyll.logger.error "MermaidPrebuild:", "Error processing #{page.relative_path}: #{e.message}"
       end
 
       Jekyll.logger.info "MermaidPrebuild:", "Total: #{total_count} diagram(s) converted" if total_count.positive?

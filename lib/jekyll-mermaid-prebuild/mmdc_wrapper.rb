@@ -72,20 +72,25 @@ module JekyllMermaidPrebuild
     def self.test_render
       input = Tempfile.new(["", ".mmd"])
       output = Tempfile.new(["", ".svg"])
-      input.write("graph TD\nA-->B")
-      input.close
-      output.close # Close before mmdc writes (Windows file locking)
+      begin
+        input.write("graph TD\nA-->B")
+        input.close
+        output.close # Close before mmdc writes (Windows file locking)
 
-      _stdout, stderr, status = Open3.capture3(
-        MMDC_COMMAND, "-i", input.path, "-o", output.path, "-e", "svg"
-      )
+        _stdout, stderr, status = Open3.capture3(
+          MMDC_COMMAND, "-i", input.path, "-o", output.path, "-e", "svg"
+        )
 
-      if status.success?
-        :ok
-      elsif stderr.include?("libgbm") || stderr.include?("browser process")
-        :puppeteer_error
-      else
-        :unknown_error
+        if status.success?
+          :ok
+        elsif stderr.include?("libgbm") || stderr.include?("browser process")
+          :puppeteer_error
+        else
+          :unknown_error
+        end
+      ensure
+        input.unlink
+        output.unlink
       end
     end
 
