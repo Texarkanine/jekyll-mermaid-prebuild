@@ -16,7 +16,7 @@ Ruby gem (Jekyll plugin) that shells out to `mmdc` (mermaid-cli) for SVG generat
 
 ## Testing Process
 
-- **RSpec** — Test framework, configured in `.rspec`. Specs live in `spec/jekyll_mermaid_prebuild/`, one file per module.
+- **RSpec** — Test framework, configured in `.rspec`. Specs live in `spec/jekyll_mermaid_prebuild/`, typically one file per module (Processor is split by capability: `processor_*_spec.rb`). HTML figure contracts use REXML via `spec/support/html_fragment_helpers.rb`.
 - **Run**: `bundle exec rspec`
 - **Coverage**: SimpleCov with Cobertura output for CI (Codecov integration). SimpleCov is skipped when Mutant is loaded (see `spec/spec_helper.rb`).
 - **Mutation testing**: Mutant + `mutant-rspec`, configured in `config/mutant.yml`. Kill discipline (A/B buckets, no ignore cheats, no SUT stubs) is documented in `CONTRIBUTING.md`. Invoke with `bundle exec mutant test` / `bundle exec mutant run`.

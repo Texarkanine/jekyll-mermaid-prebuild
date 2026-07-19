@@ -1,10 +1,11 @@
 # Active Context
 
 ## Current Task: mutation-testing-slobac-rework
-**Phase:** QA - COMPLETE (PASS)
+**Phase:** REFLECT - COMPLETE
 
 ## What Was Done
-- QA PASS; no fixes required.
+- Reflection written: `memory-bank/active/reflection/reflection-mutation-testing-slobac-rework.md`.
+- Persistent reconcile: `techContext.md` Testing Process updated for Processor split + REXML helper.
 
 ## Next Step
-- Reflect phase (automatic per L2 workflow).
+- Operator: `/niko-archive` when ready.

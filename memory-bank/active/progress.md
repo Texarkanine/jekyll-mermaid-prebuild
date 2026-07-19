@@ -135,3 +135,13 @@ Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: r
     - No trivial or substantive fixes required.
 * Insights
     - None beyond Build.
+
+## 2026-07-19 - REFLECT - COMPLETE
+
+* Work completed
+    - Wrote `memory-bank/active/reflection/reflection-mutation-testing-slobac-rework.md`.
+    - Reconciled `techContext.md` (Processor split + REXML helper).
+* Decisions made
+    - Stop before archive; operator runs `/niko-archive` when ready.
+* Insights
+    - See reflection (SLOBAC vs Mutant tension; last-to-first conversion order).
