@@ -10,7 +10,14 @@ Remediate all 70 findings in `.slobac/2026-07-19T16-23-23/audit.md` across branc
 
 ## Test Plan (TDD)
 
-This work *is* the test suite. Each TDD cycle = apply one remediation cluster → run the affected examples → confirm still green → spot-check that strengthened oracles would fail under the smell's stated failure mode (no-op, empty file, wrong width, etc.). Full suite + Mutant gate at the end.
+**Test-only work:** there is no `lib/` production code in scope. Each implementable unit below is an example (or support helper used only by examples). Per-unit order is mandatory:
+
+1. Apply the audit’s prescribed change to the example/helper (the deliverable *is* the test).
+2. Run the affected example(s) (`bundle exec rspec path:line` preferred while iterating).
+3. For strengthens: briefly confirm the smell’s failure mode would fail (empty file, no-op body, type-only hash, etc.) — mental or one-line local weaken then restore.
+4. Mark the corresponding finding checkbox(es) done.
+
+Full suite + Mutant gate only at Step 9.
 
 ### Behaviors to Verify
 
@@ -41,63 +48,128 @@ This work *is* the test suite. Each TDD cycle = apply one remediation cluster �
 
 ## Implementation Plan
 
+**Convention note:** techContext’s “one file per module” is intentionally waived for Processor per audit `#8`; new files keep the `processor_*_spec.rb` prefix and `RSpec.describe JekyllMermaidPrebuild::Processor`. Support helpers follow `ConfigurationHelpers` (`module` + `RSpec.configure { include }`); `spec/support/**/*.rb` is already auto-required by `spec_helper`.
+
 1. **Add HTML fragment helper (support)**
-   - Files: `spec/support/html_fragment.rb` (new), require from `spec/spec_helper.rb` if not auto-loaded
-   - Changes: `parse_html_fragment(str)` → REXML document/root; helpers to select `figure[@class='mermaid-diagram']`, nested `a`/`img` by class/href/src/alt; optional CSS-text presence check for `@media (prefers-color-scheme: dark)`
-   - TDD: write a tiny example or exercise via the first presentation-coupled test
+   - Files: `spec/support/html_fragment_helpers.rb` (new; auto-loaded)
+   - Changes: `HtmlFragmentHelpers` with `parse_html_fragment(str)` (REXML + wrapper root), selectors for `figure[@class='mermaid-diagram']`, nested `a`/`img`, and style-text check for `prefers-color-scheme: dark`
+   - Verify: exercise via Step 7’s first presentation-coupled example (do not land unused helper)
 
 2. **Strip deliverable fossils (mechanical)**
-   - Files: `emoji_compensator_spec.rb`, `processor_spec.rb` (and any other `# P/D/E` hits)
-   - Changes: delete checklist-prefix comments; keep behavior notes only if they add product meaning without case IDs
-   - Findings: `#14,#17,#19,#21,#34–#42,#46+` (all deliverable-fossils)
+   - Files: `emoji_compensator_spec.rb`, `processor_spec.rb`
+   - Changes: delete `# P*`, `# D*`, `# E*` checklist comments; keep non-ID behavior notes only if useful
+   - Verify: `rg '# [PDE][0-9]' spec/jekyll_mermaid_prebuild/` empty; run touched files
+   - Findings: all deliverable-fossils (`#14,#17,#19,#21,#34–#39,#42,#46–#56,#58`)
 
 3. **Rename naming-lies (titles only where body is correct)**
-   - Files: `configuration_spec.rb`, `processor_spec.rb`, `hooks_spec.rb`, others per audit
-   - Changes: rename per prescriptions (e.g. drop `via fetch`; `collapses repeated internal slashes`; outcome-based fence titles). Where audit offers rename *or* strengthen, prefer strengthen only when kill-set clearly needs it (see Step 5); else rename.
-   - Findings: `#1–#4,#10,#15,#26,#27,#30,#31,#65,#67,#69` (+ any remaining naming-lies)
+   - Files: `configuration_spec.rb`, `processor_spec.rb`, `hooks_spec.rb`, `emoji_compensator_spec.rb`
+   - Changes: rename per prescriptions. Where audit offers rename *or* strengthen, defer strengthen to Step 5 when the product claim is load-bearing; else rename.
+   - Verify: targeted examples green after each rename batch
+   - Findings: `#1–#4,#10,#15,#26,#27,#30,#31,#40,#44,#65,#67,#69` (and any remaining naming-lies not folded into Step 5)
 
 4. **Name mystery guests**
-   - Files: `generator_spec.rb` (`expected_width = 40 + 5`), `mmdc_wrapper_spec.rb` (named `PROBE_DIAGRAM` / comment for `test_render` body)
+   - Files: `generator_spec.rb` (`expected_width = 40 + padding`), `mmdc_wrapper_spec.rb` (named probe constant/comment)
+   - Verify: those two examples green
    - Findings: `#5,#59`
 
 5. **Strengthen vacuous / pseudo-tested / loose oracles**
    - Files: `processor_spec.rb`, `emoji_compensator_spec.rb`, `hooks_spec.rb`, `mmdc_wrapper_spec.rb`
-   - Changes per audit:
-     - `#11`: assert concrete svg key/value from stubbed generate (and/or two-call merge if keeping “cumulative”)
-     - `#23`: assert which block converted vs retained + svg keys
-     - `#28/#29`: assert `position` / unchanged blocks after plain text
-     - `#32/#33`: assert `fence_stack` push for non-mermaid open
-     - `#41,#45,#57` (emoji vacuous): replace weak oracles per finding text
-     - `#43` (implementation-coupled): assert product outcome, not private shape
+   - Per-finding changes (each: stronger oracle → run line → failure-mode spot-check):
+     - `#11`: concrete svg key/value from stubbed generate (and/or two-call merge if keeping “cumulative”)
+     - `#23`: which block converted vs retained + svg keys
+     - `#28/#29`: `position` / unchanged blocks after plain text
+     - `#32/#33`: `fence_stack` push for non-mermaid open
+     - `#41,#45,#57`: emoji vacuous → concrete product oracles per finding text
+     - `#43`: product outcome, not private shape
      - `#61,#62,#66`: destination SVG bytes == seeded cache
-     - `#64/#65`: tighten puppeteer log to guidance topics *or* rename; prefer strengthen to match title
-     - `#67/#68`: spy nil forward *or* rename to no-raise claim
-     - `#69/#70`: positive evidence `process_site` ran on pre_render, keep empty-docs secondary claim
+     - `#64/#65`: tighten puppeteer log to guidance topics (prefer over rename-only)
+     - `#67/#68`: spy nil forward *or* rename to no-raise (title must match)
+     - `#69/#70`: positive evidence `process_site` ran; keep empty-docs secondary claim
      - `#60`: `raise_error(ArgumentError)` + message mentions `:forest` (not full allowed-list sentence)
-   - TDD: after each strengthen, briefly confirm a deliberate weaken would fail (local mental/manual check)
 
 6. **Mock hygiene**
    - Files: `processor_spec.rb`, `hooks_spec.rb`
-   - Changes: drop redundant `have_received(:generate)` after stub-block oracles (`#16,#18,#20`); drop `not_to receive(:compensate)` in favor of generate-arg oracle (`#24,#25`); drop `Generator`/`Processor` `.new` receives in hooks init (`#63`) keeping `site.data` asserts
+   - Changes: drop redundant `have_received(:generate)` (`#16,#18,#20`); drop `not_to receive(:compensate)` for generate-arg oracle (`#24,#25`); drop `Generator`/`Processor` `.new` receives (`#63`) keeping `site.data` asserts
+   - Verify: affected examples green; kill-set preserved via later Mutant gate
 
 7. **Structural HTML for presentation-coupled figure contracts**
-   - Files: `generator_spec.rb`, `processor_spec.rb` (pre-split), using helper from Step 1
-   - Findings: `#6,#7,#9,#12,#13,#22` (+ `#7` dual-theme CSS via style/text node, not raw lookahead regexes)
-   - Keep fence-absence claims as separate string/behavioral asserts where audit says so
+   - Files: `generator_spec.rb`, `processor_spec.rb` (still monolith), using Step 1 helper
+   - Findings: `#6,#7,#9,#12,#13,#22`
+   - Keep fence-absence claims as separate behavioral asserts where audit says so
+   - Verify: each converted example green; no attribute-order regex left for these
 
 8. **Split monolithic `processor_spec.rb`**
-   - Files (proposed; adjust names only if Build finds a clearer cluster):
-     - `processor_process_content_spec.rb` — `#process_content` (+ nested contexts)
+   - **Only after Steps 2–7 are green in the monolith.** Move blocks; do not rewrite during the move.
+   - Target files:
+     - `processor_process_content_spec.rb` — `#process_content`
      - `processor_convert_and_digest_spec.rb` — `#convert_block`, `#digest_string_for_cache`
-     - `processor_fence_parsing_spec.rb` — `#find_top_level_mermaid_blocks`, `#process_line`, `#handle_fence_line`, `#handle_line_at_top_level`, `#handle_line_in_mermaid`, `#handle_line_in_nested_fence`
-   - Shared: move `let`/helpers/doubles used across files into `spec/support/processor_spec_helpers.rb` (or keep thin duplicated lets if cheaper)
-   - Constraint: total `it` count unchanged; Mutant subjects still under correct method `describe` prefixes
+     - `processor_fence_parsing_spec.rb` — fence/state-machine method describes
+   - Shared: `spec/support/processor_spec_helpers.rb` only if duplication hurts; else thin duplicated `let`s
+   - Constraint: `it` count unchanged; method-level `describe "#foo"` prefixes preserved for Mutant
+   - Verify: `rg -c '^\s*it ' spec/jekyll_mermaid_prebuild/processor*.rb` matches prior count; full processor specs green
    - Finding: `#8`
 
 9. **Verification gate**
    - Run: `bundle exec rspec`, `bundle exec rubocop`, `bundle exec mutant run`
-   - Fix any fallout (Mutant describe-prefix starvation after split is the main risk)
-   - Optionally re-scan fossils with `rg '# [PDE][0-9]' spec/` for leftover checklist tags
+   - Confirm Findings Checklist all `[x]` (or documented FP deferral)
+   - Re-scan: `rg '# [PDE][0-9]' spec/jekyll_mermaid_prebuild/`
+
+## Findings Checklist
+
+Track Build against the audit. Check off when remediated.
+
+- [ ] #1 `configuration_spec.rb:19` — naming-lies
+- [ ] #2 `configuration_spec.rb:25` — naming-lies
+- [ ] #3 `configuration_spec.rb:107` — naming-lies
+- [ ] #4 `configuration_spec.rb:707` — naming-lies
+- [ ] #5 `generator_spec.rb:334` — mystery-guest
+- [ ] #6 `generator_spec.rb:521` — presentation-coupled
+- [ ] #7 `generator_spec.rb:540` — presentation-coupled
+- [ ] #8 `processor_spec.rb` — monolithic-test-file
+- [ ] #9 `processor_spec.rb:62` — presentation-coupled
+- [ ] #10 `processor_spec.rb:78` — naming-lies
+- [ ] #11 `processor_spec.rb:78` — vacuous-assertion
+- [ ] #12 `processor_spec.rb:113` — presentation-coupled
+- [ ] #13 `processor_spec.rb:120` — presentation-coupled
+- [ ] #14 `processor_spec.rb:157` — deliverable-fossils
+- [ ] #15 `processor_spec.rb:157` — naming-lies
+- [ ] #16 `processor_spec.rb:157` — over-specified-mock
+- [ ] #17 `processor_spec.rb:183` — deliverable-fossils
+- [ ] #18 `processor_spec.rb:183` — over-specified-mock
+- [ ] #19 `processor_spec.rb:201` — deliverable-fossils
+- [ ] #20 `processor_spec.rb:201` — over-specified-mock
+- [ ] #21 `processor_spec.rb:227` — deliverable-fossils
+- [ ] #22 `processor_spec.rb:440` — presentation-coupled
+- [ ] #23 `processor_spec.rb:528` — vacuous-assertion
+- [ ] #24 `processor_spec.rb:730` — over-specified-mock
+- [ ] #25 `processor_spec.rb:739` — over-specified-mock
+- [ ] #26 `processor_spec.rb:840` — naming-lies
+- [ ] #27 `processor_spec.rb:848` — naming-lies
+- [ ] #28 `processor_spec.rb:884` — pseudo-tested
+- [ ] #29 `processor_spec.rb:884` — vacuous-assertion
+- [ ] #30 `processor_spec.rb:966` — naming-lies
+- [ ] #31 `processor_spec.rb:981` — naming-lies
+- [ ] #32 `processor_spec.rb:1018` — pseudo-tested
+- [ ] #33 `processor_spec.rb:1018` — vacuous-assertion
+- [ ] #34–#39, #42, #46–#56, #58 `emoji_compensator_spec.rb` — deliverable-fossils
+- [ ] #40 `emoji_compensator_spec.rb:60` — naming-lies
+- [ ] #41 `emoji_compensator_spec.rb:60` — vacuous-assertion
+- [ ] #43 `emoji_compensator_spec.rb:151` — implementation-coupled
+- [ ] #44 `emoji_compensator_spec.rb:156` — naming-lies
+- [ ] #45 `emoji_compensator_spec.rb:156` — vacuous-assertion
+- [ ] #57 `emoji_compensator_spec.rb:346` — vacuous-assertion
+- [ ] #59 `mmdc_wrapper_spec.rb:327` — mystery-guest
+- [ ] #60 `mmdc_wrapper_spec.rb:391` — presentation-coupled
+- [ ] #61 `hooks_spec.rb:44` — pseudo-tested
+- [ ] #62 `hooks_spec.rb:117` — pseudo-tested
+- [ ] #63 `hooks_spec.rb:202` — over-specified-mock
+- [ ] #64 `hooks_spec.rb:275` — loose-text-oracle
+- [ ] #65 `hooks_spec.rb:275` — naming-lies
+- [ ] #66 `hooks_spec.rb:548` — pseudo-tested
+- [ ] #67 `hooks_spec.rb:554` — naming-lies
+- [ ] #68 `hooks_spec.rb:554` — vacuous-assertion
+- [ ] #69 `hooks_spec.rb:590` — naming-lies
+- [ ] #70 `hooks_spec.rb:590` — vacuous-assertion
 
 ## Technology Validation
 
@@ -131,6 +203,13 @@ This work *is* the test suite. Each TDD cycle = apply one remediation cluster �
 - [x] Implementation plan complete
 - [x] Technology validation complete
 - [x] Pre-Mortem complete
-- [ ] Preflight
+- [x] Preflight
 - [ ] Build
 - [ ] QA
+
+## Preflight Amendments
+
+- Clarified per-unit TDD order for test-only deliverables (no `lib/` code).
+- Renamed helper file to `html_fragment_helpers.rb` to match `ConfigurationHelpers` pattern; confirmed auto-load via `spec_helper`.
+- Added Findings Checklist for Build tracking.
+- Documented intentional waiver of one-file-per-module for Processor split (`#8`).

@@ -101,3 +101,14 @@ Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: r
     - Split `processor_spec` only after in-place remediations are green; keep method-level describe prefixes for Mutant.
 * Insights
     - Prior SLOBAC fix’s regex/lookahead approach is explicitly rejected by this audit for figure contracts.
+
+## 2026-07-19 - PREFLIGHT - PASS
+
+* Work completed
+    - Validated TDD encoding (test-only units), conventions, dependency impact, completeness vs rework brief.
+    - Amended plan: helper naming, Findings Checklist, Processor one-file waiver note.
+    - Wrote `.preflight-status` = PASS.
+* Decisions made
+    - Proceed to Build under L2 autonomous transition.
+* Insights
+    - `spec/support/**/*.rb` already auto-loaded — no `spec_helper` edit needed for new helpers.
