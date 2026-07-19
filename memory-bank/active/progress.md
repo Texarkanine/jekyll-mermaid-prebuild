@@ -217,3 +217,12 @@ Parent: Mutant + SLOBAC remediations on `feat/mutation-testing` (PR #44). Rework
     - Stop before archive; operator runs `/niko-archive` when ready.
 * Insights
     - See reflection (judge-first triage; pre-existing page log asymmetry).
+
+## 2026-07-19 - ARCHIVE - IN-PROGRESS
+
+* Work completed
+    - Operator invoked `/niko-archive`; leaving Reflect for Archive.
+* Decisions made
+    - Single archive for parent mutation-testing + SLOBAC rework + PR #44 feedback rework (same memory-bank journey; prior archives deferred by design).
+* Insights
+    - None yet.
