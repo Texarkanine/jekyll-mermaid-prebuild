@@ -60,3 +60,13 @@ Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-pre
     - No trivial or substantive fixes required.
 * Insights
     - None beyond Build.
+
+## 2026-07-19 - REFLECT - COMPLETE
+
+* Work completed
+    - Wrote `memory-bank/active/reflection/reflection-mutation-testing.md`.
+    - Reconciled persistent files (no further edits needed).
+* Decisions made
+    - Stop before archive per parent instruction; draft PR is the delivery artifact.
+* Insights
+    - See reflection document (describe-prefix starvation; Bucket A unused kwargs).

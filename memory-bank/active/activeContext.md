@@ -1,11 +1,12 @@
 # Active Context
 
 ## Current Task: mutation-testing
-**Phase:** QA - COMPLETE (PASS)
+**Phase:** REFLECT - COMPLETE
 
 ## What Was Done
-- Semantic QA vs plan/brief: completeness, KISS/YAGNI (unused diagram_type removed), Mutant discipline intact, docs present.
-- Wrote `.qa-validation-status` = PASS.
+- Reflection written: `memory-bank/active/reflection/reflection-mutation-testing.md`.
+- Persistent files scanned; techContext/systemPatterns already accurate from Build — no reconcile edits.
 
 ## Next Step
-- Reflect (no archive) → push `feat/mutation-testing` → draft PR.
+- Operator: `/niko-archive` when ready (explicitly deferred by parent).
+- Delivery: push `feat/mutation-testing` and open draft PR for review.
