@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.5.0...v0.6.0) (2026-07-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **test:** add Mutant mutation testing with 100% kill ([#44](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/44))
+
+### Features
+
+* **test:** add Mutant mutation testing with 100% kill ([#44](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/44)) ([e86a82a](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/e86a82a6eba5dc0fc037ff0f3451d12708a4f629))
+
+
+### Bug Fixes
+
+* **deps-dev:** migrate SimpleCov add_filter to skip ([#41](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/41)) ([#42](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/42)) ([bc068f0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/bc068f0268e2d974a061a1474d0973306d860f8e))
+
 ## [0.5.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.4.0...v0.5.0) (2026-03-22)
 
 
