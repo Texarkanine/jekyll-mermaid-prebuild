@@ -27,12 +27,42 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
           expect(described_class.available?).to be true
         end
       end
+
+      it "caches the positive result across PATH changes until reset" do
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          expect(described_class.available?).to be true
+          ENV["PATH"] = "/nonexistent"
+          expect(described_class.available?).to be true
+          described_class.reset_cache!
+          expect(described_class.available?).to be false
+        end
+      end
     end
 
     context "when mmdc is not in PATH" do
       it "returns false" do
         ENV["PATH"] = "/nonexistent"
         expect(described_class.available?).to be false
+      end
+
+      it "caches the negative result" do
+        ENV["PATH"] = "/nonexistent"
+        expect(described_class.available?).to be false
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          expect(described_class.available?).to be false
+        end
       end
     end
   end
@@ -59,6 +89,18 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
     it "returns false when executable does not exist" do
       ENV["PATH"] = "/nonexistent"
       expect(described_class.command_exists?("nonexistent_cmd")).to be false
+    end
+
+    it "returns false for blank command names" do
+      expect(described_class.command_exists?("")).to be false
+      expect(described_class.command_exists?(nil)).to be false
+    end
+
+    it "requires a regular file, not only an executable directory entry" do
+      Dir.mktmpdir do |dir|
+        ENV["PATH"] = dir
+        expect(described_class.command_exists?("")).to be false
+      end
     end
   end
 
@@ -134,6 +176,49 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
           expect(described_class.check_status).to eq(:ok)
         end
       end
+    end
+  end
+
+  describe ".test_render" do
+    let(:status_ok) { instance_double(Process::Status, success?: true) }
+    let(:status_bad) { instance_double(Process::Status, success?: false) }
+
+    it "invokes mmdc with tempfile paths ending in .mmd and .svg" do
+      expect(Open3).to receive(:capture3).with(
+        "mmdc",
+        "-i", a_string_matching(/\.mmd\z/),
+        "-o", a_string_matching(/\.svg\z/),
+        "-e", "svg"
+      ).and_return(["", "", status_ok])
+
+      expect(described_class.test_render).to eq(:ok)
+    end
+
+    it "writes the probe diagram into the input tempfile" do
+      written = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        input_path = args[args.index("-i") + 1]
+        written = File.read(input_path)
+        ["", "", status_ok]
+      end
+
+      described_class.test_render
+      expect(written).to eq("graph TD\nA-->B")
+    end
+
+    it "returns :puppeteer_error when stderr mentions libgbm" do
+      allow(Open3).to receive(:capture3).and_return(["", "missing libgbm", status_bad])
+      expect(described_class.test_render).to eq(:puppeteer_error)
+    end
+
+    it "returns :puppeteer_error when stderr mentions browser process" do
+      allow(Open3).to receive(:capture3).and_return(["", "Failed to launch the browser process", status_bad])
+      expect(described_class.test_render).to eq(:puppeteer_error)
+    end
+
+    it "returns :unknown_error for other failures" do
+      allow(Open3).to receive(:capture3).and_return(["", "other failure", status_bad])
+      expect(described_class.test_render).to eq(:unknown_error)
     end
   end
 

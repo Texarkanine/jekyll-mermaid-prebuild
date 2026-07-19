@@ -9,10 +9,12 @@ module JekyllMermaidPrebuild
     # Check if mmdc is available in PATH
     #
     # @return [Boolean] true if mmdc is available
-    def self.available?
-      return @available if defined?(@available)
+    MMDC_COMMAND = "mmdc"
 
-      @available = command_exists?("mmdc")
+    def self.available?
+      return @available if instance_variable_defined?(:@available)
+
+      @available = command_exists?(MMDC_COMMAND)
     end
 
     # Check if a command exists in PATH (cross-platform)
@@ -20,12 +22,14 @@ module JekyllMermaidPrebuild
     # @param cmd [String] command name
     # @return [Boolean] true if command found
     def self.command_exists?(cmd)
+      return false if cmd.nil? || cmd.empty?
+
       cmd_name = Gem.win_platform? ? "#{cmd}.exe" : cmd
       path_dirs = ENV.fetch("PATH", "").split(File::PATH_SEPARATOR)
 
       path_dirs.any? do |dir|
         executable = File.join(dir, cmd_name)
-        File.executable?(executable)
+        File.file?(executable) && File.executable?(executable)
       end
     end
 
@@ -33,9 +37,9 @@ module JekyllMermaidPrebuild
     #
     # @return [String, nil] version string or nil
     def self.version
-      return @version if defined?(@version)
+      return @version if instance_variable_defined?(:@version)
 
-      output, status = Open3.capture2e("mmdc", "--version")
+      output, status = Open3.capture2e(MMDC_COMMAND, "--version")
       @version = status.success? ? output.strip : nil
     rescue StandardError
       @version = nil
@@ -45,7 +49,7 @@ module JekyllMermaidPrebuild
     #
     # @return [Symbol] :ok, :not_found, :puppeteer_error, or :unknown_error
     def self.check_status
-      return @check_status if defined?(@check_status)
+      return @check_status if instance_variable_defined?(:@check_status)
 
       unless available?
         @check_status = :not_found
@@ -57,35 +61,31 @@ module JekyllMermaidPrebuild
 
     # Reset cached status (useful for testing)
     def self.reset_cache!
-      remove_instance_variable(:@available) if defined?(@available)
-      remove_instance_variable(:@version) if defined?(@version)
-      remove_instance_variable(:@check_status) if defined?(@check_status)
+      remove_instance_variable(:@available) if instance_variable_defined?(:@available)
+      remove_instance_variable(:@version) if instance_variable_defined?(:@version)
+      remove_instance_variable(:@check_status) if instance_variable_defined?(:@check_status)
     end
 
     # Test mmdc with a minimal diagram to verify Puppeteer works
     #
     # @return [Symbol] :ok, :puppeteer_error, or :unknown_error
     def self.test_render
-      input = Tempfile.new(["test", ".mmd"])
-      output = Tempfile.new(["test", ".svg"])
+      input = Tempfile.new(["", ".mmd"])
+      output = Tempfile.new(["", ".svg"])
+      input.write("graph TD\nA-->B")
+      input.close
+      output.close # Close before mmdc writes (Windows file locking)
 
-      begin
-        input.write("graph TD\nA-->B")
-        input.close
-        output.close # Close before mmdc writes (Windows file locking)
+      _stdout, stderr, status = Open3.capture3(
+        MMDC_COMMAND, "-i", input.path, "-o", output.path, "-e", "svg"
+      )
 
-        _stdout, stderr, status = Open3.capture3("mmdc", "-i", input.path, "-o", output.path, "-e", "svg")
-
-        if status.success?
-          :ok
-        elsif stderr.include?("libgbm") || stderr.include?("browser process")
-          :puppeteer_error
-        else
-          :unknown_error
-        end
-      ensure
-        input.close! rescue nil # rubocop:disable Style/RescueModifier
-        output.close! rescue nil # rubocop:disable Style/RescueModifier
+      if status.success?
+        :ok
+      elsif stderr.include?("libgbm") || stderr.include?("browser process")
+        :puppeteer_error
+      else
+        :unknown_error
       end
     end
 
@@ -110,7 +110,7 @@ module JekyllMermaidPrebuild
         input_file.write(mermaid_source)
         input_file.close
 
-        cmd = ["mmdc", "-i", input_file.path, "-o", output_path, "-e", "svg"]
+        cmd = [MMDC_COMMAND, "-i", input_file.path, "-o", output_path, "-e", "svg"]
         cmd += ["-t", "dark"] if theme == :dark
         _stdout, _stderr, status = Open3.capture3(*cmd)
 

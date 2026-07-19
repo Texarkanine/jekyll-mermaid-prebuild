@@ -29,7 +29,6 @@ module JekyllMermaidPrebuild
     # @param padding [Numeric] user units to add to each matching foreignObject width (must be positive)
     # @return [String] possibly widened SVG, or the original string on no-op / error
     def self.apply(svg_string, padding:)
-      return svg_string unless svg_string.is_a?(String)
       return svg_string unless padding.is_a?(Numeric) && padding.positive?
 
       apply_edge_label_padding(svg_string, padding)
@@ -48,9 +47,7 @@ module JekyllMermaidPrebuild
     # @param svg_string [String] full SVG document from mmdc
     # @return [String] SVG with overflow rule injected, or original on no-op / error
     def self.ensure_foreignobject_overflow(svg_string)
-      return svg_string unless svg_string.is_a?(String)
       return svg_string if svg_string.include?(OVERFLOW_RULE)
-      return svg_string unless svg_string.include?("</style>")
 
       svg_string.sub("</style>", "#{OVERFLOW_RULE}</style>")
     rescue StandardError
@@ -67,9 +64,7 @@ module JekyllMermaidPrebuild
     # @param svg_string [String] full SVG document from mmdc
     # @return [String] SVG with centering rule injected, or original on no-op / error
     def self.ensure_text_centering(svg_string)
-      return svg_string unless svg_string.is_a?(String)
       return svg_string if svg_string.include?(CENTERING_RULE)
-      return svg_string unless svg_string.include?("</style>")
 
       svg_string.sub("</style>", "#{CENTERING_RULE}</style>")
     rescue StandardError
@@ -84,8 +79,7 @@ module JekyllMermaidPrebuild
     # @param css_background [String] literal after `background-color:` (e.g. "black", "#fff0aa")
     # @return [String] SVG with updated root background, or original on no-op / error
     def self.apply_root_svg_background(svg_string, css_background)
-      return svg_string unless svg_string.is_a?(String)
-      return svg_string unless css_background.is_a?(String) && !css_background.empty?
+      return svg_string if css_background.nil? || css_background.empty?
 
       svg_string.sub(
         /(<svg\b[^>]*\bstyle="[^"]*?)background-color:\s*white;?/,

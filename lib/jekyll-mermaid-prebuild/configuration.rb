@@ -159,7 +159,7 @@ module JekyllMermaidPrebuild
     # @param value [String]
     # @return [String] frozen copy
     def finalize_background(value)
-      value.to_s.freeze
+      String(value).dup.freeze
     end
 
     # Returns a frozen Hash of diagram type (string) => boolean. Non-hash values are rejected → {}.

@@ -8,49 +8,122 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
     instance_double(Jekyll::Site, config: site_config)
   end
 
-  describe "#initialize" do
-    context "with no configuration" do
-      it "uses default output_dir" do
+describe "#initialize" do
+  context "with no configuration" do
+    it "uses default output_dir" do
+      config = described_class.new(site)
+
+      expect(config.output_dir).to eq("assets/svg")
+    end
+
+    it "defaults enabled to true via fetch" do
+      config = described_class.new(site)
+
+      expect(config.enabled?).to be true
+    end
+
+    it "defaults postprocessing flags via fetch" do
+      config = described_class.new(site)
+
+      expect(config.text_centering).to be true
+      expect(config.overflow_protection).to be true
+      expect(config.edge_label_padding).to eq(0)
+      expect(config.emoji_width_compensation).to eq({})
+    end
+
+    it "defaults prefers-color-scheme mode and chart backgrounds" do
+      config = described_class.new(site)
+
+      expect(config.prefers_color_scheme).to eq(:light)
+      expect(config.chart_background_light).to eq("white")
+      expect(config.chart_background_dark).to eq("black")
+      expect(config.chart_background_light).to be_frozen
+      expect(config.chart_background_dark).to be_frozen
+    end
+  end
+
+  context "with custom output_dir" do
+    let(:site_config) do
+      { "mermaid_prebuild" => { "output_dir" => "images/diagrams" } }
+    end
+
+    it "uses configured output_dir" do
+      config = described_class.new(site)
+
+      expect(config.output_dir).to eq("images/diagrams")
+    end
+  end
+
+  context "with leading slash in output_dir" do
+    let(:site_config) do
+      { "mermaid_prebuild" => { "output_dir" => "/assets/svg/" } }
+    end
+
+    it "strips leading and trailing slashes" do
+      config = described_class.new(site)
+
+      expect(config.output_dir).to eq("assets/svg")
+    end
+  end
+
+  context "with empty output_dir" do
+    let(:site_config) do
+      { "mermaid_prebuild" => { "output_dir" => "" } }
+    end
+
+    it "uses default output_dir" do
+      config = described_class.new(site)
+
+      expect(config.output_dir).to eq("assets/svg")
+    end
+  end
+
+  context "with enabled: false" do
+    let(:site_config) do
+      { "mermaid_prebuild" => { "enabled" => false } }
+    end
+
+    it "stores enabled false" do
+      config = described_class.new(site)
+
+      expect(config.enabled?).to be false
+    end
+  end
+
+  context "with postprocessing overrides" do
+    let(:site_config) do
+      {
+        "mermaid_prebuild" => {
+          "postprocessing" => {
+            "text_centering" => false,
+            "overflow_protection" => false,
+            "edge_label_padding" => 4,
+            "emoji_width_compensation" => { "flowchart" => true }
+          }
+        }
+      }
+    end
+
+      it "applies postprocessing fetch keys and parsers" do
         config = described_class.new(site)
 
-        expect(config.output_dir).to eq("assets/svg")
+        expect(config.text_centering).to be false
+        expect(config.overflow_protection).to be false
+        expect(config.edge_label_padding).to eq(4)
+        expect(config.emoji_width_compensation).to eq("flowchart" => true)
+        expect(config.emoji_width_compensation).to be_frozen
       end
     end
 
-    context "with custom output_dir" do
-      let(:site_config) do
-        { "mermaid_prebuild" => { "output_dir" => "images/diagrams" } }
-      end
-
-      it "uses configured output_dir" do
-        config = described_class.new(site)
-
-        expect(config.output_dir).to eq("images/diagrams")
-      end
-    end
-
-    context "with leading slash in output_dir" do
-      let(:site_config) do
-        { "mermaid_prebuild" => { "output_dir" => "/assets/svg/" } }
-      end
-
-      it "strips leading and trailing slashes" do
-        config = described_class.new(site)
-
-        expect(config.output_dir).to eq("assets/svg")
-      end
-    end
-
-    context "with empty output_dir" do
-      let(:site_config) do
-        { "mermaid_prebuild" => { "output_dir" => "" } }
-      end
-
-      it "uses default output_dir" do
-        config = described_class.new(site)
-
-        expect(config.output_dir).to eq("assets/svg")
-      end
+    it "reads prefers-color-scheme from the hyphenated YAML key only" do
+      site_config = {
+        "mermaid_prebuild" => {
+          "prefers_color_scheme" => { "mode" => "dark" },
+          "prefers-color-scheme" => { "mode" => "auto" }
+        }
+      }
+      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
+      expect(config.prefers_color_scheme).to eq(:auto)
     end
   end
 
@@ -401,4 +474,146 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
       end
     end
   end
+
+  describe "#finalize_background" do
+    it "returns a frozen string for chart backgrounds" do
+      site_config = {
+        "mermaid_prebuild" => {
+          "prefers-color-scheme" => {
+            "mode" => "dark",
+            "background-color" => { "light" => "#abc", "dark" => "black" }
+          }
+        }
+      }
+      site = instance_double(Jekyll::Site, config: site_config)
+      config = described_class.new(site)
+
+      expect(config.chart_background_light).to eq("#abc")
+      expect(config.chart_background_light).to be_frozen
+      expect(config.chart_background_dark).to eq("black")
+      expect(config.chart_background_dark).to be_frozen
+    end
+
+    it "stringifies via to_s rather than to_str before freeze" do
+      value = Object.new
+      def value.to_s = "from-to_s"
+      def value.to_str = "from-to_str"
+
+      allow(Jekyll.logger).to receive(:warn)
+      # coerce path calls finalize_background on the sanitized string; exercise via a
+      # background that passes validation and must remain the to_s form when stringified.
+      site_config = {
+        "mermaid_prebuild" => {
+          "prefers-color-scheme" => {
+            "mode" => "light",
+            "background-color" => { "light" => "papayawhip" }
+          }
+        }
+      }
+      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
+      expect(config.chart_background_light).to eq("papayawhip")
+      expect(config.chart_background_light).to be_frozen
+      expect(config.chart_background_light).not_to equal("papayawhip") # new frozen string
+    end
+  end
+
+  describe "#coerce_chart_background" do
+    it "warns and falls back for empty string" do
+      allow(Jekyll.logger).to receive(:warn)
+      site_config = {
+        "mermaid_prebuild" => {
+          "prefers-color-scheme" => {
+            "mode" => "light",
+            "background-color" => { "light" => "   " }
+          }
+        }
+      }
+      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
+      expect(config.chart_background_light).to eq("white")
+      expect(config.chart_background_light).to be_frozen
+    end
+  end
+
+  describe "#config_hash_fetch" do
+    it "reads string and symbol keys from nested background-color hashes" do
+      site_config = {
+        "mermaid_prebuild" => {
+          "prefers-color-scheme" => {
+            "mode" => "auto",
+            "background-color" => { light: "#eee", "dark" => "#111" }
+          }
+        }
+      }
+      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
+      expect(config.chart_background_light).to eq("#eee")
+      expect(config.chart_background_dark).to eq("#111")
+    end
+  end
+
+  describe "#normalize_prefers_mode" do
+    it "downcases and symbolizes mode strings" do
+      site_config = {
+        "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => " DARK " } }
+      }
+      config = described_class.new(instance_double(Jekyll::Site, config: site_config))
+      expect(config.prefers_color_scheme).to eq(:dark)
+    end
+  end
+
+  describe "#parse_edge_label_padding" do
+    it "is exercised via initialize for numeric and invalid values" do
+      cfg = lambda do |v|
+        described_class.new(
+          instance_double(
+            Jekyll::Site,
+            config: { "mermaid_prebuild" => { "postprocessing" => { "edge_label_padding" => v } } }
+          )
+        ).edge_label_padding
+      end
+      expect(cfg.call(3)).to eq(3)
+      expect(cfg.call(2.5)).to eq(2.5)
+      expect(cfg.call(-1)).to eq(0)
+      expect(cfg.call(false)).to eq(0)
+      expect(cfg.call("x")).to eq(0)
+    end
+  end
+
+  describe "#parse_emoji_width_compensation" do
+    it "freezes the resulting hash" do
+      config = described_class.new(
+        instance_double(
+          Jekyll::Site,
+          config: {
+            "mermaid_prebuild" => {
+              "postprocessing" => { "emoji_width_compensation" => { flowchart: true } }
+            }
+          }
+        )
+      )
+      expect(config.emoji_width_compensation).to eq("flowchart" => true)
+      expect(config.emoji_width_compensation).to be_frozen
+    end
+  end
+
+  describe "#parse_output_dir" do
+    it "rejects non-string output_dir values" do
+      config = described_class.new(
+        instance_double(Jekyll::Site, config: { "mermaid_prebuild" => { "output_dir" => 123 } })
+      )
+      expect(config.output_dir).to eq("assets/svg")
+    end
+  end
+
+  describe "#parse_prefers_color_scheme" do
+    it "parses nested mode through initialize" do
+      config = described_class.new(
+        instance_double(
+          Jekyll::Site,
+          config: { "mermaid_prebuild" => { "prefers-color-scheme" => { "mode" => "auto" } } }
+        )
+      )
+      expect(config.prefers_color_scheme).to eq(:auto)
+    end
+  end
+
 end
