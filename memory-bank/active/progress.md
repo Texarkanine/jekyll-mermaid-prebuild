@@ -126,3 +126,12 @@ Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: r
 * Insights
     - Dropping interaction mocks without value oracles regresses Mutant; compensate with product-state/content asserts.
     - `process_content` converts blocks last-to-first — failure-continuation oracles must match that order.
+
+## 2026-07-19 - QA - PASS
+
+* Work completed
+    - Semantic review vs rework brief/plan; wrote `.qa-validation-status` = PASS.
+* Decisions made
+    - No trivial or substantive fixes required.
+* Insights
+    - None beyond Build.
