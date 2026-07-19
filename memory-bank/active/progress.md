@@ -91,3 +91,13 @@ Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: r
     - Level 2 — multi-file corrective test remediations with prescribed fixes; no product architecture; same level as prior SLOBAC audit fix.
 * Insights
     - Monolithic `processor_spec.rb` split is the largest structural item; remaining findings are mostly rename/oracle/mock hygiene.
+
+## 2026-07-19 - PLAN - COMPLETE
+
+* Work completed
+    - Full L2 plan in `tasks.md` (9 steps: helper → fossils → renames → mystery guests → oracles → mocks → structural HTML → processor split → verification).
+* Decisions made
+    - Use REXML as Nokogiri-equivalent (jekyll 4.4 bundle has no nokogiri); add nokogiri only if REXML fails on fragments.
+    - Split `processor_spec` only after in-place remediations are green; keep method-level describe prefixes for Mutant.
+* Insights
+    - Prior SLOBAC fix’s regex/lookahead approach is explicitly rejected by this audit for figure contracts.
