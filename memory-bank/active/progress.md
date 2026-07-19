@@ -70,3 +70,15 @@ Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-pre
     - Stop before archive per parent instruction; draft PR is the delivery artifact.
 * Insights
     - See reflection document (describe-prefix starvation; Bucket A unused kwargs).
+
+## 2026-07-19 - REWORK INITIATED
+
+* Work completed
+    - Operator chose **rework** (post-reflect PR feedback) instead of archive.
+* Decisions made
+    - Source of feedback: SLOBAC audit `.slobac/2026-07-19T16-23-23/audit.md` against branch-changed specs on `feat/mutation-testing` vs `main`.
+    - Scope: investigate and remediate the 70 test-smell findings (56 unique locations) across 6 spec files; test-only unless a finding proves otherwise.
+* Insights
+    - Smell mix: 23 deliverable-fossils, 15 naming-lies, 9 vacuous-assertion, 7 presentation-coupled, 6 over-specified-mock, 5 pseudo-tested, 2 mystery-guest, 1 monolithic-test-file (`processor_spec.rb`), 1 implementation-coupled, 1 loose-text-oracle.
+    - Heaviest files: `processor_spec.rb` (26), `emoji_compensator_spec.rb` (25), `hooks_spec.rb` (10).
+    - Prior precedent: `memory-bank/archive/enhancements/20260514-slobac-audit-fix.md` (Level 2, test-only remediations).
