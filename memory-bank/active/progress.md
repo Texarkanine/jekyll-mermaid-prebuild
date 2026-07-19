@@ -1,6 +1,6 @@
 # Progress
 
-Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: remediate SLOBAC audit findings (`.slobac/2026-07-19T16-23-23/audit.md`) in the branch-changed RSpec suite without regressing mutation coverage.
+Parent: Mutant + SLOBAC remediations on `feat/mutation-testing` (PR #44). Rework: address judged PR review feedback — page error path logging + `test_render` tempfile cleanup — without regressing mutation coverage.
 
 **Complexity:** Level 2
 
@@ -145,3 +145,16 @@ Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: r
     - Stop before archive; operator runs `/niko-archive` when ready.
 * Insights
     - See reflection (SLOBAC vs Mutant tension; last-to-first conversion order).
+
+## 2026-07-19 - REWORK INITIATED
+
+* Work completed
+    - Operator chose **rework** (post-reflect PR #44 review feedback) instead of archive.
+* Decisions made
+    - Source: PR #44 review feedback, judged via `/ai-rizz/pr-feedback-judge`.
+    - In-scope fixes (disposition = fix in this PR):
+      1. `hooks.rb` page-loop error log should include `page.relative_path` (+ `hooks_spec` expectations).
+      2. `mmdc_wrapper.rb` `test_render` should restore tempfile `ensure`/`unlink` cleanup (regression vs main).
+    - Explicitly out of scope (dismissed): `Hooks.register` compat shim; `pad_label_content` duplicate-line padding; `parse_output_dir` `//` collapse; `String#lines`→`each_line` style nit; CodeRabbit walkthrough comment.
+* Insights
+    - Gem is `0.5.0`; load-time auto-registration remains the real activation path. LlamaPReview "breaking API" claim overstates `Hooks.register` as a public contract.

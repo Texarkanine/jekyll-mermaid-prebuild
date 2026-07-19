@@ -69,3 +69,32 @@ SLOBAC audit report: `.slobac/2026-07-19T16-23-23/audit.md` (2026-07-19; scope `
 2. `bundle exec rspec` green at project coverage target.
 3. `bundle exec mutant run` still reports 100% kill.
 4. `bundle exec rubocop` clean on touched files.
+
+## Rework (PR #44 feedback)
+
+### User Story
+
+As a gem maintainer reviewing the mutation-testing PR, I want the actionable CodeRabbit hygiene findings addressed so that page error logs are diagnosable and `test_render` does not leave tempfiles on disk.
+
+### Feedback Source
+
+GitHub PR #44 review feedback (LlamaPReview + CodeRabbit), judged 2026-07-19. Full triage in the initiating chat; only **fix in this PR** dispositions are requirements below.
+
+### Requirements
+
+1. In `Hooks.process_site`, include `page.relative_path` in the page-loop rescue error message (parity with the document loop and page success path). Update `hooks_spec.rb` expectations accordingly.
+2. In `MmdcWrapper.test_render`, restore tempfile cleanup via `begin`/`ensure` unlinking input and output tempfiles (as on `main` / as `render` already does), without changing status classification behavior.
+3. Preserve mutation kill discipline and suite greenness: remediations must not regress `bundle exec mutant run` from 100%, nor `bundle exec rspec` / RuboCop.
+
+### Constraints
+
+1. Do **not** restore a `Hooks.register` compatibility shim or treat its removal as a breaking-change blocker on `0.x`.
+2. Do **not** revert `pad_label_content` to index-only replacement or `parse_output_dir` slash-preserving gsub solely for review aesthetics.
+3. Do **not** churn `String#lines` → `each_line` unless a real deprecation/warning appears under the project's Ruby.
+4. Stay on `feat/mutation-testing`.
+
+### Acceptance Criteria
+
+1. Page error logs include the page path; specs assert the path-inclusive message.
+2. `test_render` unlinks its tempfiles in an `ensure` block.
+3. `bundle exec rspec` green at project coverage target; `bundle exec rubocop` clean on touched files; `bundle exec mutant run` still 100% kill.
