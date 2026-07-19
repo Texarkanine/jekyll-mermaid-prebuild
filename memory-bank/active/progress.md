@@ -1,8 +1,8 @@
 # Progress
 
-Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-prebuild, document kill discipline, drive mutation coverage to 100%, and open a draft PR on `feat/mutation-testing`. CI Mutant job out of scope.
+Parent: Mutant + mutant-rspec at 100% kill on `feat/mutation-testing`. Rework: remediate SLOBAC audit findings (`.slobac/2026-07-19T16-23-23/audit.md`) in the branch-changed RSpec suite without regressing mutation coverage.
 
-**Complexity:** Level 3
+**Complexity:** Level 2
 
 ## 2026-07-19 - COMPLEXITY-ANALYSIS - COMPLETE
 
@@ -82,3 +82,12 @@ Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-pre
     - Smell mix: 23 deliverable-fossils, 15 naming-lies, 9 vacuous-assertion, 7 presentation-coupled, 6 over-specified-mock, 5 pseudo-tested, 2 mystery-guest, 1 monolithic-test-file (`processor_spec.rb`), 1 implementation-coupled, 1 loose-text-oracle.
     - Heaviest files: `processor_spec.rb` (26), `emoji_compensator_spec.rb` (25), `hooks_spec.rb` (10).
     - Prior precedent: `memory-bank/archive/enhancements/20260514-slobac-audit-fix.md` (Level 2, test-only remediations).
+
+## 2026-07-19 - COMPLEXITY-ANALYSIS - COMPLETE
+
+* Work completed
+    - Classified rework as Level 2; stubbed `tasks.md` and `activeContext.md`.
+* Decisions made
+    - Level 2 — multi-file corrective test remediations with prescribed fixes; no product architecture; same level as prior SLOBAC audit fix.
+* Insights
+    - Monolithic `processor_spec.rb` split is the largest structural item; remaining findings are mostly rename/oracle/mock hygiene.
