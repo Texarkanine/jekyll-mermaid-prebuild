@@ -1,13 +1,12 @@
 # Active Context
 
 ## Current Task: mutation-testing
-**Phase:** PLAN - COMPLETE
+**Phase:** PREFLIGHT - COMPLETE (PASS)
 
 ## What Was Done
-- Level 3 plan written: mirror auto-thumbnails Mutant pattern; 8 implementation steps with per-step TDD ordering.
-- No open questions — creative skipped.
-- Technology PoC: `mutant`/`mutant-rspec` ~> 0.16, config + mutant_setup + SimpleCov guard; `bundle exec mutant test` 158/158 green.
-- Noted risks: `module_function` subjects; SUT stubs in `mmdc_wrapper_spec`.
+- Preflight validated plan: TDD encoding, conventions, completeness.
+- Advisory only: defer optional `rake mutant` wrapper.
+- Parent authorized proceed to Build without separate `/niko-build` invocation.
 
 ## Next Step
-- Preflight validation of the plan, then Build (parent-authorized after PASS).
+- Build: docs, `def self.` conversions, MmdcWrapper SUT-stub remodel, kill loop to 100%, draft PR.

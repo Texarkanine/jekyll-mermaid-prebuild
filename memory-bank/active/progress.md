@@ -27,3 +27,14 @@ Mirror Mutant + mutant-rspec from jekyll-auto-thumbnails into jekyll-mermaid-pre
     - Convert `module_function` → `def self.` and remodel MmdcWrapper SUT stubs before deep kill inventory.
 * Insights
     - PoC during plan matches the auto-thumbnails lesson: Build can start from a green `mutant test`.
+
+## 2026-07-19 - PREFLIGHT - PASS
+
+* Work completed
+    - Validated TDD encoding, convention alignment, dependency impact, completeness vs brief.
+    - Wrote `.preflight-status` = PASS.
+* Decisions made
+    - Proceed to Build under parent end-to-end authorization (no wait for `/niko-build`).
+    - Advisory: keep optional `rake mutant` out of scope.
+* Insights
+    - Scaffold from PoC is already on the branch; Build continues at docs + kill hygiene + kill loop.

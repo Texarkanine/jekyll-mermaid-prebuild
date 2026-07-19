@@ -162,6 +162,13 @@ PoC (executed in Plan): added deps + `config/mutant.yml` + `spec/support/mutant_
 - [x] Implementation plan complete
 - [x] Technology validation complete
 - [x] Pre-Mortem complete
-- [ ] Preflight
+- [x] Preflight
 - [ ] Build
 - [ ] QA
+
+## Preflight Findings
+
+- **PASS** — TDD ordering encoded per implementable unit (steps 5–7 explicit test-first; harness gated by `mutant test`).
+- Convention: Mutant files match auto-thumbnails; intentional `module_function` → `def self.` documented as Mutant hygiene (updates `systemPatterns` wording in Build if needed).
+- Completeness: requirements 1–6 mapped to steps 1–8; CI Mutant job correctly out of scope.
+- **Advisory (deferred):** optional `rake mutant` wrapper — same deferral as auto-thumbnails; CLI fidelity first.
