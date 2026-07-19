@@ -18,8 +18,6 @@ module JekyllMermaidPrebuild
   #    of theme. The plugin replaces that token with configurable CSS color values for light and
   #    dark variants (defaults white / black) so charts match page background in both modes.
   module SvgPostProcessor
-    module_function
-
     # Opening sequence produced by mmdc for block edge labels (deterministic minified output).
     EDGE_LABEL_FOREIGN_OBJECT_RE = /
       (<g\sclass="edgeLabel"[^>]*><g\sclass="label"[^>]*><foreignObject)
@@ -30,7 +28,7 @@ module JekyllMermaidPrebuild
     # @param svg_string [String] full SVG document from mmdc
     # @param padding [Numeric] user units to add to each matching foreignObject width (must be positive)
     # @return [String] possibly widened SVG, or the original string on no-op / error
-    def apply(svg_string, padding:)
+    def self.apply(svg_string, padding:)
       return svg_string unless svg_string.is_a?(String)
       return svg_string unless padding.is_a?(Numeric) && padding.positive?
 
@@ -49,7 +47,7 @@ module JekyllMermaidPrebuild
     #
     # @param svg_string [String] full SVG document from mmdc
     # @return [String] SVG with overflow rule injected, or original on no-op / error
-    def ensure_foreignobject_overflow(svg_string)
+    def self.ensure_foreignobject_overflow(svg_string)
       return svg_string unless svg_string.is_a?(String)
       return svg_string if svg_string.include?(OVERFLOW_RULE)
       return svg_string unless svg_string.include?("</style>")
@@ -68,7 +66,7 @@ module JekyllMermaidPrebuild
     #
     # @param svg_string [String] full SVG document from mmdc
     # @return [String] SVG with centering rule injected, or original on no-op / error
-    def ensure_text_centering(svg_string)
+    def self.ensure_text_centering(svg_string)
       return svg_string unless svg_string.is_a?(String)
       return svg_string if svg_string.include?(CENTERING_RULE)
       return svg_string unless svg_string.include?("</style>")
@@ -85,7 +83,7 @@ module JekyllMermaidPrebuild
     # @param svg_string [String] full SVG document from mmdc
     # @param css_background [String] literal after `background-color:` (e.g. "black", "#fff0aa")
     # @return [String] SVG with updated root background, or original on no-op / error
-    def apply_root_svg_background(svg_string, css_background)
+    def self.apply_root_svg_background(svg_string, css_background)
       return svg_string unless svg_string.is_a?(String)
       return svg_string unless css_background.is_a?(String) && !css_background.empty?
 
@@ -97,7 +95,7 @@ module JekyllMermaidPrebuild
       svg_string
     end
 
-    def apply_edge_label_padding(svg_string, padding)
+    def self.apply_edge_label_padding(svg_string, padding)
       svg_string.gsub(EDGE_LABEL_FOREIGN_OBJECT_RE) do
         prefix = Regexp.last_match(1)
         attrs = Regexp.last_match(2)

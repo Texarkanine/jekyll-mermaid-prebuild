@@ -5,14 +5,12 @@ require "fileutils"
 module JekyllMermaidPrebuild
   # Jekyll hook integration
   module Hooks
-    module_function
-
     # Copy generated SVGs to _site directory
     #
     # @param site [Jekyll::Site] the Jekyll site
     # @param config [Configuration] plugin configuration
     # @param svgs [Hash] cache_key => cached_path mapping
-    def copy_svgs_to_site(site, config, svgs)
+    def self.copy_svgs_to_site(site, config, svgs)
       return unless svgs && !svgs.empty?
 
       dest_dir = File.join(site.dest, config.output_dir)
@@ -34,7 +32,7 @@ module JekyllMermaidPrebuild
     end
 
     # Log helpful error message for Puppeteer issues
-    def log_puppeteer_error
+    def self.log_puppeteer_error
       Jekyll.logger.error "MermaidPrebuild:", "=" * 60
       Jekyll.logger.error "MermaidPrebuild:", "mmdc failed: Puppeteer cannot launch headless Chrome"
       Jekyll.logger.error "MermaidPrebuild:", ""
@@ -52,7 +50,7 @@ module JekyllMermaidPrebuild
     end
 
     # Register Jekyll hooks
-    def register
+    def self.register
       # Initialize and check mmdc after site data is loaded
       Jekyll::Hooks.register :site, :post_read do |site|
         config = Configuration.new(site)

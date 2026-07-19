@@ -6,12 +6,10 @@ require "tempfile"
 module JekyllMermaidPrebuild
   # Wrapper for mmdc (mermaid CLI) commands
   module MmdcWrapper
-    module_function
-
     # Check if mmdc is available in PATH
     #
     # @return [Boolean] true if mmdc is available
-    def available?
+    def self.available?
       return @available if defined?(@available)
 
       @available = command_exists?("mmdc")
@@ -21,7 +19,7 @@ module JekyllMermaidPrebuild
     #
     # @param cmd [String] command name
     # @return [Boolean] true if command found
-    def command_exists?(cmd)
+    def self.command_exists?(cmd)
       cmd_name = Gem.win_platform? ? "#{cmd}.exe" : cmd
       path_dirs = ENV.fetch("PATH", "").split(File::PATH_SEPARATOR)
 
@@ -34,7 +32,7 @@ module JekyllMermaidPrebuild
     # Get mmdc version
     #
     # @return [String, nil] version string or nil
-    def version
+    def self.version
       return @version if defined?(@version)
 
       output, status = Open3.capture2e("mmdc", "--version")
@@ -46,7 +44,7 @@ module JekyllMermaidPrebuild
     # Check mmdc status (availability and Puppeteer)
     #
     # @return [Symbol] :ok, :not_found, :puppeteer_error, or :unknown_error
-    def check_status
+    def self.check_status
       return @check_status if defined?(@check_status)
 
       unless available?
@@ -58,7 +56,7 @@ module JekyllMermaidPrebuild
     end
 
     # Reset cached status (useful for testing)
-    def reset_cache!
+    def self.reset_cache!
       remove_instance_variable(:@available) if defined?(@available)
       remove_instance_variable(:@version) if defined?(@version)
       remove_instance_variable(:@check_status) if defined?(@check_status)
@@ -67,7 +65,7 @@ module JekyllMermaidPrebuild
     # Test mmdc with a minimal diagram to verify Puppeteer works
     #
     # @return [Symbol] :ok, :puppeteer_error, or :unknown_error
-    def test_render
+    def self.test_render
       input = Tempfile.new(["test", ".mmd"])
       output = Tempfile.new(["test", ".svg"])
 
@@ -100,7 +98,7 @@ module JekyllMermaidPrebuild
     # @param theme [Symbol] :default (mermaid default theme) or :dark (mmdc -t dark)
     # @return [Boolean] true if successful
     # @raise [ArgumentError] if theme is not supported
-    def render(mermaid_source, output_path, theme: :default)
+    def self.render(mermaid_source, output_path, theme: :default)
       unless ALLOWED_RENDER_THEMES.include?(theme)
         raise ArgumentError,
               "unsupported mmdc theme #{theme.inspect} (allowed: #{ALLOWED_RENDER_THEMES.map(&:inspect).join(", ")})"
@@ -126,7 +124,7 @@ module JekyllMermaidPrebuild
     # Supports both backtick (```) and tilde (~~~) fences with 3+ characters
     #
     # @return [Regexp] pattern matching mermaid code blocks
-    def mermaid_fence_pattern
+    def self.mermaid_fence_pattern
       /
         ^(`{3,}|~{3,})mermaid\s*\n  # Opening fence: 3+ backticks or tildes, then 'mermaid'
         (.*?)                        # Content (captured, non-greedy)

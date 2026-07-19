@@ -9,22 +9,29 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
   end
 
   describe ".available?" do
-    context "when mmdc is in PATH" do
-      before do
-        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(true)
-      end
+    around do |example|
+      original_path = ENV.fetch("PATH", nil)
+      example.run
+      ENV["PATH"] = original_path
+    end
 
+    context "when mmdc is in PATH" do
       it "returns true" do
-        expect(described_class.available?).to be true
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          expect(described_class.available?).to be true
+        end
       end
     end
 
     context "when mmdc is not in PATH" do
-      before do
-        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(false)
-      end
-
       it "returns false" do
+        ENV["PATH"] = "/nonexistent"
         expect(described_class.available?).to be false
       end
     end
@@ -82,35 +89,50 @@ RSpec.describe JekyllMermaidPrebuild::MmdcWrapper do
   end
 
   describe ".check_status" do
-    context "when mmdc is not available" do
-      before do
-        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(false)
-      end
+    around do |example|
+      original_path = ENV.fetch("PATH", nil)
+      example.run
+      ENV["PATH"] = original_path
+    end
 
+    context "when mmdc is not available" do
       it "returns :not_found" do
+        ENV["PATH"] = "/nonexistent"
         expect(described_class.check_status).to eq(:not_found)
       end
     end
 
     context "when mmdc is available but Puppeteer fails" do
-      before do
-        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(true)
-        allow(described_class).to receive(:test_render).and_return(:puppeteer_error)
-      end
-
       it "returns :puppeteer_error" do
-        expect(described_class.check_status).to eq(:puppeteer_error)
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          bad = instance_double(Process::Status, success?: false)
+          allow(Open3).to receive(:capture3).and_return(["", "Failed to launch the browser process", bad])
+
+          expect(described_class.check_status).to eq(:puppeteer_error)
+        end
       end
     end
 
     context "when mmdc works correctly" do
-      before do
-        allow(described_class).to receive(:command_exists?).with("mmdc").and_return(true)
-        allow(described_class).to receive(:test_render).and_return(:ok)
-      end
-
       it "returns :ok" do
-        expect(described_class.check_status).to eq(:ok)
+        Dir.mktmpdir do |dir|
+          ENV["PATH"] = dir
+          filename = Gem.win_platform? ? "mmdc.exe" : "mmdc"
+          executable = File.join(dir, filename)
+          File.write(executable, Gem.win_platform? ? "" : "#!/bin/sh\nexit 0")
+          File.chmod(0o755, executable) unless Gem.win_platform?
+
+          ok = instance_double(Process::Status, success?: true)
+          allow(Open3).to receive(:capture3).and_return(["", "", ok])
+
+          expect(described_class.check_status).to eq(:ok)
+        end
       end
     end
   end

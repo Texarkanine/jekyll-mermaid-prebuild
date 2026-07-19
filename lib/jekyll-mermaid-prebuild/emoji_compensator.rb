@@ -4,8 +4,6 @@ module JekyllMermaidPrebuild
   # Stateless module: compensates for headless Chromium emoji width undermeasurement
   # by appending &nbsp; padding to emoji-containing node labels before mmdc renders.
   module EmojiCompensator
-    module_function
-
     # Match a single Extended_Pictographic codepoint (emoji).
     EMOJI_RE = /\p{Extended_Pictographic}/
 
@@ -15,7 +13,7 @@ module JekyllMermaidPrebuild
     #
     # @param mermaid_source [String] raw Mermaid diagram source
     # @return [String, nil] diagram type keyword (e.g. "flowchart", "sequenceDiagram") or nil
-    def detect_diagram_type(mermaid_source)
+    def self.detect_diagram_type(mermaid_source)
       return nil if !mermaid_source || mermaid_source.strip.empty?
 
       in_frontmatter = false
@@ -49,7 +47,7 @@ module JekyllMermaidPrebuild
     # @param mermaid_source [String] Mermaid diagram source
     # @param diagram_type [String] result of detect_diagram_type
     # @return [String] possibly modified source
-    def compensate(mermaid_source, diagram_type)
+    def self.compensate(mermaid_source, diagram_type)
       return mermaid_source if diagram_type != "flowchart"
 
       compensate_flowchart_labels(mermaid_source)
@@ -62,7 +60,7 @@ module JekyllMermaidPrebuild
     #
     # @param text [String]
     # @return [Integer]
-    def count_emoji(text)
+    def self.count_emoji(text)
       text.scan(EMOJI_RE).length
     end
 
@@ -71,7 +69,7 @@ module JekyllMermaidPrebuild
     #
     # @param text [String]
     # @return [Integer]
-    def visual_length(text)
+    def self.visual_length(text)
       text.length + count_emoji(text)
     end
 
@@ -82,7 +80,7 @@ module JekyllMermaidPrebuild
     #
     # @param content [String] raw label text (may contain <br/> line breaks)
     # @return [String] possibly padded label text
-    def pad_label_content(content)
+    def self.pad_label_content(content)
       parts = content.split(BR_RE)
       line_indices = (0...parts.length).step(2).to_a
       return content if line_indices.empty?
@@ -96,7 +94,7 @@ module JekyllMermaidPrebuild
       parts.join
     end
 
-    def compensate_flowchart_labels(source)
+    def self.compensate_flowchart_labels(source)
       result = source.dup
 
       [
