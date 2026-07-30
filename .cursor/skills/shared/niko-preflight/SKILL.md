@@ -25,8 +25,10 @@ Read:
 
 2. **TDD Plan Encoding** *(blocking)*
    - The test-first process lives in `.cursor/rules/shared/always-tdd.mdc`
-   - For each implementable unit of work (function, slice, milestone — whatever granularity the plan uses), confirm the ordered substeps place test-writing before production code, explicitly enough that a reasonable implementer cannot follow the plan by coding first
-   - FAIL when numbered steps are implementation-only under a "we follow TDD" disclaimer; when any step explicitly orders implementation before tests; or when TDD ordering lives only in the plan's preamble rather than per-unit
+   - This check governs units that change executable behavior. A unit delivering user-facing prose or policy (docs content, PR/issue templates, CONTRIBUTING, instructional comments, rule/skill wording, etc.) owes no tests for those artifacts; omitting tests for those artifacts passes this check
+   - For each implementable unit of executable work (function, slice, milestone — whatever granularity the plan uses), confirm the ordered substeps place test-writing before production code, explicitly enough that a reasonable implementer cannot follow the plan by coding first
+   - FAIL when the numbered steps for an executable unit are implementation-only under a "we follow TDD" disclaimer; when any step explicitly orders implementation before tests; or when TDD ordering lives only in the plan's preamble rather than per-unit
+   - FAIL when the plan schedules a test that can only go red when someone deliberately edits the artifact it asserts on — heading, phrase, link, or checklist assertions on a document. That is a change-detector, not a test.
 
 3. **Convention Compliance**
    - Verify the plan's proposed file locations, naming conventions, and patterns align with established codebase conventions documented in `memory-bank/systemPatterns.md`
@@ -46,7 +48,7 @@ Read:
 6. **Completeness Precheck**
    - Verify the plan addresses all stated requirements with concrete implementation steps mapped to each one - not aspirationally, but with specific files, functions, and approaches identified
    - Flag any requirements that are acknowledged but lack a clear implementation path
-   - Verify test coverage is planned for all new behavior
+   - Verify test coverage is planned for all new executable behavior — not for prose or policy artifacts; the TDD Plan Encoding check governs that boundary
 
 7. **Radical Innovation** *(advisory - not blocking)*
     - What's the single smartest and most radically innovative and accretive and useful and compelling change you could make to the plan at this point?
@@ -64,7 +66,7 @@ Read:
    - **On PASS with ADVISORY**: Allow transition to `/niko-build`, but document advisory findings for the operator's consideration
    - **On FAIL (rearchitect needed)**: Operator decision required.
    - **On FAIL (conflict/convention)**: Provide specific fix instructions, block `/niko-build`; Operator decision required.
-   - **On FAIL (TDD plan encoding)**: Block `/niko-build`; cite the unit(s) that lack explicit test-before-code ordering and re-run `/niko-plan` to restructure them.
+   - **On FAIL (TDD plan encoding)**: Block `/niko-build`; cite executable units lacking test-before-code ordering, and any scheduled change-detector tests with the instruction to remove them (keeping any purpose-built CI gate); then re-run `/niko-plan` to restructure.
 
 ## Step 3: Log Progress
 

@@ -5,7 +5,19 @@ alwaysApply: true
 ---
 # Test-Driven Development (TDD) Requirement
 
-**ALL** code changes must be made according to this test-driven development process: **TESTS GET WRITTEN FIRST!** Strictly follow the four steps laid out below, in order, for every code change. **NEVER** skip ahead to making code changes without following this process!
+All changes to **executable behavior** (defined below) must be made according to this test-driven development process: **tests get written first**. Strictly follow the four steps laid out below, in order, for every such change. Never skip ahead to making code changes without following this process.
+
+## What TDD Governs
+
+In scope: executable behavior — code, schemas, parsers, CLIs, and any configuration or workflow the product runs, etc. If something executes it, it is in scope, whatever its file extension.
+
+Out of scope: user-facing prose and policy — docs content, PR and issue templates, CONTRIBUTING, instructional comments, project narrative, rule and skill wording, etc.
+
+Before writing a test that asserts on a document's contents, ask what makes the test fail:
+
+> If it can only go red when someone deliberately edits the artifact it asserts on, it is a **change-detector**, not a test: it fires on intended edits and stays silent when the product breaks.
+
+Delete change-detectors; write none. The failure mode decides, not the format. A test that locks a contract across files (manifest/version lockstep, dual plugin manifests, etc.) is not a change-detector: it goes red when the contract breaks for a user, not when content is merely edited. Enforce out-of-scope artifacts with review, a purpose-built gate (commit-title lint, link checker, schema validator), or nothing at all.
 
 ## 1. Determine Scope
 
@@ -15,17 +27,17 @@ alwaysApply: true
 	- Determine if new test suites must be added
 	- Determine if test cases must be added to existing test suites
 	- Determine if existing test cases must be modified
-	- **IMPORTANT:** If you cannot locate existing test infrastructure, **STOP AND ASK** what to do.
+	- If you cannot locate existing test infrastructure, **stop and ask** what to do.
 
-## 2. Preparation (Stubbing)
+## 2. Stubbing
 
 1. **Stub new tests:** create any necessary test suites and/or test cases, with **empty implementations**
 	- If the test signature is not self-descriptive, include multi-line comments on the test suites and test cases explaining the behaviors they are supposed to test.
-	- **IMPORTANT:** do not implement any tests yet!
+	- Do not implement any tests yet.
 2. **Stub the interface:** add any new functions, classes, etc to the codebase with **empty implementations**
 	- include full function and/or class signatures, etc
 	- include full multi-line comment documentation in the style already in use in the project *or* the industry standard for the language(s) in use if the project has no prior art
-	- **IMPORTANT:** do not implement any of the actual code changes yet!
+	- Do not implement any of the actual code changes yet.
 3. **Modify existing tests:** modify any existing tests as needed to correctly test for the new behavior
 
 ## 3. Write Tests

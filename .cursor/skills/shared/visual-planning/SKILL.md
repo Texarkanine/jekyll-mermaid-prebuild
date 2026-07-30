@@ -1,7 +1,9 @@
 ---
-alwaysApply: false
-description: Guidelines for using Mermaid diagrams to increase comprehension of complex processes. Apply when planning non-trivial work involving multiple components, interactions, data models, or process flows, or when describing a system with complex interactions where prose alone becomes unwieldy.
+name: "visual-planning"
+description: "Guidelines for using Mermaid diagrams to increase comprehension of complex processes. Apply when planning non-trivial work involving multiple components, interactions, data models, or process flows, or when describing a system with complex interactions where prose alone becomes unwieldy."
 ---
+
+
 # Visual Planning with Mermaid Diagrams
 
 When planning non-trivial work, **use Mermaid diagrams whenever they communicate structure, flow, or relationships more clearly than prose.** Don't diagram for the sake of diagramming - use diagrams when they earn their keep.
@@ -159,3 +161,4 @@ When planning a non-trivial task:
 3. **Add ER/class diagrams** if the work involves data model or interface design
 4. **Add state diagrams** if the work involves status/lifecycle management
 5. **Reference the diagrams** in your implementation plan - they are the plan's backbone, not decoration
+
