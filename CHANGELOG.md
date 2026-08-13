@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.6.0...v0.7.0) (2026-08-13)
+
+
+### Features
+
+* **hooks:** append elapsed time to completion logs ([#49](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/49)) ([5ae967b](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/5ae967bbfe704f952fd04a885009d672f5df5dd6))
+
 ## [0.6.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.5.0...v0.6.0) (2026-07-19)
 
 
