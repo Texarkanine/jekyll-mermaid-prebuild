@@ -9,6 +9,34 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
     allow(Jekyll).to receive(:logger).and_return(logger)
   end
 
+  describe ".format_elapsed" do
+    it "formats zero seconds" do
+      expect(described_class.format_elapsed(0)).to eq("in 0s")
+    end
+
+    it "formats sub-minute durations with an s suffix" do
+      expect(described_class.format_elapsed(12)).to eq("in 12s")
+    end
+
+    it "formats 59 seconds without minutes" do
+      expect(described_class.format_elapsed(59)).to eq("in 59s")
+    end
+
+    it "formats 60 seconds as one minute" do
+      expect(described_class.format_elapsed(60)).to eq("in 1 m 0 s")
+    end
+
+    it "formats minutes plus remaining seconds" do
+      expect(described_class.format_elapsed(62)).to eq("in 1 m 2 s")
+      expect(described_class.format_elapsed(422)).to eq("in 7 m 2 s")
+    end
+
+    it "rounds fractional seconds" do
+      expect(described_class.format_elapsed(12.4)).to eq("in 12s")
+      expect(described_class.format_elapsed(12.6)).to eq("in 13s")
+    end
+  end
+
   describe ".copy_svgs_to_site" do
     let(:cache_dir) { File.join(@temp_dir, "cache") }
     let(:dest_dir) { File.join(@temp_dir, "site") }
@@ -60,7 +88,18 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
       it "logs the exact copied count and output directory" do
         described_class.copy_svgs_to_site(site, config, svgs)
 
-        expect(logger).to have_received(:info).with("MermaidPrebuild:", "Copied 2 SVG(s) to assets/svg/")
+        expect(logger).to have_received(:info).with(
+          "MermaidPrebuild:",
+          a_string_matching(%r{\ACopied 2 SVG\(s\) to assets/svg/ in \d+s\z})
+        )
+      end
+
+      it "appends elapsed time to the copied log" do
+        allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC).and_return(10.0, 11.0)
+
+        described_class.copy_svgs_to_site(site, config, svgs)
+
+        expect(logger).to have_received(:info).with("MermaidPrebuild:", "Copied 2 SVG(s) to assets/svg/ in 1s")
       end
 
       it "warns and skips missing cache files without counting them" do
@@ -73,7 +112,10 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
           "MermaidPrebuild:",
           "Missing cached SVG for missing (expected: #{missing_path})"
         )
-        expect(logger).to have_received(:info).with("MermaidPrebuild:", "Copied 2 SVG(s) to assets/svg/")
+        expect(logger).to have_received(:info).with(
+          "MermaidPrebuild:",
+          a_string_matching(%r{\ACopied 2 SVG\(s\) to assets/svg/ in \d+s\z})
+        )
       end
 
       it "skips a nil cached_path without raising and continues copying later entries" do
@@ -91,7 +133,10 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
           "Missing cached SVG for nilkey (expected: )"
         )
         expect(File.exist?(File.join(dest_dir, "assets/svg/present.svg"))).to be true
-        expect(logger).to have_received(:info).with("MermaidPrebuild:", "Copied 1 SVG(s) to assets/svg/")
+        expect(logger).to have_received(:info).with(
+          "MermaidPrebuild:",
+          a_string_matching(%r{\ACopied 1 SVG\(s\) to assets/svg/ in \d+s\z})
+        )
       end
 
       it "names destination files from the cache key, not the source basename" do
@@ -389,15 +434,32 @@ RSpec.describe JekyllMermaidPrebuild::Hooks do
 
       expect(logger).to have_received(:info).with(
         "MermaidPrebuild:",
-        a_string_matching(%r{Converted 1 diagram\(s\) in _posts/diagram\.md})
+        a_string_matching(%r{\AConverted 1 diagram\(s\) in _posts/diagram\.md\z})
       )
       expect(logger).to have_received(:info).with(
         "MermaidPrebuild:",
-        a_string_matching(/Converted 1 diagram\(s\) in about\.md/)
+        a_string_matching(/\AConverted 1 diagram\(s\) in about\.md\z/)
       )
       expect(logger).to have_received(:info).with(
         "MermaidPrebuild:",
-        "Total: 2 diagram(s) converted"
+        a_string_matching(/\ATotal: 2 diagram\(s\) converted in /)
+      )
+    end
+
+    it "appends elapsed time to the total conversion log" do
+      allow(processor).to receive(:process_content)
+        .with(document.content, site)
+        .and_return(["<figure>doc</figure>", 1, { "aaa11111" => "/cache/a.svg" }])
+      allow(processor).to receive(:process_content)
+        .with(page.content, site)
+        .and_return(["<figure>page</figure>", 1, { "bbb22222" => "/cache/b.svg" }])
+      allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC).and_return(100.0, 112.0)
+
+      described_class.process_site(site)
+
+      expect(logger).to have_received(:info).with(
+        "MermaidPrebuild:",
+        "Total: 2 diagram(s) converted in 12s"
       )
     end
 

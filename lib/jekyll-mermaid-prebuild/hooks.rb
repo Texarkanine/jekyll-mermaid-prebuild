@@ -5,6 +5,18 @@ require "fileutils"
 module JekyllMermaidPrebuild
   # Jekyll hook integration
   module Hooks
+    # Format a duration for Jekyll log suffixes.
+    #
+    # @param seconds [Numeric] elapsed seconds
+    # @return [String] `in Xs` under a minute, otherwise `in X m Y s`
+    def self.format_elapsed(seconds)
+      total = seconds.round
+      return "in #{total}s" if total < 60
+
+      minutes, remainder = total.divmod(60)
+      "in #{minutes} m #{remainder} s"
+    end
+
     # Copy generated SVGs to _site directory
     #
     # @param site [Jekyll::Site] the Jekyll site
@@ -16,6 +28,7 @@ module JekyllMermaidPrebuild
       dest_dir = File.join(site.dest, config.output_dir)
       FileUtils.mkdir_p(dest_dir)
 
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       copied_count = 0
       svgs.each do |cache_key, cached_path|
         unless cached_path && File.exist?(cached_path)
@@ -28,7 +41,9 @@ module JekyllMermaidPrebuild
         copied_count += 1
       end
 
-      Jekyll.logger.info "MermaidPrebuild:", "Copied #{copied_count} SVG(s) to #{config.output_dir}/"
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+      Jekyll.logger.info "MermaidPrebuild:",
+                         "Copied #{copied_count} SVG(s) to #{config.output_dir}/ #{format_elapsed(elapsed)}"
     end
 
     # Log helpful error message for Puppeteer issues
@@ -82,6 +97,7 @@ module JekyllMermaidPrebuild
 
       processor = site.data["mermaid_prebuild_processor"]
       total_count = 0
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       site.documents.each do |document|
         next unless document.content
@@ -111,7 +127,11 @@ module JekyllMermaidPrebuild
         Jekyll.logger.error "MermaidPrebuild:", "Error processing #{page.relative_path}: #{e.message}"
       end
 
-      Jekyll.logger.info "MermaidPrebuild:", "Total: #{total_count} diagram(s) converted" if total_count.positive?
+      return unless total_count.positive?
+
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+      Jekyll.logger.info "MermaidPrebuild:",
+                         "Total: #{total_count} diagram(s) converted #{format_elapsed(elapsed)}"
     end
 
     # Copy SVGs into _site after write (:post_write)
