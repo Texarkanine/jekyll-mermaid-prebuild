@@ -1,11 +1,12 @@
 # Active Context
 
 ## Current Task: log-elapsed-time
-**Phase:** PREFLIGHT - COMPLETE (PASS)
+**Phase:** BUILD - COMPLETE
 
 ## What Was Done
-- Preflight PASS: TDD encoding per step, Hooks convention, no new deps, exact Copied/Total strings listed as test updates.
-- Advisory (not taken): a shared duration gem across Jekyll plugins would be L3/out of brief.
+- `Hooks.format_elapsed` plus timed Total / Copied logs.
+- Files: `/home/mobaxterm/git/jekyll-mermaid-prebuild/lib/jekyll-mermaid-prebuild/hooks.rb`, `/home/mobaxterm/git/jekyll-mermaid-prebuild/spec/jekyll_mermaid_prebuild/hooks_spec.rb`
+- Deviation: elapsed stored in a local to satisfy Layout/LineLength; Total log uses a guard clause.
 
 ## Next Step
-- Build.
+- QA review.

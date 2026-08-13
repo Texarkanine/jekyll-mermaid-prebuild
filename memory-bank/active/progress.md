@@ -34,3 +34,16 @@ Append elapsed time to MermaidPrebuild completion log lines (`Total: N diagram(s
     - PASS; declined a shared duration gem as out of Level 2 / brief scope
 * Insights
     - Three exact Copied strings and one exact Total string are the regression surface
+
+## 2026-08-13 - BUILD - COMPLETE
+
+* Work completed
+    - Added `Hooks.format_elapsed` (`in Xs` / `in X m Y s`)
+    - Timed `process_site` onto Total and `copy_svgs_to_site` onto Copied
+    - Full suite 418 examples, 0 failures, 100% line coverage; RuboCop clean
+* Decisions made
+    - Elapsed computed into a local before logging (line-length)
+    - Total log restored to a guard clause after the timed block
+* Insights
+    - Exact-string Copied/Total specs were the whole test-update surface
+
