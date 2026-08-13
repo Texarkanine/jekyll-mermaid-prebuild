@@ -1,11 +1,11 @@
 # Active Context
 
 ## Current Task: log-elapsed-time
-**Phase:** PLAN - COMPLETE
+**Phase:** PREFLIGHT - COMPLETE (PASS)
 
 ## What Was Done
-- Level 2 plan written: `format_elapsed` on `Hooks`, time `process_site` (Total line) and `copy_svgs_to_site` (Copied line).
-- Three TDD steps, no new files or dependencies.
+- Preflight PASS: TDD encoding per step, Hooks convention, no new deps, exact Copied/Total strings listed as test updates.
+- Advisory (not taken): a shared duration gem across Jekyll plugins would be L3/out of brief.
 
 ## Next Step
-- Preflight validation.
+- Build.

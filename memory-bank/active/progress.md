@@ -25,3 +25,12 @@ Append elapsed time to MermaidPrebuild completion log lines (`Total: N diagram(s
     - Leave per-document Converted lines untimed
 * Insights
     - Exact-string Copied/Total specs are the main test-update surface
+
+## 2026-08-13 - PREFLIGHT - COMPLETE (PASS)
+
+* Work completed
+    - Validated TDD ordering, convention (formatter on Hooks), dependency impact, completeness
+* Decisions made
+    - PASS; declined a shared duration gem as out of Level 2 / brief scope
+* Insights
+    - Three exact Copied strings and one exact Total string are the regression surface
