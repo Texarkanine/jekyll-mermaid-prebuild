@@ -36,6 +36,7 @@ Read:
 
 - Produce a **linear, ordered** list of implementation steps. Each step must name concrete files and functions - not abstractions.
 - Each step should map to roughly one TDD cycle: write failing test → implement to pass → refactor.
+- Carve-out definition: `.cursor/rules/shared/always-tdd.mdc` (Niko ships it always-on). Entirely prose/policy steps use `N/A for prose & policy artifacts` under Tests first.
 - Steps must be sequenced so that each builds on the last; no step should require backtracking.
 - Document the specific changes per file: new functions, modified signatures, added exports, config changes.
 - Include documentation update steps for any project documentation (README files, doc comments, configuration docs, user-facing guides) that would be affected by the implementation. Documentation changes are implementation work, not an afterthought.
@@ -96,9 +97,11 @@ After Challenges & Mitigations are recorded, run Pre-Mortem on the whole plan:
 
 1. [Step 1 - maps to TDD cycle]
    - Files: [file paths]
+   - Tests first: [test file + case(s) to write and watch fail; or `N/A for prose & policy artifacts`]
    - Changes: [specific changes]
 2. [Step 2]
    - Files: [file paths]
+   - Tests first: [test file + case(s) to write and watch fail; or `N/A for prose & policy artifacts`]
    - Changes: [specific changes]
 
 ## Technology Validation

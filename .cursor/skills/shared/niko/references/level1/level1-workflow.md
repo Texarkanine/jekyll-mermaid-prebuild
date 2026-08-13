@@ -9,10 +9,18 @@ Level 1 tasks are isolated bug fixes affecting a single component. Prioritize sp
 ```mermaid
 graph LR
     Start(("Complexity Analysis")) --> NikoBuild["🐱 Build"]
-    NikoBuild --> NikoQA{"🐱 QA"}
+    NikoBuild ==Spawn==> NikoQA[["🐈 QA"]]
     NikoQA -->|"PASS"| Done("Done")
     NikoQA -->|"FAIL"| NikoBuild
 ```
+
+> Legend:
+> - 🐱 = Phase executed autonomously
+> - 🐈 = Phase executed autonomously in a sub-agent
+> - Solid edge = Transition does not require operator input
+
+Outbound edges from a 🐈 sub-agent are taken by the parent once the sub-agent completes.
+A node with no outbound solid edges is a **terminal node**.
 
 Level 1 tasks skip `/niko-plan`, `/niko-creative`, and `/niko-preflight`. Go straight to build.
 Level 1 tasks are *simple* so there's no `/niko-reflect` or `/niko-archive` after building, either. A commit message & description are sufficient record.
@@ -25,7 +33,7 @@ To execute a phase for a level 1 task:
 2. 🚨 ***CRITICAL:*** Commit all changes - memory bank *and* other resources - to source control using a conventional commit in the following format: `chore: saving work before [phase] phase`.
 3. Read and follow the instructions in the appropriate locations:
     - **Level 1 Build Phase**: Load `.cursor/skills/shared/niko/references/level1/level1-build.md`
-    - **Level 1 QA Phase**: Invoke the `niko-qa` skill
+    - **Level 1 QA Phase**: Delete `memory-bank/active/.qa-validation-status` if it exists. Spawn a subagent (prefer smarter / different family if available); the only instruction you add is `` Run the `/niko-qa` skill ``. Do not run the skill in this conversation.
 
 ## Wrap-Up
 

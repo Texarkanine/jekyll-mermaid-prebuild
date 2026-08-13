@@ -8,6 +8,8 @@ The preflight status file is a simple text file used to track the status of the 
 
 The preflight status file is stored in the `memory-bank/active/.preflight-status` file.
 
-If pre-flight checks pass, the file contains the text `PASS`.
+Allowed values (exact casing; write exactly one):
 
-If pre-flight checks fail, the file should contain the text `FAIL`.
+- `PASS` — checks passed with no advisories
+- `PASS WITH ADVISORY` — checks passed; advisory findings recorded for the operator; still a valid build/transition gate
+- `FAIL` — checks failed; operator decision or fixable re-run required (see the preflight report)

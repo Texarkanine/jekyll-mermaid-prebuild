@@ -9,15 +9,15 @@ Level 3 tasks are intermediate features that require a structured approach with 
 ```mermaid
 graph TD
     Start(("Complexity Analysis")) --> NikoPlan["🐱 plan"]
-    NikoPlan --> NikoPreflight{"🐱 preflight"}
+    NikoPlan ==Spawn==> NikoPreflight[["🐈 Preflight"]]
     NikoPreflight -.->|"PASS"| ManualBuild[/"🧑‍💻 /niko-build"/]
     NikoPreflight -.->|"FAIL"| ManualPlan[/"🧑‍💻 /niko-plan"/]
 
     NikoPlan -->|"Open Questions"| NikoCreative{"🐱 creative"}
     NikoCreative -->|"High Confidence"| NikoPlan
-    NikoCreative -.->|"Low Confidence"| ManualPlan[/"🧑‍💻 /niko-plan"/]
+    NikoCreative -.->|"Low Confidence"| ManualPlan
 
-    ManualBuild --> NikoQA{"🐱 qa"}
+    ManualBuild ==Spawn==> NikoQA[["🐈 QA"]]
     NikoQA -->|"PASS"| NikoReflect["🐱 reflect"]
     NikoReflect -.-> ManualArchive[/"🧑‍💻 /niko-archive"/]
     NikoQA -->|"FAIL (fixable)"| ManualBuild
@@ -28,9 +28,13 @@ graph TD
 
 > Legend:
 > - 🐱 = Phase executed autonomously
+> - 🐈 = Phase executed autonomously in a sub-agent
 > - 🧑‍💻 = Phase initiated by operator with explicit command
 > - Solid edge = Transition does not require operator input
-> - Dashed edge = Transition requires operator input
+> - Dashed edge = Transition requires operator input (STOP and wait)
+
+Outbound edges from a 🐈 sub-agent are taken by the parent once the sub-agent completes.
+A node with no outbound solid edges is a **terminal node**.
 
 The following phase transitions require operator input; if you have arrived at one of these transitions, STOP and wait! You're done for now.
 
@@ -48,8 +52,8 @@ To execute a phase for a level 3 task:
 2. 🚨 ***CRITICAL:*** Commit all changes - memory bank *and* other resources - to source control using a conventional commit in the following format: `chore: saving work before [phase] phase`.
 3. Read and follow the instructions in the appropriate locations:
     - **Level 3 Plan Phase**: Load `.cursor/skills/shared/niko/references/level3/level3-plan.md`
-    - **Level 3 Preflight Phase**: Invoke the `niko-preflight` skill
+    - **Level 3 Preflight Phase**: Spawn a subagent (prefer smarter / different family if available); the only instruction you add is `` Run the `/niko-preflight` skill ``. Do not run the skill in this conversation.
     - **Level 3 Build Phase**: Load `.cursor/skills/shared/niko/references/level3/level3-build.md`
-    - **Level 3 QA Phase**: Invoke the `niko-qa` skill
+    - **Level 3 QA Phase**: Delete `memory-bank/active/.qa-validation-status` if it exists. Spawn a subagent (prefer smarter / different family if available); the only instruction you add is `` Run the `/niko-qa` skill ``. Do not run the skill in this conversation.
     - **Level 3 Reflect Phase**: Load `.cursor/skills/shared/niko/references/level3/level3-reflect.md`
     - **Level 3 Archive Phase**: Load `.cursor/skills/shared/niko/references/level3/level3-archive.md`

@@ -34,7 +34,7 @@ Err on the side of brevity - if you're not sure if something needs to be mention
 
 ## When to Update
 
-After creation, the default is to leave this file alone: completing a task is not a reason to write here. Update it only when work you just completed made something in it factually wrong or materially incomplete - a build tool replaced, a test process changed, an environment step added - and then make a surgical fix to the invalidated content, nothing more. New content must pass the same bar as creation: durable pointers, not values that drift. When in doubt, don't.
+After creation, the default is to leave this file alone: completing a task is not a reason to write here. Update it only when work you just completed made something in it factually wrong or materially incomplete - a build tool replaced, a test process changed (including a new required way to assert or signal failures), an environment step added - and then make a surgical fix to the invalidated content, nothing more. A pointer to a shared contract module belongs here; a catalog of every script does not. New content must pass the same bar as creation: durable pointers, not values that drift. When in doubt, don't.
 
 ## Format
 

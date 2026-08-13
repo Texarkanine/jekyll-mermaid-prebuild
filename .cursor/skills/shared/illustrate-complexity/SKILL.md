@@ -1,12 +1,14 @@
 ---
-name: "visual-planning"
-description: "Guidelines for using Mermaid diagrams to increase comprehension of complex processes. Apply when planning non-trivial work involving multiple components, interactions, data models, or process flows, or when describing a system with complex interactions where prose alone becomes unwieldy."
+name: "illustrate-complexity"
+description: "Decide whether an explanation needs a diagram, pick the right Mermaid type, and write it so it renders. Use when explaining a system's structure, flow, or relationships - in docs, READMEs, design notes, prompts, plans, or a chat answer - even when nobody asked for a diagram. Not for charting numeric data."
 ---
 
 
-# Visual Planning with Mermaid Diagrams
+# Illustrate Complexity with Mermaid Diagrams
 
-When planning non-trivial work, **use Mermaid diagrams whenever they communicate structure, flow, or relationships more clearly than prose.** Don't diagram for the sake of diagramming - use diagrams when they earn their keep.
+**Use a Mermaid diagram whenever it communicates structure, flow, or relationships more clearly than prose.** The test: if the structure takes more than a paragraph to explain, and you keep wanting to say "and then" or "which connects to" or "if ...", it should be a diagram. Don't diagram for the sake of diagramming - use diagrams when they earn their keep.
+
+This applies wherever you are explaining something, not only when you are planning.
 
 ## When to Diagram
 
@@ -15,8 +17,6 @@ When planning non-trivial work, **use Mermaid diagrams whenever they communicate
 - **Data models & entity relationships** - schemas, table relationships, domain models
 - **State machines & decision logic** - status transitions, branching workflows
 - **Class/module structure** - inheritance hierarchies, interface contracts, module boundaries
-
-If it takes more than a paragraph of prose to explain the structure and you keep wanting to say "and then" or "which connects to," or "if ...," it should be a diagram.
 
 ## Choosing the Right Diagram Type
 
@@ -31,6 +31,8 @@ Pick the diagram type that matches what you're communicating:
 | Status lifecycles, workflow states | **State diagram** | `stateDiagram-v2` |
 
 Use `TD` (top-down) for hierarchies and dependencies. Use `LR` (left-right) for sequential flows.
+
+These five cover most cases. If what you need to show is none of them, Mermaid also draws timelines, Gantt charts, mindmaps, C4 models, and more - see the [diagram syntax reference](https://mermaid.js.org/intro/syntax-reference.html).
 
 ## Visual Elements for Rapid Scanning
 
@@ -55,7 +57,7 @@ These prevent rendering failures:
 2. **Escape special characters** - use `#quot;` for quotes inside labels, `#amp;` for ampersands. The `#` instead of `&` on-purpose and important: because Mermaid often renders within HTML documents, it uses its own entity format to ensure that the HTML renderer does NOT process it - only the Mermaid renderer.
 3. **Use `subgraph` blocks** to group related nodes - label them clearly
 4. **Use `classDef` + `:::className`** for styling - never inline `style` statements
-5. **Keep diagrams focused.** If a single diagram exceeds ~15-20 nodes, split it into multiple diagrams with clear titles explaining what each one covers.
+5. **Keep diagrams focused.** If a single diagram exceeds ~15-20 nodes, consider if it should be split into multiple diagrams with clear titles explaining what each one covers. Do not split when this reduces clarity - sometimes you really do need a big diagram.
 
 ## Flowcharts
 
@@ -152,13 +154,13 @@ stateDiagram-v2
     Approved --> [*]
 ```
 
-## Planning Workflow
+## Where the Diagram Will Be Read
 
-When planning a non-trivial task:
+Pick the type from the table above. Then size the diagram for the place a reader will meet it.
 
-1. **Start with a flowchart** to map the components and their relationships
-2. **Add sequence diagrams** for any multi-step interactions that need to happen in a specific order
-3. **Add ER/class diagrams** if the work involves data model or interface design
-4. **Add state diagrams** if the work involves status/lifecycle management
-5. **Reference the diagrams** in your implementation plan - they are the plan's backbone, not decoration
+**Documentation and READMEs.** A large diagram is fine here, and usually better than a trimmed one. Rendered on the web, the reader can expand it and pan around, so completeness beats brevity.
+
+**Plans and design notes.** The diagram is the artifact's backbone, not decoration. High detail and completeness are paramount. Refer to it from the prose that follows, so the reader knows it carries weight.
+
+**Answers in chat.** Keep it small. Most chat interfaces render Mermaid poorly or not at all, and a wide diagram is unreadable in a narrow column. Split a large one, or diagram only the part that carries the confusion and write the rest as prose.
 

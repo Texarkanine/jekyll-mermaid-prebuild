@@ -24,36 +24,30 @@ Read:
     - Read the original implementation plan to establish the review baseline
     - For Level 3-4: Read creative phase documents for design intent
 
-2. **Review the code just implemented against the original plan and apply these constraints:**
+2. **Review the code just implemented against the original plan.** Judge only — do not edit the implementation under review. Flag violations of:
 
-    - **KISS**: Simplify over-engineered logic; flatten unnecessary abstractions or indirection layers introduced during the build. If a simpler construct achieves the same outcome, prefer it. Do not preserve complexity merely because it was part of the initial implementation approach.
+    - **KISS**: Over-engineered logic, unnecessary abstractions, or indirection that a simpler construct would replace.
+    - **DRY**: Duplicate code, boilerplate, or reinvented utilities the codebase already provides.
+    - **YAGNI**: Speculative code, unused parameters, or features not required by the plan.
+    - **Completeness**: Requirements stubbed, TODO'd, commented-as-pseudocode, or otherwise not actually implemented.
+    - **Regression**: Broken naming, structure, error-handling, or other established patterns across affected projects; code that accretes rather than extends the architecture.
+    - **Integrity**: Hardcoded shortcuts, magic numbers, placeholder strings, or debug artifacts left from scaffolding.
+    - **Documentation**: Project docs that should have been updated with the code changes and were not.
 
-    - **DRY**: Consolidate any duplicate code, boilerplate, or redundant patterns introduced during iterative development into clean, reusable constructs. Cross-reference new code against existing utilities and helpers to avoid reinventing what the codebase already provides.
-
-    - **YAGNI**: Prune speculative code, "just-in-case" variables, unused parameters, and features not explicitly required by the plan. If it wasn't asked for, it doesn't ship.
-
-    - **Completeness**: Verify every requirement from the original plan was **actually implemented** - not stubbed, TODO'd, commented-as-pseudocode, or hand-waved. Treat any `// TODO` or placeholder value introduced during this session as a blocking deficiency, not a future suggestion.
-
-    - **Regression**: Confirm no existing architectural patterns were broken - naming conventions, casing, error handling strategies, import styles, file structure, and established abstractions must remain consistent **across all affected projects**. New code must be indistinguishable in style from surrounding code **and integrate as a natural extension of existing architecture, not an accretion layer.**
-
-    - **Integrity**: Replace any hardcoded shortcuts, magic numbers, placeholder strings, or debug artifacts (`console.log`, `print("HERE")`) introduced as temporary scaffolding. If it was a means to an end during development, it does not survive into the final commit.
-
-    - **Documentation**: Verify that any project documentation (README files, doc comments, memory bank persistent files, configuration docs, user-facing guides) affected by the code changes was updated alongside those changes. Treat missing documentation updates as an incomplete implementation — same severity as a missing requirement.
-
-3. **Apply Fixes or Fail**
-     - **Trivial fixes** (debug artifacts, naming inconsistencies, dead code, magic numbers): fix directly, re-run lint/build/test after each.
-     - **Substantive issues** (missing requirements, wrong approach, broken contracts, incomplete implementations): do NOT fix. Record as a FAIL finding with enough detail for the next Build or Plan cycle to act on it.
-     - The line: if the fix requires understanding design intent or making a decision between approaches, it's not QA's job. Fail and route back.
+3. **Judge, Do Not Fix**
+     - Surface and judge. Never modify the work under review.
+     - Allowed writes only: `memory-bank/active/.qa-validation-status`, QA findings in `tasks.md` / `progress.md`, and (at Step 4) the `**Phase:**` field in `activeContext.md`.
+     - Record every issue as a finding. FAIL when something must change before acceptance; PASS only when the implementation is acceptable as-is (advisories allowed).
 
 4. **Generate QA Report**
-    - Summarize findings and corrections applied
+    - Summarize findings
     - Write validation status to `memory-bank/active/.qa-validation-status`
     - Update `memory-bank/active/tasks.md` with QA results
 
 5. **Handle Results**
-    - **On PASS (clean or all issues fixed)**: Good job!
-    - **On FAIL (issues requiring build changes)**: Return to the Build phase to fix the issues.
-    - **On FAIL (fundamental plan issue discovered)**: Return to the Plan phase to revise the plan.
+    - **On PASS**: Good job!
+    - **On FAIL (issues requiring build changes)**: Record that Build must rerun to fix the issues.
+    - **On FAIL (fundamental plan issue discovered)**: Record that Plan must rerun to revise the plan.
 
 ## Step 3: Log Progress
 
@@ -70,7 +64,7 @@ When QA review is complete, print:
 
 ✅ PASS
 
-1. **Findings** - bulleted list of each semantic finding and the fix applied (or why it blocks)
+1. **Findings** - bulleted list of each semantic finding and why it does or does not block
 
 ~~~
 
@@ -81,14 +75,13 @@ When QA review is complete, print:
 
 ❌ FAIL
 
-1. **Findings** - bulleted list of each semantic finding and the fix applied (or why it blocks)
+1. **Findings** - bulleted list of each semantic finding and why it blocks
 
 ## Next Steps
 
 (the next command, if any, based on the current complexity-level's workflow & QA result)
 ~~~
 
-## Step 4: Phase Transition
+## Step 4: End of Verification
 
-- If operator input is required: stop and wait for them.
-- If operator input is not required: load the appropriate complexity level-specific Niko workflow file, then use its Phase Mappings to execute the next phase.
+Update `memory-bank/active/activeContext.md` so `**Phase:**` records this phase complete with PASS or FAIL (e.g. `**Phase:** PREFLIGHT - COMPLETE (PASS)` / `**Phase:** QA - COMPLETE (FAIL)`). Do not load a level workflow or begin another phase. Stop.

@@ -28,9 +28,9 @@ Err on the side of brevity: anything omitted now can be added later, on the term
 
 ## When to Update
 
-This file is read far more often than it is written, and its value is inversely proportional to its length. After creation, the default is to leave it alone: completing a task is not a reason to write here, and this file is never the place to record what you just built, fixed, or learned - that history belongs in commits, archives, and the code itself.
+This file is read far more often than it is written, and its value is inversely proportional to its length. After creation, the default is to leave it alone: completing a task is not a reason to write here. Do not dump task history or a feature changelog here. Do record a durable pattern when the work established a system-wide contract a developer outside that task would need — even if that contract shipped in this task's diff. Task narrative still belongs in commits, archives, and the code itself.
 
-Update this file only when work you just completed made something in it factually wrong or materially incomplete - and then make a surgical fix to the invalidated content, nothing more. Anything added must pass the same bar as creation: a durable, system-wide pattern at briefing altitude. When in doubt, don't: a missing pattern is cheap to add later; accumulated noise is what makes this file useless.
+Update this file only when work you just completed made something in it factually wrong or materially incomplete - and then make a surgical fix to the invalidated content, nothing more. Anything added must pass the same bar as creation: a durable, system-wide pattern at briefing altitude. When in doubt, apply the damage test (Avoid item 4): if damage without the knowledge is not plausible, skip. Prefer omission over inventing a pattern; accumulated noise is what makes this file useless.
 
 ## Format
 

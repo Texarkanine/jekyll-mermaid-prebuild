@@ -29,6 +29,7 @@ Read:
    - For each implementable unit of executable work (function, slice, milestone — whatever granularity the plan uses), confirm the ordered substeps place test-writing before production code, explicitly enough that a reasonable implementer cannot follow the plan by coding first
    - FAIL when the numbered steps for an executable unit are implementation-only under a "we follow TDD" disclaimer; when any step explicitly orders implementation before tests; or when TDD ordering lives only in the plan's preamble rather than per-unit
    - FAIL when the plan schedules a test that can only go red when someone deliberately edits the artifact it asserts on — heading, phrase, link, or checklist assertions on a document. That is a change-detector, not a test.
+   - On FAIL: cite the executable units lacking test-before-code ordering, and any scheduled change-detector tests with the instruction to remove them (keeping any purpose-built CI gate). Route as rearchitect (Handle Results).
 
 3. **Convention Compliance**
    - Verify the plan's proposed file locations, naming conventions, and patterns align with established codebase conventions documented in `memory-bank/systemPatterns.md`
@@ -58,15 +59,14 @@ Read:
 
 8. **Generate Preflight Report**
    - Create comprehensive findings report
-   - Write validation status to `memory-bank/active/.preflight-status`
+   - Write validation status to `memory-bank/active/.preflight-status` — exactly one allowed value from `.cursor/rules/shared/niko/memory-bank/active/preflight-status.mdc`
    - Update `memory-bank/active/tasks.md` with any plan amendments or findings
 
 9. **Handle Results**
    - **On PASS**: Good job!
-   - **On PASS with ADVISORY**: Allow transition to `/niko-build`, but document advisory findings for the operator's consideration
-   - **On FAIL (rearchitect needed)**: Operator decision required.
+   - **On PASS with ADVISORY**: Document advisory findings for the operator's consideration; still a valid build/transition gate (status file: `PASS WITH ADVISORY`)
+   - **On FAIL (rearchitect needed)**: Operator decision required; write status `FAIL`; tell the operator `/niko-plan` must rerun.
    - **On FAIL (conflict/convention)**: Provide specific fix instructions, block `/niko-build`; Operator decision required.
-   - **On FAIL (TDD plan encoding)**: Block `/niko-build`; cite executable units lacking test-before-code ordering, and any scheduled change-detector tests with the instruction to remove them (keeping any purpose-built CI gate); then re-run `/niko-plan` to restructure.
 
 ## Step 3: Log Progress
 
@@ -108,7 +108,6 @@ Print the appropriate block:
 - **On FAIL (fixable)**: Address the findings and re-run `/niko-preflight`.
 ~~~
 
-## Step 4: Phase Transition
+## Step 4: End of Verification
 
-- If operator input is required: stop and wait for them.
-- If operator input is not required: load the appropriate complexity level-specific Niko workflow file, then use its Phase Mappings to execute the next phase.
+Update `memory-bank/active/activeContext.md` so `**Phase:**` records this phase complete with PASS or FAIL (e.g. `**Phase:** PREFLIGHT - COMPLETE (PASS)` / `**Phase:** QA - COMPLETE (FAIL)`). Do not load a level workflow or begin another phase. Stop.

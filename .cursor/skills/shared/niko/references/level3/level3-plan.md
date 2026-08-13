@@ -72,6 +72,7 @@ Process open questions one at a time. After each creative phase completes, reass
 - Produce an **ordered** list of implementation steps, grouped by component/module.
 - Each step names concrete files and functions.
 - Each step maps to roughly one TDD cycle: write failing test → implement to pass → refactor.
+- Carve-out definition: `.cursor/rules/shared/always-tdd.mdc` (Niko ships it always-on). Entirely prose/policy steps use `N/A for prose & policy artifacts` under Tests first.
 - Steps must be sequenced so that each builds on the last. For multi-component features, start with the component that has the fewest dependencies and work outward.
 - Document the specific changes per file: new functions, modified signatures, added exports, config changes.
 - Include documentation update steps for any project documentation (README files, doc comments, configuration docs, user-facing guides) that would be affected by the implementation. Documentation changes are implementation work, not an afterthought.
@@ -168,10 +169,12 @@ After Challenges & Mitigations are recorded, run Pre-Mortem on the whole plan:
 
 1. [Step 1 - component, TDD cycle]
     - Files: [file paths]
+    - Tests first: [test file + case(s) to write and watch fail; or `N/A for prose & policy artifacts`]
     - Changes: [specific changes]
     - Creative ref: [if applicable, link to creative decision]
 2. [Step 2]
     - Files: [file paths]
+    - Tests first: [test file + case(s) to write and watch fail; or `N/A for prose & policy artifacts`]
     - Changes: [specific changes]
 
 ## Technology Validation
