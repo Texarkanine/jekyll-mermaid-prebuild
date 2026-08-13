@@ -74,4 +74,9 @@ No new technology - validation not required
 - [x] Pre-Mortem complete
 - [x] Preflight
 - [x] Build
-- [ ] QA
+- [x] QA
+
+## QA Results
+
+PASS. KISS: `format_elapsed` on Hooks, no extra type. Completeness: Total and Copied carry elapsed; per-document Converted lines do not. No README log-string contract to update.
+
