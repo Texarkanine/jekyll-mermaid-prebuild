@@ -135,6 +135,20 @@ RSpec.describe JekyllMermaidPrebuild::Processor do
       processor.convert_block(block)
     end
 
+    context "when inline_svg is enabled" do
+      let(:config_inline) do
+        instance_double(
+          JekyllMermaidPrebuild::Configuration,
+          **configuration_processor_attrs(cache_dir, inline_svg: true)
+        )
+      end
+      let(:processor_inline) { described_class.new(config_inline, generator) }
+
+      it "inserts generated SVG markup directly" do
+        expect(processor_inline.convert_block(block)[:html]).to eq("<svg/>")
+      end
+    end
+
     context "when prefers_color_scheme is :auto" do
       let(:config_auto) do
         instance_double(
