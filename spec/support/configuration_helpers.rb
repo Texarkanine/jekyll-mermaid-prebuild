@@ -9,6 +9,7 @@ module ConfigurationHelpers
     {
       cache_dir: cache_dir,
       output_dir: c::DEFAULT_OUTPUT_DIR,
+      inline_svg: false,
       text_centering: true,
       overflow_protection: true,
       edge_label_padding: 0,
@@ -23,6 +24,7 @@ module ConfigurationHelpers
     {
       cache_dir: cache_dir,
       output_dir: c::DEFAULT_OUTPUT_DIR,
+      inline_svg: false,
       enabled?: true,
       emoji_width_compensation: {},
       edge_label_padding: 0,
