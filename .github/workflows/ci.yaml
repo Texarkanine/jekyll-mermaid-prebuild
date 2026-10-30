@@ -14,8 +14,6 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          # Latest 3.4 patch. An exact .ruby-version patch is missing on a new ubuntu-latest image.
-          ruby-version: '3.4'
           bundler-cache: true
       - name: Install dependencies
         run: bundle install
