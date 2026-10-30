@@ -19,6 +19,15 @@ env:
   GEM_NAME: jekyll-mermaid-prebuild
 
 jobs:
+  ruby-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ruby.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: ruby
+        run: echo "version=$(tr -d '[:space:]' < .ruby-version)" >> "$GITHUB_OUTPUT"
+
   release-please:
     runs-on: ubuntu-latest
     outputs:
@@ -38,19 +47,17 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
   publish-gem:
-    needs: release-please
+    needs: [release-please, ruby-version]
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    container:
+      image: "ruby:${{ needs.ruby-version.outputs.version }}"
     environment: rubygems.org
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          # Latest 3.4 patch. An exact .ruby-version patch is missing on a new ubuntu-latest image.
-          ruby-version: '3.4'
-          bundler-cache: true
+      - name: Install dependencies
+        run: bundle install
 
       - name: Run tests with coverage
         run: bundle exec rspec

@@ -9,11 +9,23 @@ permissions:
   contents: write
 
 jobs:
+  ruby-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ruby.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: ruby
+        run: echo "version=$(tr -d '[:space:]' < .ruby-version)" >> "$GITHUB_OUTPUT"
+
   update-gemfile-lock:
     name: "Update Gemfile.lock"
     # Only run on Release Please PRs
     if: startsWith(github.head_ref, 'release-please--')
+    needs: ruby-version
     runs-on: ubuntu-latest
+    container:
+      image: "ruby:${{ needs.ruby-version.outputs.version }}"
     steps:
       - name: Generate GitHub App Token
         id: generate-token
@@ -26,13 +38,6 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           token: ${{ steps.generate-token.outputs.token }}
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          # Latest 3.4 patch. An exact .ruby-version patch is missing on a new ubuntu-latest image.
-          ruby-version: '3.4'
-          bundler-cache: false
 
       - name: Update Gemfile.lock
         run: bundle install
