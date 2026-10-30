@@ -6,15 +6,23 @@ on:
       - main
 
 jobs:
-  test:
-    name: "Test"
+  ruby-version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ruby.outputs.version }}
     steps:
       - uses: actions/checkout@v7
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
+      - id: ruby
+        run: echo "version=$(tr -d '[:space:]' < .ruby-version)" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: "Test"
+    needs: ruby-version
+    runs-on: ubuntu-latest
+    container:
+      image: "ruby:${{ needs.ruby-version.outputs.version }}"
+    steps:
+      - uses: actions/checkout@v7
       - name: Install dependencies
         run: bundle install
       - name: Run tests
