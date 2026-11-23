@@ -49,6 +49,10 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 5
           command: |
+            # checkout records safe.directory in a temporary HOME. This git
+            # process does not own the workspace, so without this it refuses
+            # the repository. '*' covers /__w and /github/workspace.
+            git config --global --add safe.directory '*'
             git config user.name "${{ github.event.pull_request.user.login }}"
             git config user.email "${{ github.event.pull_request.user.id }}+${{ github.event.pull_request.user.login }}@users.noreply.github.com"
             if ! git diff --quiet Gemfile.lock; then
