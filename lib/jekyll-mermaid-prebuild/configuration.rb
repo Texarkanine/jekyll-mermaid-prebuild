@@ -16,7 +16,7 @@ module JekyllMermaidPrebuild
     PREFERS_COLOR_SCHEME_YAML_KEY = "prefers-color-scheme"
     BACKGROUND_COLOR_YAML_KEY = "background-color"
 
-    attr_reader :output_dir, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation,
+    attr_reader :output_dir, :inline_svg, :text_centering, :overflow_protection, :edge_label_padding, :emoji_width_compensation,
                 :prefers_color_scheme, :chart_background_light, :chart_background_dark
 
     # Initialize configuration from Jekyll site
@@ -25,6 +25,7 @@ module JekyllMermaidPrebuild
     def initialize(site)
       config = site.config["mermaid_prebuild"] || {}
       @output_dir = parse_output_dir(config["output_dir"])
+      @inline_svg = config.fetch("inline_svg", false)
       @enabled = config.fetch("enabled", true)
       pcs_raw = config[PREFERS_COLOR_SCHEME_YAML_KEY]
       parse_prefers_color_scheme(pcs_raw)

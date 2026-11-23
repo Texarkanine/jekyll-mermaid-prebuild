@@ -94,6 +94,7 @@ Add to your `_config.yml`:
 mermaid_prebuild:
   enabled: true          # default: true
   output_dir: assets/svg # default: assets/svg
+  inline_svg: false      # default: false; embed SVG markup directly in HTML
   prefers-color-scheme:
     mode: light          # light (default) | dark | auto — see [Color scheme](#color-scheme-mermaid-theme)
     # Optional: override mmdc’s root SVG background (defaults: light=white, dark=black)
@@ -110,11 +111,12 @@ mermaid_prebuild:
 
 ### Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `enabled` | `true` | Enable/disable the plugin |
-| `output_dir` | `assets/svg` | Directory for generated SVG files |
-| `prefers-color-scheme` | see below | **Hash** with `mode` (`light` / `dark` / `auto`) and optional `background-color` for chart backgrounds. See [Color scheme](#color-scheme-mermaid-theme). |
+| Option                 | Default      | Description                                                                                                                                              |
+| ---------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`              | `true`       | Enable/disable the plugin                                                                                                                                |
+| `output_dir`           | `assets/svg` | Directory for generated SVG files                                                                                                                        |
+| `inline_svg`           | `false`      | Embed generated SVG markup directly in HTML instead of using linked images                                                                               |
+| `prefers-color-scheme` | see below    | **Hash** with `mode` (`light` / `dark` / `auto`) and optional `background-color` for chart backgrounds. See [Color scheme](#color-scheme-mermaid-theme). |
 
 #### `postprocessing` group
 

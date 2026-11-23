@@ -79,7 +79,9 @@ module JekyllMermaidPrebuild
       return nil if paths.nil? || paths.empty?
 
       light_url = @generator.build_svg_url(cache_key)
-      html = if @config.prefers_color_scheme == :auto
+      html = if @config.inline_svg
+               File.read(paths.fetch(cache_key))
+             elsif @config.prefers_color_scheme == :auto
                dark_url = @generator.build_svg_url("#{cache_key}-dark")
                @generator.build_figure_html(light_url, dark_url: dark_url)
              else

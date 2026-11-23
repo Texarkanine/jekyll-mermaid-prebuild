@@ -22,6 +22,12 @@ RSpec.describe JekyllMermaidPrebuild::Configuration do
         expect(config.enabled?).to be true
       end
 
+      it "defaults inline_svg to false" do
+        config = described_class.new(site)
+
+        expect(config.inline_svg).to be false
+      end
+
       it "defaults postprocessing flags when postprocessing is omitted" do
         config = described_class.new(site)
 
