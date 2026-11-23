@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.7.0...v0.7.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **ci:** let the lockfile job commit inside the Ruby image ([#66](https://github.com/Texarkanine/jekyll-mermaid-prebuild/issues/66)) ([01c836c](https://github.com/Texarkanine/jekyll-mermaid-prebuild/commit/01c836c0be97c10f711f9fbd20af484846b01d58))
+
 ## [0.7.0](https://github.com/Texarkanine/jekyll-mermaid-prebuild/compare/v0.6.0...v0.7.0) (2026-08-13)
 
 
